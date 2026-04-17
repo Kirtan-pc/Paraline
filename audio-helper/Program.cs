@@ -159,15 +159,275 @@ internal sealed class WasapiLoopbackCapture : IDisposable
         return Math.Clamp(_lastLevel, 0, 1);
     }
 
+    private void AccumulateSamples(IntPtr dataPointer, int sampleCount, ref double sumSquares, ref int totalSamples)
+    {
+        var byteCount = checked(sampleCount * _bytesPerSample);
+        EnsureSampleBufferSize(byteCount);
+        Marshal.Copy(dataPointer, _sampleBuffer, 0, byteCount);
 
-            var payload = JsonSerializer.Serialize(new
-            {
-                type = "level",
-                value
-            });
+        for (var sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++)
+        {
+            var offset = sampleIndex * _bytesPerSample;
+            var sample = ReadNormalizedSample(_sampleBuffer, offset);
 
-            Console.WriteLine(payload);
-            await Task.Delay(33);
+            sumSquares += sample * sample;
+            totalSamples++;
         }
     }
+
+    private double ReadNormalizedSample(byte[] buffer, int offset)
+    {
+        return _sampleFormat switch
+        {
+            SampleFormat.Float32 => ClampAudioSample(BitConverter.ToSingle(buffer, offset)),
+            SampleFormat.Pcm16 => BitConverter.ToInt16(buffer, offset) / 32768.0,
+            SampleFormat.Pcm24 => ReadInt24(buffer, offset) / 8388608.0,
+            SampleFormat.Pcm32 => BitConverter.ToInt32(buffer, offset) / 2147483648.0,
+            _ => throw new NotSupportedException("Unsupported sample format.")
+        };
+    }
+
+    private static double ClampAudioSample(double value)
+    {
+        if (value > 1)
+        {
+            return 1;
+        }
+
+        if (value < -1)
+        {
+            return -1;
+        }
+
+        return value;
+    }
+
+    private static int ReadInt24(byte[] buffer, int offset)
+    {
+        var value = buffer[offset] | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16);
+
+        if ((value & 0x0080_0000) != 0)
+        {
+            value |= unchecked((int)0xFF00_0000);
+        }
+
+        return value;
+    }
+
+    private void EnsureSampleBufferSize(int requiredSize)
+    {
+        if (_sampleBuffer.Length >= requiredSize)
+        {
+            return;
+        }
+
+        _sampleBuffer = new byte[requiredSize];
+    }
+
+    private static (SampleFormat Format, int BytesPerSample) DetectSampleFormat(IntPtr mixFormatPointer, WaveFormatEx mixFormat)
+    {
+        var bytesPerSample = mixFormat.nBlockAlign / Math.Max(1, mixFormat.nChannels);
+
+        return mixFormat.wFormatTag switch
+        {
+            WaveFormatTags.Pcm => bytesPerSample switch
+            {
+                2 => (SampleFormat.Pcm16, bytesPerSample),
+                3 => (SampleFormat.Pcm24, bytesPerSample),
+                4 => (SampleFormat.Pcm32, bytesPerSample),
+                _ => throw new NotSupportedException($"Unsupported PCM sample size: {bytesPerSample} bytes.")
+            },
+            WaveFormatTags.IeeeFloat when bytesPerSample == 4 => (SampleFormat.Float32, bytesPerSample),
+            WaveFormatTags.Extensible => DetectExtensibleFormat(mixFormatPointer, bytesPerSample),
+            _ => throw new NotSupportedException($"Unsupported wave format tag: 0x{mixFormat.wFormatTag:X4}.")
+        };
+    }
+
+    private static (SampleFormat Format, int BytesPerSample) DetectExtensibleFormat(IntPtr mixFormatPointer, int bytesPerSample)
+    {
+        var extensible = Marshal.PtrToStructure<WaveFormatExtensible>(mixFormatPointer);
+
+        if (extensible.SubFormat == KsdDataFormatSubtypeIeeeFloat && bytesPerSample == 4)
+        {
+            return (SampleFormat.Float32, bytesPerSample);
+        }
+
+        if (extensible.SubFormat == KsdDataFormatSubtypePcm)
+        {
+            return bytesPerSample switch
+            {
+                2 => (SampleFormat.Pcm16, bytesPerSample),
+                3 => (SampleFormat.Pcm24, bytesPerSample),
+                4 => (SampleFormat.Pcm32, bytesPerSample),
+                _ => throw new NotSupportedException($"Unsupported extensible PCM sample size: {bytesPerSample} bytes.")
+            };
+        }
+
+        throw new NotSupportedException($"Unsupported extensible sub-format: {extensible.SubFormat}.");
+    }
+
+    public void Dispose()
+    {
+        if (_isStarted)
+        {
+            _audioClient.Stop();
+            _isStarted = false;
+        }
+
+        if (_mixFormatPointer != IntPtr.Zero)
+        {
+            Marshal.FreeCoTaskMem(_mixFormatPointer);
+        }
+
+        Marshal.ReleaseComObject(_captureClient);
+        Marshal.ReleaseComObject(_audioClient);
+        Marshal.ReleaseComObject(_device);
+        Marshal.ReleaseComObject(_deviceEnumerator);
+    }
+}
+
+internal enum SampleFormat
+{
+    Float32,
+    Pcm16,
+    Pcm24,
+    Pcm32
+}
+
+internal enum EDataFlow
+{
+    eRender = 0,
+    eCapture = 1,
+    eAll = 2
+}
+
+internal enum ERole
+{
+    eConsole = 0,
+    eMultimedia = 1,
+    eCommunications = 2
+}
+
+[Flags]
+internal enum ClsCtx : uint
+{
+    CLSCTX_INPROC_SERVER = 0x1,
+    CLSCTX_INPROC_HANDLER = 0x2,
+    CLSCTX_LOCAL_SERVER = 0x4,
+    CLSCTX_REMOTE_SERVER = 0x10,
+    CLSCTX_ALL = CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER
+}
+
+internal enum AudioClientShareMode
+{
+    Shared = 0,
+    Exclusive = 1
+}
+
+[Flags]
+internal enum AudioClientStreamFlags : uint
+{
+    Loopback = 0x00020000
+}
+
+[Flags]
+internal enum AudioClientBufferFlags : uint
+{
+    None = 0x0,
+    DataDiscontinuity = 0x1,
+    Silent = 0x2,
+    TimestampError = 0x4
+}
+
+internal static class WaveFormatTags
+{
+    public const ushort Pcm = 0x0001;
+    public const ushort IeeeFloat = 0x0003;
+    public const ushort Extensible = 0xFFFE;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct WaveFormatEx
+{
+    public ushort wFormatTag;
+    public ushort nChannels;
+    public uint nSamplesPerSec;
+    public uint nAvgBytesPerSec;
+    public ushort nBlockAlign;
+    public ushort wBitsPerSample;
+    public ushort cbSize;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct WaveFormatExtensible
+{
+    public WaveFormatEx Format;
+    public ushort wValidBitsPerSample;
+    public uint dwChannelMask;
+    public Guid SubFormat;
+}
+
+[ComImport]
+[Guid("A95664D2-9614-4F35-A746-DE8DB63617E6")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IMMDeviceEnumerator
+{
+    int EnumAudioEndpoints(EDataFlow dataFlow, int stateMask, out object devices);
+    int GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, out IMMDevice endpoint);
+    int GetDevice(string id, out IMMDevice device);
+    int RegisterEndpointNotificationCallback(IntPtr client);
+    int UnregisterEndpointNotificationCallback(IntPtr client);
+}
+
+[ComImport]
+[Guid("D666063F-1587-4E43-81F1-B948E807363F")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IMMDevice
+{
+    int Activate(ref Guid iid, ClsCtx clsCtx, IntPtr activationParams, [MarshalAs(UnmanagedType.IUnknown)] out object instance);
+    int OpenPropertyStore(int stgmAccess, out IntPtr properties);
+    int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
+    int GetState(out int state);
+}
+
+[ComImport]
+[Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IAudioClient
+{
+    int Initialize(
+        AudioClientShareMode shareMode,
+        AudioClientStreamFlags streamFlags,
+        long bufferDuration,
+        long periodicity,
+        IntPtr format,
+        IntPtr audioSessionGuid);
+
+    int GetBufferSize(out uint bufferSize);
+    int GetStreamLatency(out long latency);
+    int GetCurrentPadding(out uint currentPadding);
+    int IsFormatSupported(AudioClientShareMode shareMode, IntPtr format, out IntPtr closestMatchFormat);
+    int GetMixFormat(out IntPtr deviceFormatPointer);
+    int GetDevicePeriod(out long defaultDevicePeriod, out long minimumDevicePeriod);
+    int Start();
+    int Stop();
+    int Reset();
+    int SetEventHandle(IntPtr eventHandle);
+    int GetService(ref Guid iid, [MarshalAs(UnmanagedType.IUnknown)] out object service);
+}
+
+[ComImport]
+[Guid("C8ADBD64-E71E-48a0-A4DE-185C395CD317")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+internal interface IAudioCaptureClient
+{
+    int GetBuffer(
+        out IntPtr data,
+        out uint numFramesToRead,
+        out AudioClientBufferFlags flags,
+        out ulong devicePosition,
+        out ulong qpcPosition);
+
+    int ReleaseBuffer(uint numFramesRead);
+    int GetNextPacketSize(out uint numFramesInNextPacket);
 }
