@@ -1,6 +1,8 @@
 const canvas = document.getElementById("visualizer");
 const context = canvas.getContext("2d");
 
+console.log("[debug] renderer loaded");
+
 const TARGET_FPS = 36;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
 const MAX_DEVICE_SCALE = 1.25;
@@ -19,6 +21,12 @@ let debugPanel;
 let lastDebugPaintAt = 0;
 let lastFrameAt = 0;
 let edgeGradient;
+let visualizerState = {
+  sensitivity: 3.2,
+  theme: "blue",
+  edgeMode: "bottom",
+  paused: false
+};
 
 const THEMES = {
   blue: {
@@ -48,8 +56,6 @@ const THEMES = {
 };
 
 const params = new URLSearchParams(window.location.search);
-const themeName = params.get("theme") || "blue";
-const theme = THEMES[themeName] || THEMES.blue;
 const debugEnabled = params.get("debug") === "1";
 
 function clamp01(value) {
@@ -57,6 +63,7 @@ function clamp01(value) {
 }
 
 function rebuildCachedPaint() {
+  const theme = THEMES[visualizerState.theme] || THEMES.blue;
   edgeGradient = context.createLinearGradient(0, 0, 0, height);
   edgeGradient.addColorStop(0, theme.hazeTop);
   edgeGradient.addColorStop(0.16, "rgba(0, 0, 0, 0)");
@@ -134,9 +141,14 @@ function resizeCanvas() {
   canvas.height = Math.floor(height * deviceScale);
   context.setTransform(deviceScale, 0, 0, deviceScale, 0, 0);
   rebuildCachedPaint();
+  console.log("[debug] resizeCanvas", { width, height, deviceScale });
 }
 
 function updateAudioLevel(now) {
+  if (visualizerState.paused) {
+    return;
+  }
+
   const helperDriven = latestSource === "helper";
   const breathing = helperDriven ? 0.003 : 0.028 * (Math.sin(now * 0.00023) + 1);
   const response = helperDriven ? 0.2 : 0.018;
@@ -212,25 +224,66 @@ function renderFrame(now) {
   const deltaMs = lastFrameAt ? now - lastFrameAt : FRAME_INTERVAL;
   lastFrameAt = now;
 
-  time += deltaMs * 0.001;
+  if (!visualizerState.paused) {
+    time += deltaMs * 0.001;
+  }
+
   updateAudioLevel(now);
 
   context.clearRect(0, 0, width, height);
   drawGlowBand();
 
+  const theme = THEMES[visualizerState.theme] || THEMES.blue;
   const helperDriven = latestSource === "helper";
+  const drawTop = visualizerState.edgeMode === "top" || visualizerState.edgeMode === "both";
+  const drawBottom = visualizerState.edgeMode === "bottom" || visualizerState.edgeMode === "both";
+  const topBase = 66 + smoothedLevel * 10;
   const bottomBase = height - 62 - smoothedLevel * 18;
   const primaryAmplitude = helperDriven ? 8 + smoothedLevel * 38 : 5 + smoothedLevel * 12;
   const secondaryAmplitude = helperDriven ? 3 + smoothedLevel * 16 : 2 + smoothedLevel * 6;
-  drawSoftFill(bottomBase, primaryAmplitude * 0.9, 0.007, 0.32, theme.bottomGlow, 40);
 
-  drawWave(bottomBase, primaryAmplitude * 0.9, 0.0102, 0.34, theme.bottomLine, 1.25, 0.68);
-  drawWave(bottomBase - 8, secondaryAmplitude, 0.013, 0.48, theme.bottomGlow, 0.9, 0.28);
+  if (drawTop) {
+    drawSoftFill(topBase, primaryAmplitude * 0.6, 0.0064, 0.28, theme.topGlow, 28);
+    drawWave(topBase, primaryAmplitude * 0.6, 0.0088, 0.26, theme.topLine, 1.05, 0.56);
+    drawWave(topBase + 6, secondaryAmplitude * 0.55, 0.0112, 0.34, theme.topGlow, 0.8, 0.18);
+  }
+
+  if (drawBottom) {
+    drawSoftFill(bottomBase, primaryAmplitude * 0.9, 0.007, 0.32, theme.bottomGlow, 40);
+    drawWave(bottomBase, primaryAmplitude * 0.9, 0.0102, 0.34, theme.bottomLine, 1.25, 0.68);
+    drawWave(bottomBase - 8, secondaryAmplitude, 0.013, 0.48, theme.bottomGlow, 0.9, 0.28);
+  }
 
   context.globalAlpha = 1;
   context.shadowBlur = 0;
   paintDebugPanel(now);
 }
+
+function applySettings(nextSettings) {
+  visualizerState = {
+    ...visualizerState,
+    ...nextSettings
+  };
+
+  if (!THEMES[visualizerState.theme]) {
+    visualizerState.theme = "blue";
+  }
+
+  if (!["top", "bottom", "both"].includes(visualizerState.edgeMode)) {
+    visualizerState.edgeMode = "bottom";
+  }
+
+  if (!Number.isFinite(visualizerState.sensitivity)) {
+    visualizerState.sensitivity = 3.2;
+  }
+
+  rebuildCachedPaint();
+  console.log("[debug] applySettings", visualizerState);
+}
+
+window.addEventListener("error", (event) => {
+  console.log("[debug] renderer error", event.message);
+});
 
 window.addEventListener("resize", resizeCanvas);
 
@@ -240,9 +293,21 @@ if (window.audioBridge) {
       latestSource = payload.source || "unknown";
       lastPayloadValue = payload.value;
       incomingLevel = latestSource === "helper"
-        ? clamp01(payload.value * 3.2)
+        ? clamp01(payload.value * visualizerState.sensitivity)
         : clamp01(payload.value);
     }
+  });
+}
+
+if (window.visualizerSettings) {
+  window.visualizerSettings.onChange((nextSettings) => {
+    applySettings(nextSettings);
+  });
+
+  window.visualizerSettings.get().then((nextSettings) => {
+    applySettings(nextSettings);
+  }).catch(() => {
+    // Ignore startup settings errors and keep defaults.
   });
 }
 
