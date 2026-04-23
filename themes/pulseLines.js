@@ -28,9 +28,10 @@
     }
   };
 
-  const AUDIO_SMOOTHING = 0.065;
-  const SPEED_SMOOTHING = 0.08;
-  const MAX_AUDIO_LEVEL = 0.82;
+  const ENERGY_ATTACK = 0.28;
+  const ENERGY_RELEASE = 0.08;
+  const SPEED_SMOOTHING = 0.16;
+  const MAX_AUDIO_LEVEL = 0.72;
 
   let localAudioLevel = 0.24;
   let localSpeed = 0;
@@ -93,20 +94,20 @@
     if (settings.speed === "energetic") {
       return {
         base: 0.68,
-        audioBoost: 10
+        audioBoost: 34
       };
     }
 
     if (settings.speed === "balanced") {
       return {
         base: 0.5,
-        audioBoost: 7
+        audioBoost: 24
       };
     }
 
     return {
       base: 0.36,
-      audioBoost: 5
+      audioBoost: 15
     };
   }
 
@@ -149,9 +150,12 @@
       ? Math.min(0.05, Math.max(0.001, time - lastMotionTime))
       : 1 / 48;
     const easedLevel = easeAudioLevel(rawLevel);
-    const targetSpeed = profile.baseSpeed * profile.speedScale + easedLevel * profile.audioSpeedBoost;
+    const energyResponse = easedLevel > localAudioLevel ? ENERGY_ATTACK : ENERGY_RELEASE;
 
-    localAudioLevel += (easedLevel - localAudioLevel) * AUDIO_SMOOTHING;
+    localAudioLevel += (easedLevel - localAudioLevel) * energyResponse;
+
+    const targetSpeed = profile.baseSpeed * profile.speedScale + localAudioLevel * profile.audioSpeedBoost;
+
     localSpeed += (targetSpeed - localSpeed) * SPEED_SMOOTHING;
     travelDistance += delta * localSpeed;
     lastMotionTime = time;
