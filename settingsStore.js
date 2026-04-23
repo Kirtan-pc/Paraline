@@ -33,10 +33,22 @@ const DEFAULT_SETTINGS = Object.freeze({
     intensity: "medium",
     colorStyle: "blue",
     speed: "calm"
+  }),
+  dotParticles: Object.freeze({
+    density: "medium",
+    motionStyle: "balanced",
+    directionBehavior: "beatReactive",
+    glowStrength: "medium"
+  }),
+  rippleFlow: Object.freeze({
+    mode: "sideRipples",
+    intensity: "medium",
+    sensitivity: "medium",
+    colorStyle: "blue"
   })
 });
 
-const VALID_MAIN_THEMES = new Set(["ambientWave", "reactiveBorder", "flowBorder", "sideBars", "flatRipples"]);
+const VALID_MAIN_THEMES = new Set(["ambientWave", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow"]);
 const VALID_AMBIENT_TONES = new Set(["blue", "purple", "warm"]);
 const VALID_LEVELS = new Set(["low", "medium", "high"]);
 const VALID_EDGE_MODES = new Set(["top", "bottom", "both"]);
@@ -53,6 +65,10 @@ const VALID_SIDE_BARS_DENSITY = new Set(["low", "medium", "high"]);
 const VALID_FLAT_RIPPLES_MODES = new Set(["sideRipples", "flatRipples"]);
 const VALID_FLAT_RIPPLES_COLORS = new Set(["red", "blue", "white", "multicolor"]);
 const VALID_FLAT_RIPPLES_SPEEDS = new Set(["calm", "balanced", "energetic"]);
+const VALID_DOT_PARTICLES_MOTION_STYLES = new Set(["calm", "balanced", "energetic"]);
+const VALID_DOT_PARTICLES_DIRECTIONS = new Set(["mostlyClockwise", "mostlyAnticlockwise", "beatReactive"]);
+const VALID_RIPPLE_FLOW_MODES = new Set(["sideRipples", "flatRipples"]);
+const VALID_RIPPLE_FLOW_COLORS = new Set(["red", "blue", "white"]);
 
 function createDefaultSettings() {
   return {
@@ -61,7 +77,9 @@ function createDefaultSettings() {
     reactiveBorder: { ...DEFAULT_SETTINGS.reactiveBorder },
     flowBorder: { ...DEFAULT_SETTINGS.flowBorder },
     sideBars: { ...DEFAULT_SETTINGS.sideBars },
-    flatRipples: { ...DEFAULT_SETTINGS.flatRipples }
+    flatRipples: { ...DEFAULT_SETTINGS.flatRipples },
+    dotParticles: { ...DEFAULT_SETTINGS.dotParticles },
+    rippleFlow: { ...DEFAULT_SETTINGS.rippleFlow }
   };
 }
 
@@ -131,6 +149,24 @@ function sanitizeFlatRipples(input = {}) {
   };
 }
 
+function sanitizeDotParticles(input = {}) {
+  return {
+    density: pick(input.density, VALID_LEVELS, DEFAULT_SETTINGS.dotParticles.density),
+    motionStyle: pick(input.motionStyle, VALID_DOT_PARTICLES_MOTION_STYLES, DEFAULT_SETTINGS.dotParticles.motionStyle),
+    directionBehavior: pick(input.directionBehavior, VALID_DOT_PARTICLES_DIRECTIONS, DEFAULT_SETTINGS.dotParticles.directionBehavior),
+    glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.dotParticles.glowStrength)
+  };
+}
+
+function sanitizeRippleFlow(input = {}) {
+  return {
+    mode: pick(input.mode, VALID_RIPPLE_FLOW_MODES, DEFAULT_SETTINGS.rippleFlow.mode),
+    intensity: pick(input.intensity, VALID_LEVELS, DEFAULT_SETTINGS.rippleFlow.intensity),
+    sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.rippleFlow.sensitivity),
+    colorStyle: pick(input.colorStyle, VALID_RIPPLE_FLOW_COLORS, DEFAULT_SETTINGS.rippleFlow.colorStyle)
+  };
+}
+
 function migrateLegacySettings(input = {}) {
   if (VALID_MAIN_THEMES.has(input.selectedTheme)) {
     return input;
@@ -174,7 +210,9 @@ function sanitizeSettings(input = {}) {
     reactiveBorder: sanitizeReactiveBorder(source.reactiveBorder),
     flowBorder: sanitizeFlowBorder(source.flowBorder),
     sideBars: sanitizeSideBars(source.sideBars),
-    flatRipples: sanitizeFlatRipples(source.flatRipples)
+    flatRipples: sanitizeFlatRipples(source.flatRipples),
+    dotParticles: sanitizeDotParticles(source.dotParticles),
+    rippleFlow: sanitizeRippleFlow(source.rippleFlow)
   };
 }
 
