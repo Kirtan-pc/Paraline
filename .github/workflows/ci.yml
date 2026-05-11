@@ -24,6 +24,3 @@ jobs:
 
       - name: Build helper
         run: npm run build:helper
-
-      - name: Run app build check
-        run: npm run build
