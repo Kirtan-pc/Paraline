@@ -8,6 +8,7 @@ import CTASection from "./components/sections/CTASection";
 import Footer from "./components/Footer";
 import Sidebar from "./components/Sidebar";
 import InstallationGuide from "./components/pages/InstallationGuide";
+import TermsPage from "./components/pages/TermsPage";
 
 const downloadUrl = import.meta.env.VITE_DOWNLOAD_URL || "/downloads/Paraline-Setup.exe";
 const isHostedInstaller = /^https?:\/\//.test(downloadUrl);
@@ -121,7 +122,7 @@ export default function App() {
         </header>
 
         <main>
-          {currentPage === "home" ? (
+          {currentPage === "home" && (
            <>
           <section id="hero" className="scroll-mt-28">
           <HeroSection
@@ -147,11 +148,15 @@ export default function App() {
             />
             </section>
         </>
-        ) : (
-    <InstallationGuide setCurrentPage={setCurrentPage} />
-  )}
+        )}
+        {currentPage === "installation" && (
+          <InstallationGuide setCurrentPage={setCurrentPage} />
+        )}
+        {currentPage === "terms" && (
+          <TermsPage setCurrentPage={setCurrentPage} />
+        )}
         </main>
-        <Footer />
+        <Footer setCurrentPage={setCurrentPage} />
       </div>
 
       <Analytics />
