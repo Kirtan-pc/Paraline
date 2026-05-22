@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const DEFAULT_SETTINGS = Object.freeze({
+  launchOnStartup: false,
   selectedTheme: "ambientWave",
   ambientWave: Object.freeze({
     tone: "blue",
@@ -91,6 +92,7 @@ const VALID_EDGE_FLUTTER_MODES = new Set(["left", "right", "both"]);
 
 function createDefaultSettings() {
   return {
+    launchOnStartup: DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: DEFAULT_SETTINGS.selectedTheme,
     ambientWave: { ...DEFAULT_SETTINGS.ambientWave },
     reactiveBorder: { ...DEFAULT_SETTINGS.reactiveBorder },
@@ -274,6 +276,7 @@ function sanitizeSettings(input = {}) {
   const source = migrateLegacySettings(input);
 
   return {
+    launchOnStartup: typeof source.launchOnStartup === "boolean" ? source.launchOnStartup : DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: pick(source.selectedTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.selectedTheme),
     ambientWave: sanitizeAmbientWave(source.ambientWave),
     reactiveBorder: sanitizeReactiveBorder(source.reactiveBorder),
