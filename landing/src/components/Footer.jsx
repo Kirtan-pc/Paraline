@@ -1,7 +1,8 @@
 const footerLinks = [
   { label: "Contact", href: "https://github.com/SamXop123/Paraline/issues" },
-  { label: "Terms", href: "https://github.com/SamXop123/Paraline/blob/main/README.md" },
-  { label: "Privacy", action: "privacy" },
+  { label: "Terms & Conditions", id: "terms" },
+  { label: "Privacy Policy", id: "privacy" },
+  { label: "FAQ", id: "faq" },
 ];
 
 export default function Footer({ setCurrentPage }) {
@@ -14,14 +15,14 @@ export default function Footer({ setCurrentPage }) {
 
         <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-6">
           {footerLinks.map((link) => (
-            link.action ? (
+            link.id ? (
               <button
                 key={link.label}
                 onClick={() => {
-                  if (link.action === "privacy") setCurrentPage("privacy");
-                  window.scrollTo(0, 0);
+                  setCurrentPage(link.id);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="text-[11px] uppercase tracking-[0.28em] text-white/52 transition hover:text-white"
+                className="text-[11px] uppercase tracking-[0.28em] text-white/52 transition hover:text-white bg-transparent border-none cursor-pointer p-0"
               >
                 {link.label}
               </button>

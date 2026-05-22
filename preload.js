@@ -42,5 +42,12 @@ contextBridge.exposeInMainWorld("visualizerSettings", {
     return () => {
       ipcRenderer.removeListener("show-context-menu", wrapped);
     };
+    return ipcRenderer.invoke("visualizer-settings:update", patch);
   }
+});
+
+contextBridge.exposeInMainWorld("paralineApp", {
+  togglePause: () => ipcRenderer.invoke("app:toggle-pause"),
+  reloadVisualizer: () => ipcRenderer.invoke("app:reload-visualizer"),
+  openExternal: (url) => ipcRenderer.invoke("app:open-external", url)
 });
