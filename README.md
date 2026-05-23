@@ -252,6 +252,8 @@ Paraline is designed to stay running in the background without feeling heavy or 
 | &ensp; **Pulse Lines** | Center-origin pulse motion locked to the screen edges | `Mode` · `Intensity` · `Speed` · `Color` |
 | &ensp; **Dot Particles** | Full-border dot motion with beat-reactive energy and direction changes | `Density` · `Motion style` · `Direction behavior` · `Glow strength` |
 | &ensp; **Ripple Flow** | Symmetric edge wavefronts expanding outward from a center origin | `Mode` · `Intensity` · `Sensitivity` · `Color` |
+| &ensp; **Snow Particles** | Falling audio-reactive particles with depth and drifting motion | `Fall area` · `Density` · `Motion style` · `Particle size` · `Glow strength` |
+| &ensp; **Edge Crystals** | Crystalline flutter structures along the screen edges | `Flutter style` · `Density` · `Edge mode` · `Color style` · `Glow strength` |
 
 <br>
 
