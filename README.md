@@ -1,310 +1,253 @@
+﻿<div align="center">
+
 <div align="center">
 
-<br><br>
+<h1 style="font-size: 64px; letter-spacing: 2px;">Paraline</h1>
 
-<h1>
-<samp>&nbsp;P A R A L I N E&nbsp;</samp>
-</h1>
+</div>
 
-<br>
+### *A desktop audio visualizer that turns your screen edges into motion.*
 
-*A layer of motion for the desktop itself.*
+![Platform](https://img.shields.io/badge/Platform-Windows-0f172a?style=for-the-badge)
+![Built With](https://img.shields.io/badge/Built%20With-Electron-0f172a?style=for-the-badge)
+![Audio](https://img.shields.io/badge/Audio-WASAPI%20Loopback-0f172a?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Active-0f172a?style=for-the-badge)
 
-<br><br>
-
-![Platform](https://img.shields.io/badge/Windows-0f172a?style=flat-square&logo=windows&logoColor=94a3b8&labelColor=0f172a&color=1e293b)
-&nbsp;
-![Electron](https://img.shields.io/badge/Electron-0f172a?style=flat-square&logo=electron&logoColor=94a3b8&labelColor=0f172a&color=1e293b)
-&nbsp;
-![WASAPI](https://img.shields.io/badge/WASAPI_Loopback-0f172a?style=flat-square&labelColor=0f172a&color=1e293b)
-&nbsp;
-![Status](https://img.shields.io/badge/Active-0f172a?style=flat-square&labelColor=0f172a&color=1e293b)
-
-<br>
-
-<sub>
-Paraline is a Windows desktop visualizer that lives directly on your screen —<br>
+Paraline is a Windows desktop visualizer that lives directly on your screen —  
 not inside a music player, not trapped in a window, but woven into the desktop itself.
-</sub>
 
-<br>
+It transforms system audio into ambient waves, reactive borders, and flowing light around your display, built to feel atmospheric, polished, and comfortable enough to leave running for hours.
 
-<sub>
-It transforms system audio into ambient waves, reactive borders,<br>
-and flowing light around your display.
-</sub>
-
-<br><br>
-
-<sub>Star ⭐ this repo to stay updated as we ship new features and improvements.</sub>
-
-<br><br>
+Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 </div>
 
 ---
 
-<br>
+## ✦ Preview
 
 <div align="center">
-
-### ✦ &ensp; Preview
-
-<br>
 
 <table>
 <tr>
 <td align="center" width="33%">
-<br>
-<sub><strong>AMBIENT WAVE</strong></sub><br><br>
-<img src="./previews/ambient-wave-preview.svg" alt="Ambient Wave" width="260"/>
-<br><br>
+<strong>Ambient Wave</strong><br/>
+<img src="./previews/ambient-wave-preview.svg" alt="Ambient Wave Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
-<br>
-<sub><strong>REACTIVE BORDER</strong></sub><br><br>
-<img src="./previews/reactive-border-preview.svg" alt="Reactive Border" width="260"/>
-<br><br>
+<strong>Reactive Border</strong><br/>
+<img src="./previews/reactive-border-preview.svg" alt="Reactive Border Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
-<br>
-<sub><strong>FLOW BORDER</strong></sub><br><br>
-<img src="./previews/flow-border-preview.svg" alt="Flow Border" width="260"/>
-<br><br>
+<strong>Flow Border</strong><br/>
+<img src="./previews/flow-border-preview.svg" alt="Flow Border Preview" width="260"/>
+
 </td>
 </tr>
 <tr>
 <td align="center" width="33%">
-<br>
-<sub><strong>SIDE BARS</strong></sub><br><br>
-<img src="./previews/side-bars-preview.svg" alt="Side Bars" width="260"/>
-<br><br>
+<strong>Side Bars</strong><br/>
+<img src="./previews/side-bars-preview.svg" alt="Side Bars Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
-<br>
-<sub><strong>PULSE LINES</strong></sub><br><br>
-<img src="./previews/pulse-lines-preview.svg" alt="Pulse Lines" width="260"/>
-<br><br>
+<strong>Pulse Lines</strong><br/>
+<img src="./previews/pulse-lines-preview.svg" alt="Pulse Lines Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
-<br>
-<sub><strong>DOT PARTICLES</strong></sub><br><br>
-<img src="./previews/dot-particles-preview.svg" alt="Dot Particles" width="260"/>
-<br><br>
+<strong>Dot Particles</strong><br/>
+<img src="./previews/dot-particles-preview.svg" alt="Dot Particles Preview" width="260"/>
+
 </td>
 </tr>
 <tr>
 <td align="center" width="33%">
-<br>
-<sub><strong>RIPPLE FLOW</strong></sub><br><br>
-<img src="./previews/ripple-flow-preview.svg" alt="Ripple Flow" width="260"/>
-<br><br>
+<strong>Ripple Flow</strong><br/>
+<img src="./previews/ripple-flow-preview.svg" alt="Ripple Flow Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
-<br>
-<sub><strong>SNOW PARTICLES</strong></sub><br><br>
-<img src="./previews/snow-particles-preview.svg" alt="Snow Particles" width="260"/>
-<br><br>
+<strong>Snow Particles</strong><br/>
+<img src="./previews/snow-particles-preview.svg" alt="Snow Particles Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
-<br>
-<sub><strong>EDGE CRYSTALS</strong></sub><br><br>
-<img src="./previews/edge-crystals-preview.svg" alt="Edge Crystals" width="260"/>
-<br><br>
+<strong>Edge Crystals</strong><br/>
+<img src="./previews/edge-crystals-preview.svg" alt="Edge Crystals Preview" width="260"/>
+
 </td>
 </tr>
 </table>
 
-<br>
-
-<sub><em>Nine visual identities — each shaped around a different way sound moves through space.</em></sub>
-
-<br>
-
 </div>
-
-<br>
 
 ---
 
-<br>
+## ✦ Installation
 
-<div align="center">
+1. Download the latest **Paraline** release
+2. Run the `.exe` installer
+3. Launch the app
+4. Open the **system tray** to control themes and settings
 
-### ✦ &ensp; The Idea
+Once started, Paraline runs as a transparent desktop overlay and reacts in real time to the audio playing through your current output device.
 
-</div>
+---
 
-<br>
+## ✦ The Idea
 
 Most visualizers are designed to **grab attention**.
 
 Paraline was built to do something more interesting:
 
-> Make the desktop feel alive without making it feel loud.
+> make the desktop feel alive without making it feel loud.
 
 Instead of sitting in a separate player window, Paraline becomes part of the screen itself — subtle when it should be subtle, expressive when it needs to be expressive, and always shaped around the audio currently playing on your system.
 
 It is less about showing sound as a spectacle,  
 and more about turning sound into atmosphere.
 
-<br>
-
 ---
 
-<br>
-
-<div align="center">
-
-### ✦ &ensp; Why Paraline Feels Different
-
-<br>
+## ✦ Why Paraline Feels Different
 
 <table>
 <tr>
-<th align="center" width="50%"><sub>❌ &ensp; Traditional Visualizers</sub></th>
-<th align="center" width="50%"><sub>✦ &ensp; Paraline</sub></th>
-</tr>
-<tr>
-<td align="center"><sub>Live inside a player window</sub></td>
-<td align="center"><sub>Lives directly on the desktop</sub></td>
-</tr>
-<tr>
-<td align="center"><sub>Feel flashy and temporary</sub></td>
-<td align="center"><sub>Feels calm, architectural, and ambient</sub></td>
-</tr>
-<tr>
-<td align="center"><sub>Compete with the desktop</sub></td>
-<td align="center"><sub>Blends into your workspace</sub></td>
-</tr>
-<tr>
-<td align="center"><sub>Often too loud visually</sub></td>
-<td align="center"><sub>Built for continuous background use</sub></td>
+<td>
+
+### Traditional Visualizers
+- live inside a player window  
+- feel flashy and temporary  
+- compete with the desktop  
+- are often too loud visually  
+
+</td>
+<td>
+
+### Paraline
+- lives directly on the desktop  
+- feels calm, architectural, and ambient  
+- blends into your workspace  
+- is built for cont. background use  
+
+</td>
 </tr>
 </table>
 
-<br>
-
-</div>
-
-<br>
-
 ---
 
-<br>
+## ✦ Core Features
 
-<div align="center">
-
-### ✦ &ensp; Core Features
-
-</div>
-
-<br>
-
-**Real Audio, Not a Demo Loop**  
+### 🎧 Real Audio, Not a Demo Loop
 Paraline reacts to **actual Windows system audio** using WASAPI loopback capture, so the visuals respond to whatever is really playing on your machine.
 
-<br>
-
-**Desktop-Native Overlay**  
+### 🖥️ Desktop-Native Overlay
 The app runs as a **transparent, always-on-top, click-through overlay**, so the effect feels embedded into the screen instead of floating above your workflow.
 
-<br>
-
-**Multiple Visual Styles**  
+### 🎨 Multiple Visual Styles
 Paraline includes multiple themes, each built with its own visual identity and its own settings, so the experience can shift from subtle to expressive without feeling messy.
 
-<br>
-
-**Tray-Based Control**  
+### ⚙️ Tray-Based Control
 The visualizer stays lightweight and out of the way, with controls available directly from the **system tray**.
 
-<br>
-
-**Theme-Specific Settings**  
+### 💾 Theme-Specific Settings
 Each theme remembers its own configuration, so switching styles does not destroy your previous setup.
 
-<br>
-
-**Optimized for Long Sessions**  
+### 🚀 Optimized for Long Sessions
 Paraline is designed to stay running in the background without feeling heavy or distracting.
 
-<br>
+---
+
+## ✦ Themes
+
+<table>
+<tr>
+<th align="left">Theme</th>
+<th align="left">Style</th>
+<th align="left">Controls</th>
+</tr>
+<tr>
+<td><strong>Ambient Wave</strong></td>
+<td>Soft ambient edge waves for minimal desktop motion.</td>
+<td>Tone, edge mode, sensitivity, glow strength</td>
+</tr>
+<tr>
+<td><strong>Reactive Border</strong></td>
+<td>Full-border audio-reactive glow with stronger presence.</td>
+<td>Color style, intensity, border thickness, glow strength</td>
+</tr>
+<tr>
+<td><strong>Flow Border</strong></td>
+<td>Directional light motion traveling around the screen perimeter.</td>
+<td>Direction, speed mode, segment length, glow strength, color style</td>
+</tr>
+<tr>
+<td><strong>Side Bars</strong></td>
+<td>Left-right edge bars with centered musical emphasis.</td>
+<td>Color style, bar thickness, sensitivity, bar count</td>
+</tr>
+<tr>
+<td><strong>Pulse Lines</strong></td>
+<td>Center-origin pulse motion locked to the screen edges.</td>
+<td>Mode, intensity, speed, color</td>
+</tr>
+<tr>
+<td><strong>Dot Particles</strong></td>
+<td>Full-border dot motion with beat-reactive energy and direction changes.</td>
+<td>Density, motion style, direction behavior, glow strength</td>
+</tr>
+<tr>
+<td><strong>Ripple Flow</strong></td>
+<td>Symmetric edge wavefronts expanding outward from a center origin.</td>
+<td>Mode, intensity, sensitivity, color</td>
+</tr>
+</table>
 
 ---
 
-<br>
+## ✦ Experience
 
-<div align="center">
+Paraline is built for a very specific feeling:
 
-### ✦ &ensp; Themes
+- the desktop should stay usable  
+- the visuals should stay elegant  
+- the sound should feel present  
+- the effect should feel like part of the OS  
 
-<br>
+That balance is the whole point.
 
-</div>
+You can leave it running while:
+- working
+- coding
+- studying
+- listening casually
+- sitting in a dark room with music on and nothing else open
 
-| &ensp; Theme | Style | Controls |
-|:---|:---|:---|
-| &ensp; **Ambient Wave** | Soft ambient edge waves for minimal desktop motion | `Tone` · `Edge mode` · `Sensitivity` · `Glow strength` |
-| &ensp; **Reactive Border** | Full-border audio-reactive glow with stronger presence | `Color style` · `Intensity` · `Border thickness` · `Glow strength` |
-| &ensp; **Flow Border** | Directional light motion traveling around the screen perimeter | `Direction` · `Speed mode` · `Segment length` · `Glow strength` · `Color style` |
-| &ensp; **Side Bars** | Left-right edge bars with centered musical emphasis | `Color style` · `Bar thickness` · `Sensitivity` · `Bar count` |
-| &ensp; **Pulse Lines** | Center-origin pulse motion locked to the screen edges | `Mode` · `Intensity` · `Speed` · `Color` |
-| &ensp; **Dot Particles** | Full-border dot motion with beat-reactive energy and direction changes | `Density` · `Motion style` · `Direction behavior` · `Glow strength` |
-| &ensp; **Ripple Flow** | Symmetric edge wavefronts expanding outward from a center origin | `Mode` · `Intensity` · `Sensitivity` · `Color` |
-| &ensp; **Snow Particles** | Falling audio-reactive particles with depth and drifting motion | `Fall area` · `Density` · `Motion style` · `Particle size` · `Glow strength` |
-| &ensp; **Edge Crystals** | Crystalline flutter structures along the screen edges | `Flutter style` · `Density` · `Edge mode` · `Color style` · `Glow strength` |
-
-<br>
+And it should still feel good.
 
 ---
 
-<br>
 
-<div align="center">
+## ✦ Usage
 
-### ✦ &ensp; Installation
-
-</div>
-
-<br>
-
-1. Download the latest **Paraline** release  
-2. Run the `.exe` installer  
-3. Launch the app  
-4. Open the **system tray** to control themes and settings  
-
-Once started, Paraline runs as a transparent desktop overlay and reacts in real time to the audio playing through your current output device.
-
-<br>
-
----
-
-<br>
-
-<div align="center">
-
-### ✦ &ensp; Usage
-
-</div>
-
-<br>
-
-**Tray Controls**
+## Tray Controls
 
 Paraline is designed to stay visually present but operationally invisible.
 
 From the tray, you can:
 
-- Pause or resume the visualizer  
-- Switch between themes  
-- Open theme-specific settings  
-- Change each theme's behavior independently  
-- Quit the app cleanly  
+- pause or resume the visualizer
+- switch between themes
+- open theme-specific settings
+- change each theme’s behavior independently
+- quit the app cleanly
 
-<br>
+---
 
-**Theme-Specific Settings**
+## Theme-Specific Settings
 
 Each theme owns its own settings.
 
@@ -314,87 +257,65 @@ That means you can keep:
 - **Reactive Border** brighter and more intense  
 - **Flow Border** smoother and more directional  
 
-Switching themes does **not** wipe the others.  
-Your setup stays remembered the way you left it.
+Switching themes does **not** wipe the others.
 
-<br>
+Your setup stays remembered the way you left it.
 
 ---
 
-<br>
-
-<div align="center">
-
-### ✦ &ensp; Built With
-
-</div>
-
-<br>
+## ✦ Built With
 
 Paraline combines desktop UI rendering with native Windows audio capture.
 
-| Layer | Technology |
-|:---|:---|
-| Desktop shell | **Electron** |
-| Runtime logic | **Node.js** |
-| Visual output | **Canvas-based rendering** |
-| Audio capture | **C# helper process** |
-| System audio input | **WASAPI loopback** |
-
-<br>
+- **Electron** — desktop shell and overlay window
+- **Node.js** — app/runtime logic
+- **Canvas-based rendering** — visual output and animation
+- **C# helper process** — Windows audio capture layer
+- **WASAPI loopback** — real-time system audio input
 
 ---
 
-<br>
+## ✦ Why This Project Exists
 
-<div align="center">
+Most audio visualizers fall into one of three extremes:
 
-### ✦ &ensp; Roadmap
+- too flashy  
+- too gimmicky  
+- too disconnected from the desktop  
 
-</div>
+Paraline started from a different question:
 
-<br>
+> what if a visualizer felt less like an app, and more like a part of the screen?
 
-- Multi-monitor support  
-- More theme presets  
-- Smoother startup and background behavior  
-- Deeper theme-specific controls  
-- Better packaging and release polish  
-- More refined motion systems  
-
-<br>
+The goal was not just to make sound visible,  
+but to make the desktop itself feel more alive —  
+more atmospheric, more intentional, and more beautiful to sit in.
 
 ---
 
-<br>
+## ✦ Roadmap
 
-<div align="center">
+- multi-monitor support  
+- more theme presets  
+- smoother startup and background behavior  
+- deeper theme-specific controls  
+- better packaging and release polish  
+- more refined motion systems  
 
-### ✦ &ensp; Developer Notes
+---
 
-</div>
-
-<br>
+## ✦ Developer Notes
 
 If you want to explore the implementation details, local setup, or development workflow:
 
-**[Open Developer Notes →](./docs/DEVELOPMENT.md)**
-
-<br>
+**[Open Developer Notes](./docs/DEVELOPMENT.md)**
 
 ---
 
-<br>
-
 <div align="center">
 
-<br>
+### Paraline is not a media player visualizer.
 
-<sub>
-Paraline is not a media player visualizer.<br>
 It is a layer of motion for the desktop itself.
-</sub>
-
-<br><br>
 
 </div>
