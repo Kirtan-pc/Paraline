@@ -12,6 +12,32 @@ let tray;
 let isPaused = false;
 let settingsStore;
 let visualizerSettings;
+let settingsWindow;
+
+function createSettingsWindow() {
+  if (settingsWindow) {
+    settingsWindow.focus();
+    return;
+  }
+  settingsWindow = new BrowserWindow({
+    width: 900,
+    height: 650,
+    minWidth: 800,
+    minHeight: 600,
+    title: "Paraline Settings",
+    backgroundColor: "#121212",
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js")
+    },
+    autoHideMenuBar: true
+  });
+  settingsWindow.loadFile("settings.html");
+  settingsWindow.on("closed", () => {
+    settingsWindow = null;
+  });
+}
 
 const APP_VERSION = app.getVersion();
 
@@ -39,7 +65,8 @@ const THEME_LABELS = {
   dotParticles: "Dot Particles",
   rippleFlow: "Ripple Flow",
   snowBubbleParticles: "Snow Particles",
-  edgeCrystals: "Edge Crystals"
+  edgeCrystals: "Edge Crystals",
+  sideBraids: "Side Braids"
 };
 
 function createOverlayWindow() {
@@ -59,7 +86,7 @@ function createOverlayWindow() {
     fullscreenable: false,
     skipTaskbar: true,
     hasShadow: false,
-    focusable: false,
+    focusable: true,
     backgroundColor: "#00000000",
     webPreferences: {
       contextIsolation: true,
@@ -101,9 +128,12 @@ function sendAudioLevel(value, source) {
 }
 
 function getRendererSettings() {
+  const helperConnected = audioBridge ? (audioBridge.getStatus().mode === "helper") : false;
   return {
     ...visualizerSettings,
-    paused: isPaused
+    paused: isPaused,
+    version: APP_VERSION,
+    helperConnected: helperConnected
   };
 }
 
@@ -238,26 +268,12 @@ function openExternalUrl(url) {
 }
 
 function createTrayIcon() {
-  const isWindows = process.platform === "win32";
-
-  // On Windows, prefer the .ico file which contains all resolutions (16, 32, 48, 256px)
-  // natively — this avoids blurry downscaling from a single PNG on high-DPI displays.
-  // Fall back to .png for non-Windows platforms or when the .ico is not yet present.
-  const iconCandidates = isWindows
-    ? [
-        path.join(process.resourcesPath, "assets", "appicon.ico"),
-        path.join(__dirname, "assets", "appicon.ico"),
-        path.join(process.resourcesPath, "assets", "appicon.png"),
-        path.join(process.resourcesPath, "assets", "paraline.png"),
-        path.join(__dirname, "assets", "appicon.png"),
-        path.join(__dirname, "assets", "paraline.png")
-      ]
-    : [
-        path.join(process.resourcesPath, "assets", "appicon.png"),
-        path.join(process.resourcesPath, "assets", "paraline.png"),
-        path.join(__dirname, "assets", "appicon.png"),
-        path.join(__dirname, "assets", "paraline.png")
-      ];
+  const iconCandidates = [
+    path.join(process.resourcesPath, "assets", "appicon.png"),
+    path.join(process.resourcesPath, "assets", "paraline.png"),
+    path.join(__dirname, "assets", "appicon.png"),
+    path.join(__dirname, "assets", "paraline.png")
+  ];
 
   const iconPath = iconCandidates.find((candidatePath) => {
     try {
@@ -271,11 +287,6 @@ function createTrayIcon() {
     const image = nativeImage.createFromPath(iconPath);
 
     if (!image.isEmpty()) {
-      // ICO files already embed multi-resolution sizes — no need to resize.
-      // Only resize PNG fallbacks to the 16×16 tray size.
-      if (iconPath.endsWith(".ico")) {
-        return image;
-      }
       return image.resize({ width: 16, height: 16 });
     }
   }
@@ -303,7 +314,8 @@ function buildMainThemeMenuItems() {
     { value: "dotParticles", label: "Dot Particles" },
     { value: "rippleFlow", label: "Ripple Flow" },
     { value: "snowBubbleParticles", label: "Snow Particles" },
-    { value: "edgeCrystals", label: "Edge Crystals" }
+    { value: "edgeCrystals", label: "Edge Crystals" },
+    { value: "sideBraids", label: "Side Braids" }
   ];
 
   return themeOptions.map((themeOption) => ({
@@ -856,6 +868,95 @@ function buildEdgeCrystalsMenuItems() {
   ];
 }
 
+function buildSideBraidsMenuItems() {
+  const braidSettings = visualizerSettings.sideBraids;
+
+  return [
+    {
+      label: "Side Braids Settings",
+      enabled: false
+    },
+    {
+      label: "Braid Density",
+      submenu: [
+        { label: "Sparse", value: "sparse" },
+        { label: "Medium", value: "medium" },
+        { label: "Dense", value: "dense" }
+      ].map((option) => ({
+        label: option.label,
+        type: "radio",
+        checked: braidSettings.braidDensity === option.value,
+        click: () => updateSettings({ sideBraids: { braidDensity: option.value } })
+      }))
+    },
+    {
+      label: "Braid Width",
+      submenu: [
+        { label: "Thin", value: "thin" },
+        { label: "Medium", value: "medium" },
+        { label: "Thick", value: "thick" }
+      ].map((option) => ({
+        label: option.label,
+        type: "radio",
+        checked: braidSettings.braidWidth === option.value,
+        click: () => updateSettings({ sideBraids: { braidWidth: option.value } })
+      }))
+    },
+    {
+      label: "Motion Style",
+      submenu: [
+        { label: "Calm", value: "calm" },
+        { label: "Balanced", value: "balanced" },
+        { label: "Energetic", value: "energetic" }
+      ].map((option) => ({
+        label: option.label,
+        type: "radio",
+        checked: braidSettings.motionStyle === option.value,
+        click: () => updateSettings({ sideBraids: { motionStyle: option.value } })
+      }))
+    },
+    {
+      label: "Color Style",
+      submenu: [
+        { label: "Cyan Pink", value: "cyanPink" },
+        { label: "Blue Purple", value: "bluePurple" },
+        { label: "Red Blue", value: "redBlue" },
+        { label: "White", value: "white" }
+      ].map((option) => ({
+        label: option.label,
+        type: "radio",
+        checked: braidSettings.colorStyle === option.value,
+        click: () => updateSettings({ sideBraids: { colorStyle: option.value } })
+      }))
+    },
+    {
+      label: "Flow Direction",
+      submenu: [
+        { label: "Top Down", value: "topDown" },
+        { label: "Bottom Up", value: "bottomUp" }
+      ].map((option) => ({
+        label: option.label,
+        type: "radio",
+        checked: braidSettings.flowDirection === option.value,
+        click: () => updateSettings({ sideBraids: { flowDirection: option.value } })
+      }))
+    },
+    {
+      label: "Glow Strength",
+      submenu: [
+        { label: "Soft", value: "soft" },
+        { label: "Medium", value: "medium" },
+        { label: "Strong", value: "strong" }
+      ].map((option) => ({
+        label: option.label,
+        type: "radio",
+        checked: braidSettings.glowStrength === option.value,
+        click: () => updateSettings({ sideBraids: { glowStrength: option.value } })
+      }))
+    }
+  ];
+}
+
 function buildActiveThemeMenuItems() {
   if (visualizerSettings.selectedTheme === "reactiveBorder") {
     return buildReactiveBorderMenuItems();
@@ -889,6 +990,10 @@ function buildActiveThemeMenuItems() {
     return buildEdgeCrystalsMenuItems();
   }
 
+  if (visualizerSettings.selectedTheme === "sideBraids") {
+    return buildSideBraidsMenuItems();
+  }
+
   return buildAmbientWaveMenuItems();
 }
 
@@ -904,6 +1009,11 @@ function refreshTrayMenu() {
   const helperConnected = bridgeStatus.mode === "helper";
 
   const menu = Menu.buildFromTemplate([
+    {
+      label: "Open Settings",
+      click: () => createSettingsWindow()
+    },
+    { type: "separator" },
     {
       label: `Paraline ${APP_VERSION}`,
       enabled: false
@@ -959,12 +1069,44 @@ function refreshTrayMenu() {
     }
   ]);
 
-  tray.setContextMenu(menu);
+  // We render the context menu in the HTML page to achieve the macOS glassmorphic look
+  // tray.setContextMenu(menu);
   tray.setToolTip(`Paraline Visualizer - ${THEME_LABELS[visualizerSettings.selectedTheme]}`);
+}
+
+function showCustomContextMenu() {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    return;
+  }
+  const cursorPoint = screen.getCursorScreenPoint();
+
+  // Force Windows to refresh the window's z-order relative to other topmost windows
+  // (like the tray overflow panel) by toggling setAlwaysOnTop and calling show()/focus()
+  overlayWindow.setAlwaysOnTop(false);
+  overlayWindow.setAlwaysOnTop(true, "screen-saver");
+  overlayWindow.show();
+  overlayWindow.focus();
+  overlayWindow.moveTop();
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const localX = cursorPoint.x - primaryDisplay.bounds.x;
+  const localY = cursorPoint.y - primaryDisplay.bounds.y;
+
+  overlayWindow.webContents.send("show-context-menu", {
+    x: localX,
+    y: localY
+  });
+  overlayWindow.setIgnoreMouseEvents(false);
 }
 
 function createTray() {
   tray = new Tray(createTrayIcon());
+  tray.on("click", () => {
+    showCustomContextMenu();
+  });
+  tray.on("right-click", () => {
+    showCustomContextMenu();
+  });
   refreshTrayMenu();
 }
 
@@ -986,6 +1128,55 @@ app.whenReady().then(() => {
 
   ipcMain.handle("visualizer-settings:get", () => {
     return getRendererSettings();
+  });
+
+  ipcMain.on("visualizer-settings:update", (event, patch) => {
+    updateSettings(patch);
+  });
+
+  ipcMain.on("visualizer-action", (event, { action, data }) => {
+    if (action === "toggle-paused") {
+      togglePaused();
+    } else if (action === "reload") {
+      reloadVisualizer();
+    } else if (action === "reset-theme") {
+      resetCurrentThemeSettings();
+    } else if (action === "reset-all") {
+      resetAllSettings();
+    } else if (action === "open-url") {
+      openExternalUrl(data);
+    } else if (action === "quit") {
+      app.quit();
+    }
+  });
+
+  ipcMain.on("set-ignore-mouse-events", (event, ignore) => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      if (ignore) {
+        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+        overlayWindow.blur();
+      } else {
+        overlayWindow.setIgnoreMouseEvents(false);
+      }
+    }
+  });
+
+  ipcMain.handle("visualizer-settings:update", (_event, patch) => {
+    updateSettings(patch);
+    return getRendererSettings();
+  });
+
+  ipcMain.handle("app:toggle-pause", () => {
+    togglePaused();
+    return isPaused;
+  });
+
+  ipcMain.handle("app:reload-visualizer", () => {
+    reloadVisualizer();
+  });
+  
+  ipcMain.handle("app:open-external", (_event, url) => {
+    openExternalUrl(url);
   });
 
   createOverlayWindow();

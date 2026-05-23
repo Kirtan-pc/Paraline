@@ -50,26 +50,28 @@ jobs:
 
   package-app:
     runs-on: windows-latest
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+  
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+  
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
+  
       - name: Install dependencies
         run: npm install
-
+  
       - name: Build audio helper
         run: npm run build:helper
-
+  
       - name: Package Windows app (dir only)
         run: npm run pack:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
