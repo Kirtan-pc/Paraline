@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog } = require("electron");
 const path = require("path");
 const { createAudioBridge } = require("./audioBridge");
 const { createDefaultSettings, createSettingsStore, createThemeDefaults } = require("./settingsStore");
@@ -267,6 +267,44 @@ function resetAllSettings() {
   isPaused = false;
   sendVisualizerSettings();
   refreshTrayMenu();
+}
+function saveThemeProfile(profileName) {
+  const profiles = settingsStore.loadProfiles();
+
+  profiles[profileName] = visualizerSettings;
+
+  settingsStore.saveProfiles(profiles);
+
+  return profiles;
+}
+
+function loadThemeProfile(profileName) {
+  const profiles = settingsStore.loadProfiles();
+
+  if (!profiles[profileName]) {
+    return null;
+  }
+
+  visualizerSettings = settingsStore.save(profiles[profileName]);
+
+  sendVisualizerSettings();
+  refreshTrayMenu();
+
+  return visualizerSettings;
+}
+
+function deleteThemeProfile(profileName) {
+  const profiles = settingsStore.loadProfiles();
+
+  delete profiles[profileName];
+
+  settingsStore.saveProfiles(profiles);
+
+  return profiles;
+}
+
+function getThemeProfiles() {
+  return settingsStore.loadProfiles();
 }
 
 function openExternalUrl(url) {
@@ -1194,6 +1232,88 @@ app.whenReady().then(() => {
 
   ipcMain.handle("app:reload-visualizer", () => {
     reloadVisualizer();
+  });
+
+  ipcMain.handle("theme-profiles:get", () => {
+  return getThemeProfiles();
+  });
+
+  ipcMain.handle("theme-profiles:save", (_event, profileName) => {
+    return saveThemeProfile(profileName);
+  });
+
+  ipcMain.handle("theme-profiles:load", (_event, profileName) => {
+    return loadThemeProfile(profileName);
+  });
+
+  ipcMain.handle("theme-profiles:delete", (_event, profileName) => {
+    return deleteThemeProfile(profileName);
+  });
+
+  ipcMain.handle("theme-profiles:export", async (_event, profileName) => {
+    const profiles = settingsStore.loadProfiles();
+
+    if (!profiles[profileName]) {
+      return { success: false };
+    }
+
+    const result = await dialog.showSaveDialog({
+      title: "Export Theme Profile",
+      defaultPath: `${profileName}.json`,
+      filters: [
+        {
+          name: "JSON Files",
+          extensions: ["json"]
+        }
+      ]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false };
+    }
+
+    require("fs").writeFileSync(
+      result.filePath,
+      JSON.stringify(profiles[profileName], null, 2)
+    );
+
+    return { success: true };
+  });
+
+  ipcMain.handle("theme-profiles:import", async () => {
+    const result = await dialog.showOpenDialog({
+      title: "Import Theme Profile",
+      filters: [
+        {
+          name: "JSON Files",
+          extensions: ["json"]
+        }
+      ],
+      properties: ["openFile"]
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return { success: false };
+    }
+
+    const filePath = result.filePaths[0];
+
+    const importedProfile = JSON.parse(
+      require("fs").readFileSync(filePath, "utf8")
+    );
+
+    const profileName = path.basename(filePath, ".json");
+
+    const profiles = settingsStore.loadProfiles();
+
+    profiles[profileName] = importedProfile;
+
+    settingsStore.saveProfiles(profiles);
+
+    return {
+      success: true,
+      profileName
+    };
   });
   
   ipcMain.handle("app:open-external", (_event, url) => {

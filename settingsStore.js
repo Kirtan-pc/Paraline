@@ -365,6 +365,7 @@ function sanitizeSettings(input = {}) {
 
 function createSettingsStore(userDataPath) {
   const settingsPath = path.join(userDataPath, "settings.json");
+  const profilesPath = path.join(userDataPath, "themeProfiles.json");
 
   function load() {
     try {
@@ -386,13 +387,38 @@ function createSettingsStore(userDataPath) {
     fs.writeFileSync(settingsPath, JSON.stringify(cleanSettings, null, 2));
     return cleanSettings;
   }
+  function loadProfiles() {
+  try {
+    if (!fs.existsSync(profilesPath)) {
+      return {};
+    }
+
+    const fileContent = fs.readFileSync(profilesPath, "utf8");
+    return JSON.parse(fileContent);
+  } catch (_error) {
+    return {};
+  }
+}
+
+function saveProfiles(profiles) {
+  fs.mkdirSync(path.dirname(profilesPath), { recursive: true });
+
+  fs.writeFileSync(
+    profilesPath,
+    JSON.stringify(profiles, null, 2)
+  );
+
+  return profiles;
+}
 
   return {
-    load,
-    save,
-    path: settingsPath
-  };
-}
+  load,
+  save,
+  loadProfiles,
+  saveProfiles,
+  path: settingsPath,
+  profilesPath
+};
 
 module.exports = {
   DEFAULT_SETTINGS,

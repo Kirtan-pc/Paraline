@@ -214,6 +214,54 @@
                         <input type="range" class="custom-trigger" id="customSpeed" min="1" max="100" value="30">
                     </div>
                 </div>
+                <div class="settings-group">
+                        <h3>Theme Profiles</h3>
+                        <p class="setting-desc">
+                            Save, switch, import, and export your personalized visualizer themes.
+                        </p>
+
+                        <div class="input-group" style="margin-top: 14px;">
+                            <select class="styled-select" id="theme-profile-selector">
+                                <option value="">Select Theme Profile</option>
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 14px;">
+                            <input
+                                type="text"
+                                id="theme-profile-name"
+                                class="styled-select"
+                                placeholder="Profile Name"
+                                style="flex: 1; padding: 8px 12px;"
+                            >
+
+                            <button id="btn-save-theme-profile" class="btn-secondary">
+                                Save
+                            </button>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+                            <button id="btn-load-theme-profile" class="btn-secondary">
+                                Load
+                            </button>
+
+                            <button id="btn-delete-theme-profile" class="btn-secondary">
+                                Delete
+                            </button>
+
+                            <button id="btn-export-theme-profile" class="btn-secondary">
+                                Export
+                            </button>
+
+                            <button id="btn-import-theme-profile" class="btn-secondary">
+                                Import
+                            </button>
+
+                            <button id="btn-reset-theme-profile" class="btn-secondary">
+                                Restore Defaults
+                            </button>
+                        </div>
+                    </div>
             </section>
 
             <!-- About Tab -->
