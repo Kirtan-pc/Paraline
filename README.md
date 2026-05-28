@@ -87,6 +87,9 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 </td>
 <td align="center" width="33%">
+<strong>Aurora Drift</strong><br/>
+<img src="./previews/aurora-drift-preview.svg" alt="Aurora Drift Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
 </td>
@@ -233,7 +236,7 @@ Paraline is designed to stay running in the background without feeling heavy or 
 <tr>
 <td><strong>Aurora Drift</strong></td>
 <td>Cinematic aurora curtains rising from the bottom edge with layered folds and shimmer.</td>
-<td>Intensity, Turbulence, Glow, Speed, Layer Density</td>
+<td>Gradient stops sculptor (2-6 stops), Glow radius/bloom, primary/secondary frequency & internal complexity, response smoothing, active curtains layer count, ambient fine-tuners, saved presets</td>
 </tr>
 </table>
 
