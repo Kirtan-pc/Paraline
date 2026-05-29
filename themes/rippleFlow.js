@@ -1,6 +1,7 @@
 (() => {
   const {
     clamp01,
+    hexToRgb,
     applyOptimizedShadow,
     getPerformanceMultiplier
   } = window.ParalineShared;
@@ -17,6 +18,19 @@
   let smoothedEnergy = 0.22;
   let waveSequence = 0;
   let activeKey = "";
+  const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+  function normalizeHexColor(color) {
+    if (typeof color !== "string" || !HEX_COLOR_PATTERN.test(color)) {
+      return null;
+    }
+
+    if (color.length === 4) {
+      return `#${color.slice(1).split("").map((channel) => channel + channel).join("")}`;
+    }
+
+    return color;
+  }
 
   function getRippleFlowAudioMultiplier(settings = {}) {
     if (settings.sensitivity === "low") {
@@ -114,6 +128,23 @@
   function rgba(color, opacity) {
     const [r, g, b] = color;
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  function getRippleFlowColor(settings = {}) {
+    if (settings.colorStyle === "custom" && Array.isArray(settings.customColors) && settings.customColors.length) {
+      const candidate = settings.customColors[1] || settings.customColors[0];
+      const normalized = normalizeHexColor(candidate);
+
+      if (normalized) {
+        try {
+          return hexToRgb(normalized);
+        } catch (_error) {
+          // Fall through to the default color below.
+        }
+      }
+    }
+
+    return RIPPLE_FLOW_COLORS[settings.colorStyle] || RIPPLE_FLOW_COLORS.blue;
   }
 
   function drawVerticalSegment(context, x, y, length, color, opacity, profile, breakFactor, performanceMode = 'balanced') {
@@ -262,7 +293,7 @@ function drawBottomOrigin(context, width, height, color, profile, energy, perfor
     ensureThemeState(width, height, settings);
 
     const profile = getRippleProfile(settings);
-    const color = RIPPLE_FLOW_COLORS[settings.colorStyle] || RIPPLE_FLOW_COLORS.blue;
+    const color = getRippleFlowColor(settings);
     const delta = lastTime ? Math.min(0.05, Math.max(0.001, time - lastTime)) : 1 / 48;
     const targetEnergy = clamp01(smoothedLevel);
 

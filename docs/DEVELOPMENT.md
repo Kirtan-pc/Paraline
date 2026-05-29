@@ -144,8 +144,11 @@ Renderer / Canvas Visualizer
 - `themes/edgeCrystals.js`
   Edge Crystals rendering with left/right edge-locked vibrating energy strokes.
 
+- `themes/sideBraids.js`
+  Side Braids rendering with intertwined glowing neon strands braiding and flowing vertically along screen edges.
+
 - `themes/auroraDrift.js`
-  Aurora Drift rendering with layered aurora curtains, shimmer, and bottom-edge flow.
+  Aurora Drift rendering with layered ambient aurora curtains, dynamic HSL color stop editing, real-time advanced customizable glow, wave speeds, and responsive audio decay rates.
 
 - `preload.js`
   Safe Electron-to-renderer bridge.
@@ -225,12 +228,58 @@ The app uses one root selected theme plus nested settings per theme:
     "colorStyle": "blue",
     "edgeMode": "both"
   },
+  "sideBraids": {
+    "colorStyle": "cyanPink",
+    "braidDensity": "medium",
+    "motionStyle": "balanced",
+    "glowStrength": "medium",
+    "braidWidth": "medium",
+    "flowDirection": "topDown"
+  },
   "auroraDrift": {
-    "intensity": 1.0,
-    "turbulence": 1.0,
-    "glow": 1.0,
-    "speed": 1.05,
-    "layerDensity": 6
+    "auroraStyle": "cinematic",
+    "intensity": "balanced",
+    "height": "medium",
+    "glowStrength": "medium",
+    "motionSpeed": "balanced",
+    "colorPalette": "cyanViolet",
+    "audioReactivity": "balanced",
+    "softness": "smooth",
+    "layerDensity": "balanced",
+    "gradientStops": [
+      { "pos": 0.0, "color": "#00e5ff" },
+      { "pos": 0.35, "color": "#0077ff" },
+      { "pos": 0.7, "color": "#7f00ff" },
+      { "pos": 1.0, "color": "#ff007f" }
+    ],
+    "baseGlowRadius": 1.0,
+    "peakGlowRadius": 1.0,
+    "crestBrightness": 1.0,
+    "bloomStrength": 1.0,
+    "glowFalloff": 1.0,
+    "primaryFrequency": 1.0,
+    "secondaryFrequency": 1.0,
+    "turbulenceComplexity": 1.0,
+    "motionSmoothness": 1.0,
+    "driftSpeed": 1.0,
+    "bassInfluence": 1.0,
+    "midInfluence": 1.0,
+    "highShimmer": 1.0,
+    "audioSmoothing": 1.0,
+    "peakSensitivity": 1.0,
+    "ribbonHeight": 1.0,
+    "ribbonWidth": 1.0,
+    "edgeSoftness": 1.0,
+    "layerSeparation": 1.0,
+    "crestSharpness": 1.0,
+    "layerCount": 5,
+    "backgroundHaze": 1.0,
+    "foregroundHighlight": 1.0,
+    "parallaxDepth": 1.0,
+    "ambientOpacity": 1.0,
+    "colorSaturation": 1.0,
+    "atmosphericFade": 1.0,
+    "edgeFeathering": 1.0
   }
 }
 ```

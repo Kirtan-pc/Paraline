@@ -2,6 +2,7 @@
   const {
     clamp01,
     getGlowMultiplier,
+    hexToRgb,
     applyOptimizedShadow,
     getPerformanceMultiplier
   } = window.ParalineShared;
@@ -26,6 +27,33 @@
   let lastTime = 0;
   let smoothedEnergy = 0.22;
   let spawnCarry = 0;
+  const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+  function normalizeHexColor(color) {
+    if (typeof color !== "string" || !HEX_COLOR_PATTERN.test(color)) {
+      return null;
+    }
+
+    if (color.length === 4) {
+      return `#${color.slice(1).split("").map((channel) => channel + channel).join("")}`;
+    }
+
+    return color;
+  }
+
+  function toRgbColor(color) {
+    const normalized = normalizeHexColor(color);
+
+    if (!normalized) {
+      return null;
+    }
+
+    try {
+      return hexToRgb(normalized);
+    } catch (_error) {
+      return null;
+    }
+  }
 
   function getSnowBubbleAudioMultiplier(settings = {}) {
     if (settings.motionStyle === "calm") {
@@ -114,6 +142,35 @@
   function seededRandom(seed) {
     const value = Math.sin(seed * 12.9898) * 43758.5453;
     return value - Math.floor(value);
+  }
+
+  function mixChannel(a, b, amount) {
+    return a + (b - a) * amount;
+  }
+
+  function brighten(color, amount) {
+    return color.map((channel) => Math.round(mixChannel(channel, 255, amount)));
+  }
+
+  function getParticlePalette(settings = {}) {
+    if (Array.isArray(settings.customColors) && settings.customColors.length) {
+      const fills = settings.customColors
+        .filter((color) => typeof color === "string")
+        .filter((color) => HEX_COLOR_PATTERN.test(color))
+        .map((color) => toRgbColor(color))
+        .filter((color) => Array.isArray(color));
+
+      if (!fills.length) {
+        return PARTICLE_COLORS;
+      }
+
+      return {
+        fills,
+        glows: fills.map((color) => brighten(color, 0.26))
+      };
+    }
+
+    return PARTICLE_COLORS;
   }
 
   function resetThemeState() {
@@ -212,8 +269,8 @@
     });
   }
 
-  function drawSnowParticle(context, particle, energy, glowMultiplier, performanceMode = 'balanced') {
-    const { fills, glows } = PARTICLE_COLORS;
+  function drawSnowParticle(context, particle, energy, glowMultiplier, palette, performanceMode = 'balanced') {
+    const { fills, glows } = palette;
     const fill = fills[particle.colorIndex % fills.length];
     const glow = glows[particle.colorIndex % glows.length];
     const fade = clamp01(1 - particle.y / Math.max(1, particle.limitY));
@@ -251,11 +308,12 @@
     updateParticles(width, height, time, delta, settings, smoothedEnergy);
 
     const glowMultiplier = getGlowMultiplier(settings.glowStrength);
+    const particlePalette = getParticlePalette(settings);
     context.globalAlpha = 1;
     context.lineCap = "round";
 
     for (const particle of particles) {
-      drawSnowParticle(context, particle, smoothedEnergy, glowMultiplier, performanceMode);
+      drawSnowParticle(context, particle, smoothedEnergy, glowMultiplier, particlePalette, performanceMode);
     }
 
     context.shadowBlur = 0;

@@ -2,6 +2,7 @@
   const {
     clamp01,
     getGlowMultiplier,
+    hexToRgb,
     applyOptimizedShadow,
     getPerformanceMultiplier
   } = window.ParalineShared;
@@ -21,6 +22,33 @@
   let lastSwitchAt = -10;
   let globalDirection = 1;
   let beatPulse = 0;
+  const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+  function normalizeHexColor(color) {
+    if (typeof color !== "string" || !HEX_COLOR_PATTERN.test(color)) {
+      return null;
+    }
+
+    if (color.length === 4) {
+      return `#${color.slice(1).split("").map((channel) => channel + channel).join("")}`;
+    }
+
+    return color;
+  }
+
+  function toRgbColor(color, fallback) {
+    const normalized = normalizeHexColor(color);
+
+    if (!normalized) {
+      return fallback;
+    }
+
+    try {
+      return hexToRgb(normalized);
+    } catch (_error) {
+      return fallback;
+    }
+  }
 
   function getDotParticlesAudioMultiplier(settings = {}) {
     let base = 3.1;
@@ -196,6 +224,21 @@
     return particle.counterFlow ? -globalDirection : globalDirection;
   }
 
+  function getParticleColors(settings = {}) {
+    if (Array.isArray(settings.customColors) && settings.customColors.length) {
+      const colors = settings.customColors
+        .filter((color) => typeof color === "string")
+        .filter((color) => HEX_COLOR_PATTERN.test(color))
+        .map((color, index) => toRgbColor(color, PARTICLE_COLORS[index % PARTICLE_COLORS.length]));
+
+      if (colors.length) {
+        return colors;
+      }
+    }
+
+    return PARTICLE_COLORS;
+  }
+
   function drawDot(context, x, y, radius, color, opacity, glowBlur, performanceMode = 'balanced') {
     const [r, g, b] = color;
     const fillColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
@@ -233,6 +276,7 @@
     const jitterAmount = profile.jitter * (0.46 + energy * 1.18 + beatPulse * 0.55);
     const baseOpacity = 0.42 + energy * 0.32 + beatPulse * 0.14;
     const glowBlur = (3.5 + energy * 6.5 + beatPulse * 3.5) * glowScale * getPerformanceMultiplier(performanceMode);
+    const particleColors = getParticleColors(settings);
 
     context.globalAlpha = 1;
     context.shadowBlur = 0;
@@ -257,7 +301,7 @@
       const x = point.x + point.normalX * jitter;
       const y = point.y + point.normalY * jitter;
 
-      drawDot(context, x, y, radius, PARTICLE_COLORS[particle.colorIndex], opacity, glowBlur, performanceMode);
+      drawDot(context, x, y, radius, particleColors[particle.colorIndex % particleColors.length], opacity, glowBlur, performanceMode);
     }
 
     beatPulse *= Math.pow(0.14, delta);

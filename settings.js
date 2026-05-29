@@ -193,14 +193,80 @@ document.addEventListener('DOMContentLoaded', () => {
         customSpeed.style.display = showSpeed ? 'block' : 'none';
     }
 
+    // ----------------------------------------
+    // THEME AUTOMATION AGENT BINDINGS
+    // ----------------------------------------
+    const enableThemeAutomation = document.getElementById('enableThemeAutomation');
+    const themeAutoControls = document.getElementById('themeAutoControls');
+    const intervalMinutes = document.getElementById('intervalMinutes');
+    const dayThemeSelect = document.getElementById('dayThemeSelect');
+    const nightThemeSelect = document.getElementById('nightThemeSelect');
+
+    function toggleAutoControls(isEnabled) {
+        if (themeAutoControls) {
+            themeAutoControls.style.display = isEnabled ? 'block' : 'none';
+        }
+    }
+
+    function updateAutomationSetting(patch) {
+        if (window.visualizerSettings) {
+            const currentAutomation = cachedSettings.themeAutomation || {};
+            const nextAutomation = { ...currentAutomation, ...patch };
+            cachedSettings.themeAutomation = nextAutomation; // Optimistic local cache update!
+            window.visualizerSettings.update({
+                themeAutomation: nextAutomation
+            });
+        }
+    }
+
+    if (enableThemeAutomation) {
+        enableThemeAutomation.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            toggleAutoControls(isChecked);
+            updateAutomationSetting({ enabled: isChecked });
+        });
+    }
+
+    if (intervalMinutes) {
+        intervalMinutes.addEventListener('change', (e) => {
+            const val = parseInt(e.target.value, 10) || 30;
+            updateAutomationSetting({ checkIntervalMinutes: val });
+        });
+    }
+
+    if (dayThemeSelect) {
+        dayThemeSelect.addEventListener('change', (e) => {
+            updateAutomationSetting({ dayTheme: e.target.value });
+        });
+    }
+
+    if (nightThemeSelect) {
+        nightThemeSelect.addEventListener('change', (e) => {
+            updateAutomationSetting({ nightTheme: e.target.value });
+        });
+    }
+
     const themeSelector = document.getElementById('theme-selector');
     themeSelector.addEventListener('change', (e) => {
-        renderThemeSettings(e.target.value);
+        const themeId = e.target.value;
+        renderThemeSettings(themeId);
         
+        // Load custom colors of the newly selected theme if they exist, or fall back to global custom colors
+        const themeData = cachedSettings[themeId] || {};
+        if (themeData.customColors && themeData.customColors.length === 3) {
+            color1.value = themeData.customColors[0];
+            color2.value = themeData.customColors[1];
+            color3.value = themeData.customColors[2];
+        } else if (cachedSettings.customColors && cachedSettings.customColors.length === 3) {
+            color1.value = cachedSettings.customColors[0];
+            color2.value = cachedSettings.customColors[1];
+            color3.value = cachedSettings.customColors[2];
+        }
+
         // Also trigger an update to actually switch the active visualizer theme
         if (window.visualizerSettings) {
             window.visualizerSettings.update({
-                selectedTheme: e.target.value
+                selectedTheme: themeId
             });
         }
     });
@@ -243,6 +309,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetEl) {
             targetEl.style.display = 'block';
         }
+    }
+
+    const colorModeSelector = document.getElementById('color-mode-selector');
+    if (colorModeSelector) {
+        colorModeSelector.addEventListener('change', (e) => {
+            if (window.visualizerSettings) {
+                window.visualizerSettings.update({
+                    colorMode: e.target.value
+                });
+            }
+        });
     }
 
     // ----------------------------------------
@@ -406,10 +483,11 @@ refreshThemeProfiles();
         themePatch.customSensitivity = parseInt(sensitivitySlider.value, 10);
         themePatch.customSpeed = parseInt(speedSlider.value, 10);
 
-        // Update the cached settings so the UI dropdowns immediately reflect "Custom"
         if (!cachedSettings[activeTheme]) cachedSettings[activeTheme] = {};
+        Object.assign(cachedSettings[activeTheme], themePatch);
         if (schema.colorStyle) cachedSettings[activeTheme].colorStyle = "custom";
         if (schema.tone) cachedSettings[activeTheme].tone = "custom";
+        cachedSettings.customColors = themePatch.customColors;
         renderThemeSettings(activeTheme); // Refresh UI dropdowns to show 'Custom' selected
 
         window.visualizerSettings.update({
@@ -433,6 +511,7 @@ refreshThemeProfiles();
         const btnPause = document.getElementById('btn-pause');
         const btnReload = document.getElementById('btn-reload');
         const btnGithub = document.getElementById('btn-github');
+        const btnUpdates = document.getElementById('btn-updates');
         const btnLanding = document.getElementById('btn-landing');
         btnSaveThemeProfile.addEventListener('click', async () => {
             const profileName = themeProfileNameInput.value.trim();
@@ -518,6 +597,11 @@ refreshThemeProfiles();
         btnGithub.addEventListener('click', () => {
             window.paralineApp.openExternal("https://github.com/SamXop123/Paraline");
         });
+
+        btnUpdates.addEventListener('click', () => {
+            window.paralineApp.openExternal("https://github.com/SamXop123/Paraline/releases");
+        });
+
         btnLanding.addEventListener('click', () => {
             window.paralineApp.openExternal("https://paraline.vercel.app");
         });
@@ -573,6 +657,10 @@ refreshThemeProfiles();
             if (settings.performanceMode) {
                 performanceModeSelector.value = settings.performanceMode;
             }
+
+            if (settings.colorMode) {
+                colorModeSelector.value = settings.colorMode;
+            }
             
             const launchCheckbox = document.getElementById('launch-on-startup-checkbox');
             if (launchCheckbox) {
@@ -586,9 +674,32 @@ refreshThemeProfiles();
                     updateFpsOutcomeDisplay(settings.fpsLimit);
                 }
             }
+
+            // Load theme automation settings
+            if (settings.themeAutomation) {
+                const automation = settings.themeAutomation;
+                if (enableThemeAutomation) {
+                    enableThemeAutomation.checked = !!automation.enabled;
+                    toggleAutoControls(automation.enabled);
+                }
+                if (intervalMinutes) {
+                    intervalMinutes.value = automation.checkIntervalMinutes || 30;
+                }
+                if (dayThemeSelect) {
+                    dayThemeSelect.value = automation.dayTheme || "ambientWave";
+                }
+                if (nightThemeSelect) {
+                    nightThemeSelect.value = automation.nightTheme || "reactiveBorder";
+                }
+            }
             
             // set custom variables into UI if they exist globally or on the active theme
-            if (settings.customColors && settings.customColors.length === 3) {
+            const activeThemeData = settings[settings.selectedTheme] || {};
+            if (activeThemeData.customColors && activeThemeData.customColors.length === 3) {
+                color1.value = activeThemeData.customColors[0];
+                color2.value = activeThemeData.customColors[1];
+                color3.value = activeThemeData.customColors[2];
+            } else if (settings.customColors && settings.customColors.length === 3) {
                 color1.value = settings.customColors[0];
                 color2.value = settings.customColors[1];
                 color3.value = settings.customColors[2];
@@ -608,6 +719,26 @@ refreshThemeProfiles();
 
         // Realtime dynamic synchronization when toggled from the tray context menu
         window.visualizerSettings.onChange((nextSettings) => {
+            Object.assign(cachedSettings, nextSettings);
+            
+            // Sync theme automation properties if updated from outside
+            if (nextSettings.themeAutomation) {
+                const automation = nextSettings.themeAutomation;
+                if (enableThemeAutomation && automation.enabled !== undefined) {
+                    enableThemeAutomation.checked = !!automation.enabled;
+                    toggleAutoControls(automation.enabled);
+                }
+                if (intervalMinutes && automation.checkIntervalMinutes !== undefined) {
+                    intervalMinutes.value = automation.checkIntervalMinutes;
+                }
+                if (dayThemeSelect && automation.dayTheme !== undefined) {
+                    dayThemeSelect.value = automation.dayTheme;
+                }
+                if (nightThemeSelect && automation.nightTheme !== undefined) {
+                    nightThemeSelect.value = automation.nightTheme;
+                }
+            }
+
             if (nextSettings.paused !== undefined) {
                 updatePauseButtonState(nextSettings.paused);
             }
@@ -631,6 +762,9 @@ refreshThemeProfiles();
             if (themeSelector.value === 'auroraDrift' && nextSettings.auroraDrift) {
                 Object.assign(cachedSettings.auroraDrift || {}, nextSettings.auroraDrift);
                 syncAuroraUI();
+            }
+            if (nextSettings.colorMode !== undefined && colorModeSelector) {
+                colorModeSelector.value = nextSettings.colorMode;
             }
         });
     } else {

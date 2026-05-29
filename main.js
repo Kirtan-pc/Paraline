@@ -1,20 +1,27 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog, nativeTheme, systemPreferences, powerMonitor } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { createAudioBridge } = require("./audioBridge");
 const { createDefaultSettings, createSettingsStore, createThemeDefaults, sanitizeSettings } = require("./settingsStore");
+const ThemeAgent = require('./themeAgent');
 
 let overlayWindow;
 let lastBridgeMode = null;
 let lastBridgeReason = null;
 let audioBridge;
 let fakeTimer;
+let isQuitting = false;
 let tray;
 let isPaused = false;
 let isHidden = false;
 let settingsStore;
 let visualizerSettings;
 let settingsWindow;
+let themeAgent;
+
+// --- Focus Mode state ---
+let focusModeTimer = null;
+let focusModeCurrentlyDimmed = false;
 
 function createSettingsWindow() {
   if (settingsWindow) {
@@ -27,6 +34,7 @@ function createSettingsWindow() {
     minWidth: 800,
     minHeight: 600,
     title: "Paraline Settings",
+    icon: getWindowIconPath(),
     backgroundColor: "#08090d",
     webPreferences: {
       contextIsolation: true,
@@ -42,6 +50,63 @@ function createSettingsWindow() {
 }
 
 const APP_VERSION = app.getVersion();
+
+function normalizeSystemColor(rawColor, fallback = "#4facfe") {
+  if (typeof rawColor !== "string") {
+    return fallback;
+  }
+
+  const normalized = rawColor.trim().replace(/^#/, "");
+
+  if (normalized.length === 8) {
+    return `#${normalized.slice(0, 6)}`;
+  }
+
+  if (normalized.length === 6) {
+    return `#${normalized}`;
+  }
+
+  return fallback;
+}
+
+function getSystemAppearance() {
+  if (typeof nativeTheme.shouldUseDarkColorsForSystemIntegratedUI === "boolean") {
+    return nativeTheme.shouldUseDarkColorsForSystemIntegratedUI ? "dark" : "light";
+  }
+
+  return nativeTheme.shouldUseDarkColors ? "dark" : "light";
+}
+
+function getSystemAccentColor() {
+  if (typeof systemPreferences.getAccentColor === "function") {
+    try {
+      const accentColor = normalizeSystemColor(systemPreferences.getAccentColor(), "");
+
+      if (accentColor) {
+        return accentColor;
+      }
+    } catch (_error) {
+      // Fall through to the highlight color fallback.
+    }
+  }
+
+  if (typeof systemPreferences.getColor === "function") {
+    try {
+      return normalizeSystemColor(systemPreferences.getColor("highlight"));
+    } catch (_error) {
+      // Use the in-app fallback below.
+    }
+  }
+
+  return "#4facfe";
+}
+
+function getSystemColorState() {
+  return {
+    systemAppearance: getSystemAppearance(),
+    systemAccentColor: getSystemAccentColor()
+  };
+}
 
 function applyStartupSettings(launchOnStartup) {
   app.setLoginItemSettings({
@@ -91,6 +156,7 @@ function createOverlayWindow() {
     hasShadow: false,
     focusable: true,
     backgroundColor: "#00000000",
+    icon: getWindowIconPath(),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -110,7 +176,12 @@ function createOverlayWindow() {
     }, 100);
   });
 
+  overlayWindow.on("close", () => {
+    stopSimulatedAudioFallback();
+  });
+
   overlayWindow.on("closed", () => {
+    stopSimulatedAudioFallback();
     overlayWindow = null;
   });
 }
@@ -134,6 +205,7 @@ function getRendererSettings() {
   const helperConnected = audioBridge ? (audioBridge.getStatus().mode === "helper") : false;
   return {
     ...visualizerSettings,
+    ...getSystemColorState(),
     paused: isPaused,
     hidden: isHidden,
     version: APP_VERSION,
@@ -141,12 +213,17 @@ function getRendererSettings() {
   };
 }
 
-function sendVisualizerSettings() {
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
+function sendVisualizerSettingsToWindow(targetWindow) {
+  if (!targetWindow || targetWindow.isDestroyed()) {
     return;
   }
 
-  overlayWindow.webContents.send("visualizer-settings", getRendererSettings());
+  targetWindow.webContents.send("visualizer-settings", getRendererSettings());
+}
+
+function sendVisualizerSettings() {
+  sendVisualizerSettingsToWindow(overlayWindow);
+  sendVisualizerSettingsToWindow(settingsWindow);
 }
 
 function mergeSettingsPatch(currentSettings, patch) {
@@ -174,6 +251,14 @@ function updateSettings(nextSettings) {
     applyStartupSettings(visualizerSettings.launchOnStartup);
   }
 
+  // Re-apply focus mode whenever settings change
+  if (nextSettings.focusMode !== undefined) {
+    applyFocusModeState();
+  }
+  if (nextSettings.themeAutomation !== undefined && themeAgent) {
+    themeAgent.start();
+  }
+
   sendVisualizerSettings();
   refreshTrayMenu();
 }
@@ -195,11 +280,75 @@ function reloadVisualizer() {
     return;
   }
 
+  stopSimulatedAudioFallback();
   overlayWindow.webContents.reloadIgnoringCache();
 }
 
+// --- Focus Mode polling ---
+function sendFocusModeOpacity(opacity) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    return;
+  }
+  overlayWindow.webContents.send("focus-mode-opacity", { opacity });
+}
+
+function startFocusModePolling() {
+  stopFocusModePolling();
+  focusModeCurrentlyDimmed = false;
+
+  focusModeTimer = setInterval(() => {
+    const fmSettings = visualizerSettings.focusMode;
+    if (!fmSettings || !fmSettings.enabled) {
+      if (focusModeCurrentlyDimmed) {
+        sendFocusModeOpacity(1.0);
+        focusModeCurrentlyDimmed = false;
+      }
+      return;
+    }
+
+    const idleSeconds = powerMonitor.getSystemIdleTime();
+    const thresholdSeconds = fmSettings.idleTimeout || 5;
+
+    if (idleSeconds < thresholdSeconds) {
+      // User is active — dim the visualizer
+      if (!focusModeCurrentlyDimmed) {
+        sendFocusModeOpacity(typeof fmSettings.dimOpacity === "number" ? fmSettings.dimOpacity : 0.1);
+        focusModeCurrentlyDimmed = true;
+      }
+    } else {
+      // User is idle — restore to full opacity
+      if (focusModeCurrentlyDimmed) {
+        sendFocusModeOpacity(1.0);
+        focusModeCurrentlyDimmed = false;
+      }
+    }
+  }, 1000);
+}
+
+function stopFocusModePolling() {
+  if (focusModeTimer) {
+    clearInterval(focusModeTimer);
+    focusModeTimer = null;
+  }
+  // Restore opacity when polling stops
+  if (focusModeCurrentlyDimmed) {
+    sendFocusModeOpacity(1.0);
+    focusModeCurrentlyDimmed = false;
+  }
+}
+
+function applyFocusModeState() {
+  if (visualizerSettings.focusMode && visualizerSettings.focusMode.enabled) {
+    startFocusModePolling();
+  } else {
+    stopFocusModePolling();
+  }
+}
+
 function startSimulatedAudioFallback() {
-  stopSimulatedAudioFallback();
+  if (fakeTimer) {
+    return;
+  }
 
   fakeTimer = setInterval(() => {
     const now = Date.now();
@@ -244,8 +393,10 @@ function handleAudioBridgeStatusChange(status) {
   }
   lastBridgeMode = status.mode;
   lastBridgeReason = status.reason;
-  if (status.mode !== "helper") {
+  if (status.mode !== "helper" && !isQuitting) {
     startSimulatedAudioFallback();
+  } else {
+    stopSimulatedAudioFallback();
   }
   refreshTrayMenu();
 }
@@ -313,6 +464,27 @@ function openExternalUrl(url) {
   shell.openExternal(url).catch(() => {
     // Ignore shell open failures from tray actions.
   });
+}
+
+function getWindowIconPath() {
+  const iconCandidates = [
+    path.join(process.resourcesPath, "assets", "appicon.ico"),
+    path.join(process.resourcesPath, "assets", "appicon.png"),
+    path.join(process.resourcesPath, "assets", "paraline.png"),
+    path.join(__dirname, "assets", "appicon.ico"),
+    path.join(__dirname, "assets", "appicon.png"),
+    path.join(__dirname, "assets", "paraline.png")
+  ];
+
+  const iconPath = iconCandidates.find((candidatePath) => {
+    try {
+      return require("fs").existsSync(candidatePath);
+    } catch {
+      return false;
+    }
+  });
+
+  return iconPath || path.join(__dirname, "assets", "appicon.png");
 }
 
 function createTrayIcon() {
@@ -1094,6 +1266,12 @@ function refreshTrayMenu() {
       checked: !!visualizerSettings.launchOnStartup,
       click: () => updateSettings({ launchOnStartup: !visualizerSettings.launchOnStartup })
     },
+    {
+      label: "Focus Mode",
+      type: "checkbox",
+      checked: !!(visualizerSettings.focusMode && visualizerSettings.focusMode.enabled),
+      click: () => updateSettings({ focusMode: { ...visualizerSettings.focusMode, enabled: !(visualizerSettings.focusMode && visualizerSettings.focusMode.enabled) } })
+    },
     { type: "separator" },
     {
       label: "Visualizer Mode",
@@ -1172,6 +1350,24 @@ app.whenReady().then(() => {
   settingsStore = createSettingsStore(app.getPath("userData"));
   visualizerSettings = settingsStore.save(settingsStore.load());
   applyStartupSettings(visualizerSettings.launchOnStartup);
+
+  nativeTheme.on("updated", () => {
+    sendVisualizerSettings();
+  });
+  systemPreferences.on("accent-color-changed", () => {
+    sendVisualizerSettings();
+  });
+  systemPreferences.on("color-changed", () => {
+    sendVisualizerSettings();
+  });
+
+  // --- NEW: Start Theme Automation Agent ---
+  themeAgent = new ThemeAgent(settingsStore, (themeName) => {
+    updateSettings({ selectedTheme: themeName });
+  });
+  
+  themeAgent.start();
+  // -----------------------------------------
 
   ipcMain.handle("audio-bridge-status", () => {
     if (!audioBridge) {
@@ -1361,6 +1557,9 @@ app.whenReady().then(() => {
   createTray();
   sendVisualizerSettings();
 
+  // Start Focus Mode polling if it was previously enabled
+  applyFocusModeState();
+
   // Start the simulated fallback first so any real helper level can immediately disable it.
   startSimulatedAudioFallback();
 
@@ -1389,12 +1588,29 @@ app.on("second-instance", () => {
   }
 });
 
+app.on("before-quit", () => {
+  isQuitting = true;
+  stopSimulatedAudioFallback();
+
+  if (audioBridge) {
+    audioBridge.stop();
+  }
+});
+
+app.on("will-quit", () => {
+  stopSimulatedAudioFallback();
+});
+
 app.on("window-all-closed", () => {
+  isQuitting = true;
+  stopSimulatedAudioFallback();
+
   if (audioBridge) {
     audioBridge.stop();
   }
 
   stopSimulatedAudioFallback();
+  stopFocusModePolling();
 
   if (process.platform !== "darwin") {
     app.quit();

@@ -69,5 +69,12 @@ export const themes = [
     blurb: "Intertwined glowing neon strands braiding and flowing vertically along screen edges.",
     preview: "/previews/side-braids-preview.svg",
   },
+  {
+    key: "aurora-drift",
+    name: "Aurora Drift",
+    tag: "Atmospheric curtains",
+    blurb: "Layered northern-lights curtains flowing upward with highly-reactive musical surges.",
+    preview: "/previews/aurora-drift-preview.svg",
+  },
 ];
 

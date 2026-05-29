@@ -4,6 +4,15 @@ const path = require("path");
 const DEFAULT_SETTINGS = Object.freeze({
   launchOnStartup: false,
   selectedTheme: "ambientWave",
+  colorMode: "manual",
+  customColors: Object.freeze(["#00f2fe", "#4facfe", "#8ee2ff"]),
+  themeAutomation: Object.freeze({
+    enabled: false,
+    checkIntervalMinutes: 30, 
+    mode: "dayNight",         
+    dayTheme: "ambientWave", 
+    nightTheme: "reactiveBorder"
+  }),
   performanceMode: "balanced",
   fpsLimit: "default",
   ambientWave: Object.freeze({
@@ -80,6 +89,11 @@ const DEFAULT_SETTINGS = Object.freeze({
     customSensitivity: 30,
     customSpeed: 30
   }),
+  focusMode: Object.freeze({
+    enabled: false,
+    dimOpacity: 0.1,
+    idleTimeout: 5
+  }),
   auroraDrift: Object.freeze({
     // Standard settings
     auroraStyle: "cinematic",
@@ -131,6 +145,7 @@ const DEFAULT_SETTINGS = Object.freeze({
 });
 
 const VALID_MAIN_THEMES = new Set(["ambientWave", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids", "auroraDrift"]);
+const VALID_COLOR_MODES = new Set(["manual", "adaptive"]);
 const VALID_PERFORMANCE_MODES = new Set(["performance", "balanced", "quality"]);
 const VALID_FPS_LIMITS = new Set(["default", "battery", "unlocked"]);
 const VALID_AMBIENT_TONES = new Set(["blue", "purple", "warm", "custom"]);
@@ -177,7 +192,10 @@ function createDefaultSettings() {
   return {
     launchOnStartup: DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: DEFAULT_SETTINGS.selectedTheme,
+    colorMode: DEFAULT_SETTINGS.colorMode,
+    themeAutomation: { ...DEFAULT_SETTINGS.themeAutomation },
     performanceMode: DEFAULT_SETTINGS.performanceMode,
+    focusMode: { ...DEFAULT_SETTINGS.focusMode },
     fpsLimit: DEFAULT_SETTINGS.fpsLimit,
     ambientWave: { ...DEFAULT_SETTINGS.ambientWave },
     reactiveBorder: { ...DEFAULT_SETTINGS.reactiveBorder },
@@ -227,6 +245,18 @@ function legacySensitivityToLevel(value) {
   }
 
   return "high";
+}
+
+function sanitizeThemeAutomation(input = {}) {
+  return {
+    enabled: typeof input.enabled === "boolean" ? input.enabled : DEFAULT_SETTINGS.themeAutomation.enabled,
+    checkIntervalMinutes: typeof input.checkIntervalMinutes === "number"
+      ? Math.max(1, Math.min(120, input.checkIntervalMinutes))
+      : DEFAULT_SETTINGS.themeAutomation.checkIntervalMinutes,
+    mode: typeof input.mode === "string" ? input.mode : DEFAULT_SETTINGS.themeAutomation.mode,
+    dayTheme: pick(input.dayTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.themeAutomation.dayTheme),
+    nightTheme: pick(input.nightTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.themeAutomation.nightTheme)
+  };
 }
 
 function sanitizeAmbientWave(input = {}) {
@@ -472,14 +502,33 @@ function migrateLegacySettings(input = {}) {
   return migrated;
 }
 
+function sanitizeFocusMode(input = {}) {
+  const enabled = typeof input.enabled === "boolean" ? input.enabled : DEFAULT_SETTINGS.focusMode.enabled;
+  const dimOpacity = typeof input.dimOpacity === "number" && input.dimOpacity >= 0 && input.dimOpacity <= 1
+    ? input.dimOpacity
+    : DEFAULT_SETTINGS.focusMode.dimOpacity;
+  const idleTimeout = typeof input.idleTimeout === "number" && input.idleTimeout >= 1 && input.idleTimeout <= 60
+    ? input.idleTimeout
+    : DEFAULT_SETTINGS.focusMode.idleTimeout;
+  return { enabled, dimOpacity, idleTimeout };
+}
+
 function sanitizeSettings(input = {}) {
   const source = migrateLegacySettings(input);
+
+  const customColors = Array.isArray(source.customColors) && source.customColors.length === 3
+    ? source.customColors
+    : DEFAULT_SETTINGS.customColors;
 
   return {
     launchOnStartup: typeof source.launchOnStartup === "boolean" ? source.launchOnStartup : DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: pick(source.selectedTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.selectedTheme),
+    colorMode: pick(source.colorMode, VALID_COLOR_MODES, DEFAULT_SETTINGS.colorMode),
+    customColors: customColors,
+    themeAutomation: sanitizeThemeAutomation(source.themeAutomation),
     performanceMode: pick(source.performanceMode, VALID_PERFORMANCE_MODES, DEFAULT_SETTINGS.performanceMode),
     fpsLimit: pick(source.fpsLimit, VALID_FPS_LIMITS, DEFAULT_SETTINGS.fpsLimit),
+    focusMode: sanitizeFocusMode(source.focusMode),
     ambientWave: sanitizeAmbientWave(source.ambientWave),
     reactiveBorder: sanitizeReactiveBorder(source.reactiveBorder),
     flowBorder: sanitizeFlowBorder(source.flowBorder),
