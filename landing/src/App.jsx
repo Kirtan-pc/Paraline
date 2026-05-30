@@ -15,12 +15,11 @@ import FAQPage from "./components/pages/FAQPage";
 const downloadUrl = import.meta.env.VITE_DOWNLOAD_URL || "https://github.com/SamXop123/Paraline/releases/download/v1.2.0/Paraline-Setup-1.2.0.exe";
 const isHostedInstaller = /^https?:\/\//.test(downloadUrl);
 const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || "";
-const analyticsEnabled = import.meta.env.VITE_ENABLE_ANALYTICS === "true";
 const githubUrl = "https://github.com/SamXop123/Paraline";
 
 export default function App() {
   useEffect(() => {
-    if (!analyticsEnabled || !gaMeasurementId) {
+    if (!gaMeasurementId) {
       return undefined;
     }
 
@@ -165,7 +164,7 @@ export default function App() {
         <Footer setCurrentPage={setCurrentPage} />
       </div>
 
-      {analyticsEnabled ? <Analytics /> : null}
+      <Analytics />
     </div>
   );
 }
