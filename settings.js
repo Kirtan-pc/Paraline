@@ -340,6 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnExportThemeProfile = document.getElementById('btn-export-theme-profile');
     const btnImportThemeProfile = document.getElementById('btn-import-theme-profile');
     const btnResetThemeProfile = document.getElementById('btn-reset-theme-profile');
+    
 
     let presets = {
         "Ocean Blue": ["#00f2fe", "#4facfe", "#8ee2ff"],
@@ -513,6 +514,15 @@ refreshThemeProfiles();
         const btnGithub = document.getElementById('btn-github');
         const btnUpdates = document.getElementById('btn-updates');
         const btnLanding = document.getElementById('btn-landing');
+        const btnResetTheme = document.getElementById('btn-reset-theme');
+        if (btnResetTheme) {
+            btnResetTheme.addEventListener('click', async () => {
+                if (confirm("Reset theme settings to default?")) {
+                    await window.paralineApp.resetActiveThemeSettings();
+                    location.reload();
+                }
+            });
+        }
         btnSaveThemeProfile.addEventListener('click', async () => {
             const profileName = themeProfileNameInput.value.trim();
 

@@ -1459,6 +1459,11 @@ app.whenReady().then(() => {
     return getRendererSettings();
   });
 
+  ipcMain.handle("theme-profiles:reset-current", () => {
+    resetCurrentThemeSettings();
+    return getRendererSettings();
+  });
+
   ipcMain.handle("theme-profiles:export", async (_event, profileName) => {
     const profiles = settingsStore.loadProfiles();
 
