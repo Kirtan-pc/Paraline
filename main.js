@@ -1416,10 +1416,6 @@ app.whenReady().then(() => {
     return getRendererSettings();
   });
 
-  ipcMain.on("visualizer-settings:update", (event, patch) => {
-    updateSettings(patch);
-  });
-
   ipcMain.on("visualizer-action", (event, { action, data }) => {
     if (action === "toggle-paused") {
       togglePaused();
