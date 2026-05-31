@@ -249,19 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeSelector = document.getElementById('theme-selector');
     themeSelector.addEventListener('change', (e) => {
         const themeId = e.target.value;
-        renderThemeSettings(themeId);
-        
-        // Load custom colors of the newly selected theme if they exist, or fall back to global custom colors
-        const themeData = cachedSettings[themeId] || {};
-        if (themeData.customColors && themeData.customColors.length === 3) {
-            color1.value = themeData.customColors[0];
-            color2.value = themeData.customColors[1];
-            color3.value = themeData.customColors[2];
-        } else if (cachedSettings.customColors && cachedSettings.customColors.length === 3) {
-            color1.value = cachedSettings.customColors[0];
-            color2.value = cachedSettings.customColors[1];
-            color3.value = cachedSettings.customColors[2];
-        }
+        syncThemeUI(themeId);
 
         // Also trigger an update to actually switch the active visualizer theme
         if (window.visualizerSettings) {
@@ -436,6 +424,37 @@ refreshThemeProfiles();
         document.getElementById('val-customSpeed').textContent = `${(e.target.value / 10).toFixed(1)}`;
         dispatchCustomUpdate();
     });
+
+    function syncThemeUI(themeId) {
+        renderThemeSettings(themeId);
+        
+        // Load custom colors of the newly selected theme if they exist, or fall back to global custom colors
+        const themeData = cachedSettings[themeId] || {};
+        if (themeData.customColors && themeData.customColors.length === 3) {
+            color1.value = themeData.customColors[0];
+            color2.value = themeData.customColors[1];
+            color3.value = themeData.customColors[2];
+        } else if (cachedSettings.customColors && cachedSettings.customColors.length === 3) {
+            color1.value = cachedSettings.customColors[0];
+            color2.value = cachedSettings.customColors[1];
+            color3.value = cachedSettings.customColors[2];
+        } else {
+            color1.value = "#00f2fe";
+            color2.value = "#4facfe";
+            color3.value = "#8ee2ff";
+        }
+        
+        // Load custom sliders
+        thicknessSlider.value = themeData.customThickness || 4;
+        gapSlider.value = themeData.customGap || 7;
+        sensitivitySlider.value = themeData.customSensitivity || 30;
+        speedSlider.value = themeData.customSpeed || 30;
+        
+        document.getElementById('val-customThickness').textContent = thicknessSlider.value;
+        document.getElementById('val-customGap').textContent = gapSlider.value;
+        document.getElementById('val-customSensitivity').textContent = (sensitivitySlider.value / 10).toFixed(1);
+        document.getElementById('val-customSpeed').textContent = (speedSlider.value / 10).toFixed(1);
+    }
 
     // ----------------------------------------
     // AUTO-SAVE / IPC INTEGRATION
@@ -659,9 +678,10 @@ refreshThemeProfiles();
             
             if (settings.selectedTheme) {
                 themeSelector.value = settings.selectedTheme;
-                renderThemeSettings(settings.selectedTheme);
+                syncThemeUI(settings.selectedTheme);
             } else {
-                renderThemeSettings("ambientWave");
+                themeSelector.value = "ambientWave";
+                syncThemeUI("ambientWave");
             }
             
             if (settings.performanceMode) {
@@ -702,34 +722,18 @@ refreshThemeProfiles();
                     nightThemeSelect.value = automation.nightTheme || "reactiveBorder";
                 }
             }
-            
-            // set custom variables into UI if they exist globally or on the active theme
-            const activeThemeData = settings[settings.selectedTheme] || {};
-            if (activeThemeData.customColors && activeThemeData.customColors.length === 3) {
-                color1.value = activeThemeData.customColors[0];
-                color2.value = activeThemeData.customColors[1];
-                color3.value = activeThemeData.customColors[2];
-            } else if (settings.customColors && settings.customColors.length === 3) {
-                color1.value = settings.customColors[0];
-                color2.value = settings.customColors[1];
-                color3.value = settings.customColors[2];
-            }
-            
-            const activeData = settings[settings.selectedTheme] || {};
-            if (activeData.customThickness) thicknessSlider.value = activeData.customThickness;
-            if (activeData.customGap) gapSlider.value = activeData.customGap;
-            if (activeData.customSensitivity) sensitivitySlider.value = activeData.customSensitivity;
-            if (activeData.customSpeed) speedSlider.value = activeData.customSpeed;
-            
-            document.getElementById('val-customThickness').textContent = thicknessSlider.value;
-            document.getElementById('val-customGap').textContent = gapSlider.value;
-            document.getElementById('val-customSensitivity').textContent = (sensitivitySlider.value / 10).toFixed(1);
-            document.getElementById('val-customSpeed').textContent = (speedSlider.value / 10).toFixed(1);
         });
 
         // Realtime dynamic synchronization when toggled from the tray context menu
         window.visualizerSettings.onChange((nextSettings) => {
             Object.assign(cachedSettings, nextSettings);
+
+            if (nextSettings.selectedTheme !== undefined) {
+                if (themeSelector.value !== nextSettings.selectedTheme) {
+                    themeSelector.value = nextSettings.selectedTheme;
+                    syncThemeUI(nextSettings.selectedTheme);
+                }
+            }
             
             // Sync theme automation properties if updated from outside
             if (nextSettings.themeAutomation) {
