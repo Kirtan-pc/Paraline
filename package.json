@@ -22,10 +22,12 @@
   ],
   "author": "SamXop123",
   "license": "MIT",
-  "devDependencies": {
-    "electron": "^37.0.0",
-    "electron-builder": "^26.8.1"
-  },
+ "devDependencies": {
+  "electron": "^37.0.0",
+  "electron-builder": "^26.8.1",
+  "vite": "^8.0.13"
+},
+"dependencies": {},
   "build": {
     "appId": "com.paraline.app",
     "productName": "Paraline",
@@ -77,8 +79,6 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Paraline"
     }
-  },
-  "dependencies": {
-    "vite": "^8.0.13"
   }
+ 
 }
