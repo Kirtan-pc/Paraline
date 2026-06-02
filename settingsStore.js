@@ -266,7 +266,7 @@ function sanitizeAmbientWave(input = {}) {
     edgeMode: pick(input.edgeMode, VALID_EDGE_MODES, DEFAULT_SETTINGS.ambientWave.edgeMode),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.ambientWave.glowStrength),
     customColors: input.customColors,
-    customSensitivity: input.customSensitivity
+    customSensitivity: typeof input.customSensitivity === "number" ? input.customSensitivity : DEFAULT_SETTINGS.sideBars.customSensitivity
   };
 }
 
