@@ -206,6 +206,10 @@ export function ThemeShowcase() {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          // If the endpoint doesn't exist, intentionally throw to trigger simulation
+          throw new Error("Theme endpoint not found");
+        }
         console.error("Failed to apply theme. Server responded with status:", response.status);
         return; // Do not set applied state on failure
       }
