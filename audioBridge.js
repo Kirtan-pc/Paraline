@@ -55,6 +55,11 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
     let helperReady = false;
 
     let stdoutBuffer = "";
+    // Maximum bytes retained in the line buffer. If the helper emits a
+    // continuous stream with no newlines (crash dump, corrupt build), the
+    // buffer is discarded once it exceeds this limit to prevent OOM in the
+    // Electron main process.
+    const MAX_STDOUT_BUFFER_BYTES = 64 * 1024; // 64 KB
 
     helperProcess.stdout.on("data", (chunk) => {
       if (!helperReady) {
@@ -66,6 +71,12 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
   });
 }
       stdoutBuffer += chunk.toString();
+
+      if (stdoutBuffer.length > MAX_STDOUT_BUFFER_BYTES) {
+        console.warn("audioBridge: stdout buffer exceeded limit, discarding accumulated data.");
+        stdoutBuffer = "";
+        return;
+      }
 
       const lines = stdoutBuffer.split(/\r?\n/);
       stdoutBuffer = lines.pop() || "";
