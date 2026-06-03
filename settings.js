@@ -581,10 +581,7 @@ refreshThemeProfiles();
         });
 
         btnDuplicateThemeProfile.addEventListener("click", async () => {
-
-            const selectedProfile =
-                themeProfileSelector.value;
-
+            const selectedProfile = themeProfileSelector.value;
             if (!selectedProfile) return;
 
             try {
@@ -601,10 +598,6 @@ refreshThemeProfiles();
                 alert("Failed to duplicate profile");
                 console.error(error);
             }
-
-            alert(`Profile duplicated as "${result.profileName}"`);
-
-            refreshThemeProfiles();
         });
 
         btnExportThemeProfile.addEventListener('click', async () => {

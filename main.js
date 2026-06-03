@@ -1537,17 +1537,15 @@ app.whenReady().then(() => {
     return deleteThemeProfile(profileName);
   });
 
-  ipcMain.handle("theme-profiles:duplicate", (_event, srcProfileName, destProfileName) => {
-    return duplicateThemeProfile(srcProfileName, destProfileName);
-  });
-
   ipcMain.handle("theme-profiles:reset", () => {
     resetAllSettings();
     return getRendererSettings();
   });
 
-  ipcMain.handle('theme-profiles:duplicate', async (_, profileName) => {
-      return duplicateThemeProfile(profileName);
+  ipcMain.handle("theme-profiles:duplicate", async (_, profileName) => {
+    return duplicateThemeProfile(profileName);
+  });
+
   ipcMain.handle("theme-profiles:reset-current", () => {
     resetCurrentThemeSettings();
     return getRendererSettings();
