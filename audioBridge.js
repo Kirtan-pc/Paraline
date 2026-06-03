@@ -63,13 +63,14 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
 
     helperProcess.stdout.on("data", (chunk) => {
       if (!helperReady) {
-  helperReady = true;
+        helperReady = true;
 
-  updateStatus({
-    mode: "helper",
-    reason: "C# helper process connected."
-  });
-}
+        updateStatus({
+          mode: "helper",
+          reason: "C# helper process connected."
+        });
+      }
+
       stdoutBuffer += chunk.toString();
 
       if (stdoutBuffer.length > MAX_STDOUT_BUFFER_BYTES) {
@@ -93,12 +94,11 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
             sendLevel(message.value);
           }
         } catch (_error) {
-  console.warn("Invalid helper message received.");
-  continue;
-}
+          console.warn("Invalid helper message received.");
+          continue;
         }
       }
-    };
+    });
 
     helperProcess.stderr.on("data", (chunk) => {
       updateStatus({
