@@ -247,6 +247,30 @@ function legacySensitivityToLevel(value) {
   return "high";
 }
 
+// Validates and clamps a custom thickness value (range: 1 to 20, default: 4).
+function sanitizeThickness(val, fallback = 4) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(1, Math.min(20, num)) : fallback;
+}
+
+// Validates and clamps a custom gap value (range: 2 to 30, default: 7).
+function sanitizeGap(val, fallback = 7) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(2, Math.min(30, num)) : fallback;
+}
+
+// Validates and clamps a custom sensitivity value (range: 1 to 100, default: 30).
+function sanitizeSensitivity(val, fallback = 30) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(1, Math.min(100, num)) : fallback;
+}
+
+// Validates and clamps a custom speed value (range: 1 to 100, default: 30).
+function sanitizeSpeed(val, fallback = 30) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(1, Math.min(100, num)) : fallback;
+}
+
 function sanitizeThemeAutomation(input = {}) {
   return {
     enabled: typeof input.enabled === "boolean" ? input.enabled : DEFAULT_SETTINGS.themeAutomation.enabled,
@@ -266,7 +290,7 @@ function sanitizeAmbientWave(input = {}) {
     edgeMode: pick(input.edgeMode, VALID_EDGE_MODES, DEFAULT_SETTINGS.ambientWave.edgeMode),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.ambientWave.glowStrength),
     customColors: input.customColors,
-    customSensitivity: typeof input.customSensitivity === "number" ? input.customSensitivity : DEFAULT_SETTINGS.sideBars.customSensitivity
+    customSensitivity: sanitizeSensitivity(input.customSensitivity)
   };
 }
 
@@ -277,8 +301,8 @@ function sanitizeReactiveBorder(input = {}) {
     borderThickness: pick(input.borderThickness, VALID_BORDER_THICKNESS, DEFAULT_SETTINGS.reactiveBorder.borderThickness),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.reactiveBorder.glowStrength),
     customColors: input.customColors,
-    customThickness: input.customThickness,
-    customSensitivity: input.customSensitivity
+    customThickness: sanitizeThickness(input.customThickness),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity)
   };
 }
 
@@ -290,9 +314,9 @@ function sanitizeFlowBorder(input = {}) {
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.flowBorder.glowStrength),
     colorStyle: pick(input.colorStyle, VALID_FLOW_COLOR_STYLES, DEFAULT_SETTINGS.flowBorder.colorStyle),
     customColors: input.customColors,
-    customThickness: input.customThickness,
-    customSensitivity: input.customSensitivity,
-    customSpeed: input.customSpeed
+    customThickness: sanitizeThickness(input.customThickness),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
@@ -307,9 +331,9 @@ function sanitizeSideBars(input = {}) {
     sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.sideBars.sensitivity),
     barDensity: pick(input.barDensity, VALID_SIDE_BARS_DENSITY, DEFAULT_SETTINGS.sideBars.barDensity),
     customColors,
-    customThickness: typeof input.customThickness === "number" ? input.customThickness : DEFAULT_SETTINGS.sideBars.customThickness,
-    customGap: typeof input.customGap === "number" ? input.customGap : DEFAULT_SETTINGS.sideBars.customGap,
-    customSensitivity: typeof input.customSensitivity === "number" ? input.customSensitivity : DEFAULT_SETTINGS.sideBars.customSensitivity
+    customThickness: sanitizeThickness(input.customThickness, DEFAULT_SETTINGS.sideBars.customThickness),
+    customGap: sanitizeGap(input.customGap, DEFAULT_SETTINGS.sideBars.customGap),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity, DEFAULT_SETTINGS.sideBars.customSensitivity)
   };
 }
 
@@ -320,8 +344,8 @@ function sanitizeFlatRipples(input = {}) {
     colorStyle: pick(input.colorStyle, VALID_FLAT_RIPPLES_COLORS, DEFAULT_SETTINGS.flatRipples.colorStyle),
     speed: pick(input.speed, VALID_FLAT_RIPPLES_SPEEDS, DEFAULT_SETTINGS.flatRipples.speed),
     customColors: input.customColors,
-    customSensitivity: input.customSensitivity,
-    customSpeed: input.customSpeed
+    customSensitivity: sanitizeSensitivity(input.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
@@ -331,8 +355,8 @@ function sanitizeDotParticles(input = {}) {
     motionStyle: pick(input.motionStyle, VALID_DOT_PARTICLES_MOTION_STYLES, DEFAULT_SETTINGS.dotParticles.motionStyle),
     directionBehavior: pick(input.directionBehavior, VALID_DOT_PARTICLES_DIRECTIONS, DEFAULT_SETTINGS.dotParticles.directionBehavior),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.dotParticles.glowStrength),
-    customGap: input.customGap,
-    customSpeed: input.customSpeed
+    customGap: sanitizeGap(input.customGap),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
@@ -343,7 +367,7 @@ function sanitizeRippleFlow(input = {}) {
     sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.rippleFlow.sensitivity),
     colorStyle: pick(input.colorStyle, VALID_RIPPLE_FLOW_COLORS, DEFAULT_SETTINGS.rippleFlow.colorStyle),
     customColors: input.customColors,
-    customSensitivity: input.customSensitivity
+    customSensitivity: sanitizeSensitivity(input.customSensitivity)
   };
 }
 
@@ -365,9 +389,9 @@ function sanitizeEdgeCrystals(input = {}) {
     colorStyle: pick(input.colorStyle, VALID_EDGE_FLUTTER_COLORS, DEFAULT_SETTINGS.edgeCrystals.colorStyle),
     edgeMode: pick(input.edgeMode, VALID_EDGE_FLUTTER_MODES, DEFAULT_SETTINGS.edgeCrystals.edgeMode),
     customColors: input.customColors,
-    customGap: input.customGap,
-    customSensitivity: input.customSensitivity,
-    customSpeed: input.customSpeed
+    customGap: sanitizeGap(input.customGap),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
@@ -380,10 +404,10 @@ function sanitizeSideBraids(input = {}) {
     colorStyle: pick(input.colorStyle, VALID_BRAID_COLORS, DEFAULT_SETTINGS.sideBraids.colorStyle),
     flowDirection: pick(input.flowDirection, VALID_BRAID_DIRECTION, DEFAULT_SETTINGS.sideBraids.flowDirection),
     customColors: input.customColors,
-    customThickness: typeof input.customThickness === "number" ? input.customThickness : DEFAULT_SETTINGS.sideBraids.customThickness,
-    customGap: typeof input.customGap === "number" ? input.customGap : DEFAULT_SETTINGS.sideBraids.customGap,
-    customSensitivity: typeof input.customSensitivity === "number" ? input.customSensitivity : DEFAULT_SETTINGS.sideBraids.customSensitivity,
-    customSpeed: typeof input.customSpeed === "number" ? input.customSpeed : DEFAULT_SETTINGS.sideBraids.customSpeed
+    customThickness: sanitizeThickness(input.customThickness, DEFAULT_SETTINGS.sideBraids.customThickness),
+    customGap: sanitizeGap(input.customGap, DEFAULT_SETTINGS.sideBraids.customGap),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity, DEFAULT_SETTINGS.sideBraids.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed, DEFAULT_SETTINGS.sideBraids.customSpeed)
   };
 }
 
