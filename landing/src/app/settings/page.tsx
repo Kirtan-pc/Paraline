@@ -6,19 +6,19 @@ import { Monitor, Volume2 } from "lucide-react";
 
 const initialGroups = [
   {
-    title: "Display Preferences",
+    title: "Display & Performance",
     icon: Monitor,
     settings: [
-      { id: "multi-monitor", name: "Multi-monitor Spanning", description: "Stretch visualizer across all connected displays.", active: true },
-      { id: "fps-cap", name: "Framerate Cap", description: "Limit rendering to 60fps to preserve battery life.", active: false },
+      { id: "focus-mode", name: "Focus Mode Integration", description: "Reduce visualizer opacity and intensity when your system goes idle.", active: false },
+      { id: "launch-startup", name: "Start with Windows", description: "Automatically launch Paraline when your computer boots up.", active: true },
     ]
   },
   {
-    title: "Audio Capture",
+    title: "Theme & Capture Behavior",
     icon: Volume2,
     settings: [
-      { id: "exclusive-mode", name: "Exclusive Mode", description: "Bypass Windows audio mixer for zero-latency capture.", active: true },
-      { id: "smoothing", name: "Frequency Smoothing", description: "Apply a low-pass filter to soften jagged bass spikes.", active: true },
+      { id: "theme-automation", name: "Theme Automation", description: "Automatically transition themes between day and night modes.", active: true },
+      { id: "smoothing", name: "Frequency Smoothing", description: "Apply an audio low-pass filter to soften jagged frequency response spikes.", active: true },
     ]
   }
 ];
