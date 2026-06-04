@@ -8,7 +8,7 @@ import { getDownloadUrl, GITHUB_URL } from "@/lib/paraline-api";
 import { ThemeShowcase } from "@/components/ThemeShowcase";
 import { FeaturesBento } from "@/components/FeaturesBento";
 import { AmbientWavePreview } from "@/components/visualizers/AmbientWavePreview";
-import { AuroraDriftPreview } from "@/components/visualizers/AuroraDriftPreview";
+import { SideBarsPreview } from "@/components/visualizers/SideBarsPreview";
 import { EdgeCrystalsPreview } from "@/components/visualizers/EdgeCrystalsPreview";
 import { FlowBorderPreview } from "@/components/visualizers/FlowBorderPreview";
 import { Logo } from "@/components/Logo";
@@ -81,7 +81,7 @@ export default function Home() {
                  </div>
                  {/* Visualizer content inside */}
                  <div className="relative flex-1 bg-[#02040a] overflow-hidden">
-                    <AuroraDriftPreview active={true} />
+                    <SideBarsPreview active={true} />
                     <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(0,0,0,0.9)] pointer-events-none" />
                  </div>
               </motion.div>
@@ -238,7 +238,7 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <p className="text-xs font-extrabold tracking-[0.2em] text-white/60 group-hover:text-white transition-colors uppercase w-full relative z-10 drop-shadow-sm">
-                    10+ Studio Themes Ready
+                    11+ Studio Themes Ready
                   </p>
                 </motion.div>
 
@@ -283,9 +283,9 @@ export default function Home() {
                   />
                   
                   <h4 className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-[#ffcfb3] to-[#ff8c42] mb-1.5 relative z-10 tracking-tighter drop-shadow-lg">
-                    &lt; 1%
+                    Fluid
                   </h4>
-                  <p className="text-xs font-extrabold text-[#ff8c42]/80 tracking-[0.2em] uppercase relative z-10 group-hover:text-[#ffaa66] transition-colors">CPU overhead</p>
+                  <p className="text-xs font-extrabold text-[#ff8c42]/80 tracking-[0.2em] uppercase relative z-10 group-hover:text-[#ffaa66] transition-colors">motion physics</p>
                 </div>
               </motion.div>
 
