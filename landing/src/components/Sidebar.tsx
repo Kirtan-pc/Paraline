@@ -312,19 +312,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Premium Active Indicator Widget */}
-      <div className="mt-auto p-6 bg-gradient-to-t from-[#010206] to-transparent">
-        <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-white/[0.02] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
-          <div className="relative flex h-2.5 w-2.5 items-center justify-center">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-60"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee]"></span>
-          </div>
-          <div>
-            <span className="block text-[10px] font-extrabold tracking-[0.2em] text-cyan-400 drop-shadow-md">DAEMON ACTIVE</span>
-            <span className="block text-[10px] font-light text-muted tracking-wide">CPU &lt; 0.1%</span>
-          </div>
-        </div>
-      </div>
+
       </aside>
     </>
   );
