@@ -3,7 +3,7 @@ const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-function createAudioBridge(sendLevel, onStatusChange = () => {}) {
+function createAudioBridge(sendLevel, onStatusChange = () => { }) {
   let helperProcess = null;
   let helperStatus = {
     mode: "simulated",
@@ -13,16 +13,16 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
   let lastStatusUpdate = 0; // FIX: used for throttling stderr updates
 
   function updateStatus(nextStatus) {
-    // FIX: prevent identical state spam
     if (
       helperStatus.mode === nextStatus.mode &&
       helperStatus.reason === nextStatus.reason
     ) {
-      return;
+      return false;
     }
 
     helperStatus = nextStatus;
     onStatusChange(helperStatus);
+    return true;
   }
 
   function findHelperBinary() {
@@ -66,15 +66,6 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
     let stdoutBuffer = "";
 
     helperProcess.stdout.on("data", (chunk) => {
-      if (!helperReady) {
-        helperReady = true;
-
-        updateStatus({
-          mode: "helper",
-          reason: "C# helper process connected."
-        });
-      }
-
       stdoutBuffer += chunk.toString();
 
       const lines = stdoutBuffer.split(/\r?\n/);
@@ -85,6 +76,15 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
 
         try {
           const message = JSON.parse(line);
+
+          if (!helperReady) {
+            helperReady = true;
+
+            updateStatus({
+              mode: "helper",
+              reason: "C# helper process connected."
+            });
+          }
 
           if (message.type === "level" && typeof message.value === "number") {
             sendLevel(message.value);
@@ -109,9 +109,7 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
         return;
       }
 
-      lastStatusUpdate = now;
-
-      updateStatus({
+      const changed = updateStatus({
         mode: "helper-error",
         reason: [
           "Audio helper error: ",
@@ -123,6 +121,10 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
           "\n- If this continues, rebuild the helper binary."
         ].join("")
       });
+
+      if (changed) {
+        lastStatusUpdate = now;
+      }
     });
 
     helperProcess.on("exit", (code) => {
