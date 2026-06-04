@@ -121,7 +121,7 @@ export default function Home() {
             >
               <Sparkles className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
               <p className="text-sm font-medium text-white/60 leading-relaxed max-w-[280px]">
-                Paraline provides services to deploy audio reactivity directly to your desktop.
+                Paraline runs as a lightweight, hardware-accelerated edge overlay directly on your desktop.
               </p>
             </motion.div>
 
