@@ -600,6 +600,39 @@
                 </div>
 
                 <div class="settings-group">
+                    <h3>Focus Mode</h3>
+                    <p class="setting-desc">Dim the visualizer when you are actively using your computer to reduce distractions, and restore full opacity when idle.</p>
+                    <div class="switch-control" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 500; font-size: 15px; color: #e2e8f0;">Enable Focus Mode</span>
+                            <p class="setting-desc" style="margin-top: 4px; margin-bottom: 0;">Dim the visualizer during active user input.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="focus-mode-enabled-checkbox">
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+
+                    <div id="focusModeControls" style="display: none; margin-top: 20px;">
+                        <div class="slider-control" style="margin-bottom: 20px;">
+                            <div class="slider-header">
+                                <label for="focus-mode-dim-opacity-slider">Dimmed Opacity</label>
+                                <span class="slider-value" id="val-focus-mode-dim-opacity">0.10</span>
+                            </div>
+                            <input type="range" id="focus-mode-dim-opacity-slider" min="0.0" max="1.0" step="0.05" value="0.10">
+                        </div>
+
+                        <div class="slider-control">
+                            <div class="slider-header">
+                                <label for="focus-mode-timeout-slider">Activity Idle Timeout (seconds)</label>
+                                <span class="slider-value" id="val-focus-mode-timeout">5</span>
+                            </div>
+                            <input type="range" id="focus-mode-timeout-slider" min="1" max="60" step="1" value="5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
                     <h3>System Integration</h3>
                     <p class="setting-desc">Configure how Paraline behaves with your operating system.</p>
                     <div class="switch-control" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
