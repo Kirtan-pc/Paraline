@@ -53,7 +53,7 @@ const resourceItems = [
 ];
 
 const supportItems = [
-  { name: "Contact Us", href: GITHUB_URL, icon: HeadphonesIcon, external: true },
+  { name: "Contact Us", href: "/contact", icon: HeadphonesIcon },
   { name: "Github", href: GITHUB_URL, icon: Github, external: true },
 ];
 
