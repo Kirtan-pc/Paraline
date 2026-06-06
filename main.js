@@ -154,7 +154,8 @@ function createOverlayWindow() {
     fullscreenable: false,
     skipTaskbar: true,
     hasShadow: false,
-    focusable: true,
+    focusable: false,
+    show: false,
     backgroundColor: "#00000000",
     icon: getWindowIconPath(),
     webPreferences: {
@@ -170,6 +171,14 @@ function createOverlayWindow() {
   overlayWindow.setBounds(bounds);
   overlayWindow.moveTop();
   overlayWindow.loadFile("index.html");
+
+  overlayWindow.once("ready-to-show", () => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.showInactive();
+      overlayWindow.moveTop();
+    }
+  });
+
   overlayWindow.webContents.on("did-finish-load", () => {
     setTimeout(() => {
       sendVisualizerSettings();
@@ -1406,6 +1415,7 @@ function showCustomContextMenu() {
   // (like the tray overflow panel) by toggling setAlwaysOnTop and calling show()/focus()
   overlayWindow.setAlwaysOnTop(false);
   overlayWindow.setAlwaysOnTop(true, "screen-saver");
+  overlayWindow.setFocusable(true);
   overlayWindow.show();
   overlayWindow.focus();
   overlayWindow.moveTop();
@@ -1495,8 +1505,10 @@ app.whenReady().then(() => {
     if (overlayWindow && !overlayWindow.isDestroyed()) {
       if (ignore) {
         overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+        overlayWindow.setFocusable(false);
         overlayWindow.blur();
       } else {
+        overlayWindow.setFocusable(true);
         overlayWindow.setIgnoreMouseEvents(false);
       }
     }
@@ -1781,7 +1793,14 @@ app.whenReady().then(() => {
     stopSimulatedAudioFallback();
     sendAudioLevel(value, "helper");
   }, handleAudioBridgeStatusChange);
-  audioBridge.start();
+
+  // Defer starting the audio bridge to prevent startup resource contention and SmartScreen lags from blocking Electron initialization
+  setTimeout(() => {
+    if (!isQuitting) {
+      audioBridge.start();
+    }
+  }, 4000);
+
   refreshTrayMenu();
 
   screen.on("display-metrics-changed", resizeOverlayToPrimaryDisplay);
