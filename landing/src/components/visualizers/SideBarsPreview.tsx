@@ -113,13 +113,13 @@ export function SideBarsPreview({ active }: { active: boolean }) {
         const barLength = Math.max(2, baseLength + activeLength);
 
         // Color cycle interpolation
-        const travel = (normalizedY + time * 0.045) % 1;
+        const travel = ((normalizedY + time * 0.045) % 1 + 1) % 1;
         const scaled = travel * colorsPalette.length;
         const indexA = Math.floor(scaled) % colorsPalette.length;
         const indexB = (indexA + 1) % colorsPalette.length;
         const blend = scaled - Math.floor(scaled);
-        const colorA = colorsPalette[indexA];
-        const colorB = colorsPalette[indexB];
+        const colorA = colorsPalette[indexA] || colorsPalette[0];
+        const colorB = colorsPalette[indexB] || colorsPalette[0];
         const r = mixChannel(colorA[0], colorB[0], blend);
         const g = mixChannel(colorA[1], colorB[1], blend);
         const b = mixChannel(colorA[2], colorB[2], blend);
