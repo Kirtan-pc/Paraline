@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { GITHUB_URL } from "@/lib/paraline-api";
 import { Logo } from "./Logo";
 import { 
@@ -51,10 +52,10 @@ export function Footer() {
         <div className="grid w-auto grid-cols-2 gap-x-8 gap-y-10 sm:flex sm:flex-wrap sm:justify-center">
           <div className="flex flex-col items-start gap-6">
             <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-purple-400/80">Product</h1>
-            <a href="/" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Home />Home</a>
-            <a href="/#themes" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><ImageIcon />Theme Gallery</a>
-            <a href="/settings" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Settings />Configuration</a>
-            <a href="/#download" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Download />Get Paraline</a>
+            <Link href="/" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Home />Home</Link>
+            <Link href="/#themes" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><ImageIcon />Theme Gallery</Link>
+            <Link href="/settings" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Settings />Configuration</Link>
+            <Link href="/#download" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Download />Get Paraline</Link>
           </div>
           <div className="flex flex-col items-start gap-6">
             <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-cyan-400/80">Resources</h1>
@@ -64,7 +65,7 @@ export function Footer() {
           </div>
           <div className="flex flex-col items-start gap-6">
             <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-green-400/80">Support</h1>
-            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><HeadphonesIcon />Contact Us</a>
+            <Link href="/contact" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><HeadphonesIcon />Contact Us</Link>
             <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Github />GitHub</a>
           </div>
           <div className="flex flex-col items-start gap-6">
