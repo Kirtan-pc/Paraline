@@ -620,14 +620,14 @@ For a full audio troubleshooting reference, see [docs/TROUBLESHOOTING.md](./docs
 
 ## Cross-References
 
-| Document                                                 | What It Covers                                                         |
-| -------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [README.md](./README.md)                                 | Project overview, feature list, and end-user installation              |
-| [CONTRIBUTING.md](./CONTRIBUTING.md)                     | Contribution workflow, code style, and pull request guidelines         |
-| [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)             | Architecture, file structure, settings model, and development workflow |
-| [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)     | Detailed runtime, audio, and IPC troubleshooting                       |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)           | System architecture and component interaction                          |
-| [docs/THEME_DEVELOPMENT.md](./docs/THEME_DEVELOPMENT.md) | How to create and extend visual themes                                 |
+| Document                                            | What It Covers                                                         |
+| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| [README.md](./README.md)                            | Project overview, feature list, and end-user installation              |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)                | Contribution workflow, code style, and pull request guidelines         |
+| [docs/DEVELOPMENT.md](./DEVELOPMENT.md)             | Architecture, file structure, settings model, and development workflow |
+| [docs/TROUBLESHOOTING.md](./TROUBLESHOOTING.md)     | Detailed runtime, audio, and IPC troubleshooting                       |
+| [docs/ARCHITECTURE.md](./ARCHITECTURE.md)           | System architecture and component interaction                          |
+| [docs/THEME_DEVELOPMENT.md](./THEME_DEVELOPMENT.md) | How to create and extend visual themes                                 |
 
 ---
 
