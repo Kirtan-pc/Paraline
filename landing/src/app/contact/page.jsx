@@ -1,119 +1,180 @@
+"use client";
 
+import { useState } from "react";
 
-import { NextResponse } from 'next/server';
+export default function ContactPage() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
 
-export async function POST(request) {
-  try {
-    // Parse the incoming JSON body
-    const body = await request.json();
-    const { name, email, subject, message, consent } = body;
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
-    // Basic validation
-    if (!name || !email || !message) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Missing required fields. Please provide name, email, and message.' 
+  const handleChange = (e) => {
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    setStatus("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        { status: 400 }
-      );
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, error: 'Please provide a valid email address.' },
-        { status: 400 }
-      );
-    }
-
-    // Log the submission (in production, you'd send to a service like Resend, SendGrid, etc.)
-    console.log(`[CONTACT_FORM] New submission from ${name} (${email})`);
-    console.log(`Subject: ${subject || 'General Inquiry'}`);
-    console.log(`Message: ${message.substring(0, 200)}${message.length > 200 ? '...' : ''}`);
-    console.log(`Consent given: ${consent ? 'Yes' : 'No'}`);
-
-    // === EXAMPLE: Send email using a service like Resend ===
-    // Uncomment and configure if using Resend:
-    /*
-    import { Resend } from 'resend';
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    
-    await resend.emails.send({
-      from: 'Paraline Contact <noreply@paraline.io>',
-      to: ['support@paraline.io'],
-      replyTo: email,
-      subject: `[Paraline Contact] ${subject || 'New inquiry'} from ${name}`,
-      html: `
-        <h2>New contact form submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-        ${consent ? '<p><em>User agreed to follow-up communication.</em></p>' : ''}
-      `,
-    });
-    */
-
-    // === EXAMPLE: Store in database (if using Prisma, etc.) ===
-    /*
-    import { prisma } from '@/lib/prisma';
-    await prisma.contactSubmission.create({
-      data: {
-        name,
-        email,
-        subject: subject || 'General Inquiry',
-        message,
-        consent: consent || false,
-        createdAt: new Date(),
-      },
-    });
-    */
-
-    // === Example: Send to Discord webhook ===
-    // Uncomment and configure if using webhook:
-    /*
-    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-    if (webhookUrl) {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: `📬 **New Contact Form Submission**\n**From:** ${name} (${email})\n**Subject:** ${subject || 'General'}\n**Message:** ${message.substring(0, 400)}`,
-        }),
+        body: JSON.stringify(form),
       });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStatus("✅ Message submitted successfully!");
+
+        setForm({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+
+        setTimeout(() => {
+          setStatus("");
+        }, 3000);
+      } else {
+        setStatus(`❌ ${data.error || "Failed to submit message."}`);
+
+        setTimeout(() => {
+          setStatus("");
+        }, 3000);
+      }
+    } catch (error) {
+      console.error(error);
+
+      setStatus("❌ Something went wrong. Please try again.");
+
+      setTimeout(() => {
+        setStatus("");
+      }, 3000);
+    } finally {
+      setLoading(false);
     }
-    */
+  };
 
-    // Return success response
-    return NextResponse.json({
-      success: true,
-      message: 'Your message has been sent successfully! Our team will get back to you within 24-48 hours.',
-      timestamp: new Date().toISOString(),
-    }, { status: 200 });
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="mb-10">
+        <h1 className="text-5xl font-bold mb-4 text-white">
+          Contact Us
+        </h1>
 
-  } catch (error) {
-    console.error('[CONTACT_API_ERROR]', error);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'An internal server error occurred. Please try again later or contact us directly at support@paraline.io.' 
-      },
-      { status: 500 }
-    );
-  }
-}
+        <p className="text-lg text-gray-400">
+          Need help with Paraline? Reach out to us for support,
+          feedback, bug reports, or feature requests.
+        </p>
+      </div>
 
-// Optional: Handle GET requests for testing or to return API info
-export async function GET() {
-  return NextResponse.json({
-    name: 'Paraline Contact API',
-    version: '1.0.0',
-    description: 'Endpoint for contact form submissions',
-    methods: ['POST'],
-    status: 'operational',
-  }, { status: 200 });
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Contact Form */}
+        <div className="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-sm p-8">
+          <h2 className="text-3xl font-bold text-white mb-6">
+            Send a Message
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <input
+              type="text"
+              name="name"
+              placeholder="Your Name"
+              value={form.name}
+              onChange={handleChange}
+              required
+              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+            />
+
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={form.email}
+              onChange={handleChange}
+              required
+              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+            />
+
+            <input
+              type="text"
+              name="subject"
+              placeholder="Subject"
+              value={form.subject}
+              onChange={handleChange}
+              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+            />
+
+            <textarea
+              name="message"
+              rows="6"
+              placeholder="Message"
+              value={form.message}
+              onChange={handleChange}
+              required
+              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+            />
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-4 rounded-xl transition"
+            >
+              {loading ? "Sending..." : "Send Message"}
+            </button>
+
+            {status && (
+              <div
+                className={`mt-4 p-4 rounded-xl border ${
+                  status.includes("✅")
+                    ? "bg-green-500/10 border-green-500 text-green-400"
+                    : "bg-red-500/10 border-red-500 text-red-400"
+                }`}
+              >
+                {status}
+              </div>
+            )}
+          </form>
+        </div>
+
+        {/* Contact Info */}
+        <div className="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-sm p-8">
+          <h2 className="text-3xl font-bold text-white mb-6">
+            Get in Touch
+          </h2>
+
+          <div className="space-y-6 text-gray-300 text-lg">
+            <p>📧 support@paraline.app</p>
+
+            <p>
+              🐙 GitHub Repository
+            </p>
+
+            <p>
+              💡 Found a bug? Have an idea? We'd love to hear from you.
+            </p>
+
+            <p>
+              🚀 Our team typically responds within 24–48 hours.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
