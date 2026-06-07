@@ -169,15 +169,9 @@ function createOverlayWindow() {
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlayWindow.setIgnoreMouseEvents(true, { forward: true });
   overlayWindow.setBounds(bounds);
+  overlayWindow.showInactive();
   overlayWindow.moveTop();
   overlayWindow.loadFile("index.html");
-
-  overlayWindow.once("ready-to-show", () => {
-    if (overlayWindow && !overlayWindow.isDestroyed()) {
-      overlayWindow.showInactive();
-      overlayWindow.moveTop();
-    }
-  });
 
   overlayWindow.webContents.on("did-finish-load", () => {
     setTimeout(() => {
@@ -1412,12 +1406,9 @@ function showCustomContextMenu() {
   const cursorPoint = screen.getCursorScreenPoint();
 
   // Force Windows to refresh the window's z-order relative to other topmost windows
-  // (like the tray overflow panel) by toggling setAlwaysOnTop and calling show()/focus()
+  // (like the tray overflow panel) by toggling setAlwaysOnTop and calling moveTop()
   overlayWindow.setAlwaysOnTop(false);
   overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.setFocusable(true);
-  overlayWindow.show();
-  overlayWindow.focus();
   overlayWindow.moveTop();
 
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -1505,10 +1496,8 @@ app.whenReady().then(() => {
     if (overlayWindow && !overlayWindow.isDestroyed()) {
       if (ignore) {
         overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-        overlayWindow.setFocusable(false);
         overlayWindow.blur();
       } else {
-        overlayWindow.setFocusable(true);
         overlayWindow.setIgnoreMouseEvents(false);
       }
     }
