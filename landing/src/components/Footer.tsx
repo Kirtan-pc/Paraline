@@ -1,8 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
 import { GITHUB_URL } from "@/lib/paraline-api";
+import { Logo } from "./Logo";
+import { 
+  Home, 
+  Image as ImageIcon, 
+  Settings, 
+  FileText, 
+  HelpCircle, 
+  Download, 
+  HeadphonesIcon,
+  Laptop,
+  ShieldCheck
+} from "lucide-react";
+
 
 const Github = ({ className, strokeWidth = 2 }: { className?: string; strokeWidth?: number }) => (
   <svg
@@ -22,52 +34,59 @@ const Github = ({ className, strokeWidth = 2 }: { className?: string; strokeWidt
   </svg>
 );
 
-const Twitter = ({ className, strokeWidth = 2 }: { className?: string; strokeWidth?: number }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={strokeWidth}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-  </svg>
-);
-
 export function Footer() {
   return (
-    <footer className="relative mt-auto w-full border-t border-white/5 bg-transparent backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-6 py-6 md:flex-row lg:px-8">
+    <footer className="relative mt-auto w-full border-t border-white/5 bg-transparent backdrop-blur-md max-w-7xl mx-auto px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-6 px-6 py-6 md:flex-row lg:px-8">
 
-        {/* Left Side: Copyright */}
-        <div className="flex items-center">
-          <span className="text-[11px] font-medium tracking-[0.15em] text-muted/80 hover:text-white transition-colors cursor-default uppercase">
-            © 2026 PARALINE
+        {/* Left Side */}
+        <div className="flex flex-col items-start justify-center md:items-start md:text-left">
+          <Logo />
+          <span className="mt-2 text-[10px] font-medium tracking-[0.15em] text-muted/80 uppercase">
+            Paraline brings life to your desktop edges <br />with beautiful, reactive ambient lighting. 
           </span>
         </div>
 
         {/* Right Side: Links */}
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold tracking-[0.15em] text-muted/80 transition-colors hover:text-white uppercase">
-            Contact / GitHub
-          </a>
-          <a href="/terms" className="text-[11px] font-semibold tracking-[0.15em] text-muted/80 transition-colors hover:text-white uppercase">
-            Terms & Conditions
-          </a>
-          <a href="/privacy" className="text-[11px] font-semibold tracking-[0.15em] text-muted/80 transition-colors hover:text-white uppercase">
-            Privacy Policy
-          </a>
-          <a href="/faq" className="text-[11px] font-semibold tracking-[0.15em] text-muted/80 transition-colors hover:text-white uppercase">
-            FAQ
-          </a>
+        <div className="grid w-auto grid-cols-2 gap-x-8 gap-y-10 sm:flex sm:flex-wrap sm:justify-center">
+          <div className="flex flex-col items-start gap-6">
+            <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-purple-400/80">Product</h1>
+            <a href="/" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Home />Home</a>
+            <a href="/#themes" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><ImageIcon />Theme Gallery</a>
+            <a href="/settings" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Settings />Configuration</a>
+            <a href="/#download" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Download />Get Paraline</a>
+          </div>
+          <div className="flex flex-col items-start gap-6">
+            <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-cyan-400/80">Resources</h1>
+            <a href="/requirements" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Laptop />System Requirements</a>
+            <a href="/faq" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><HelpCircle />FAQ</a>
+            <a href="/installation" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Download/>Installation guide</a>
+          </div>
+          <div className="flex flex-col items-start gap-6">
+            <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-green-400/80">Support</h1>
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><HeadphonesIcon />Contact Us</a>
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Github />GitHub</a>
+          </div>
+          <div className="flex flex-col items-start gap-6">
+            <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-pink-400/80">Legal</h1>
+            <a href="/terms" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><FileText />Terms & Conditions</a>
+            <a href="/privacy" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><ShieldCheck />Privacy Policy</a>
+          </div>
         </div>
-
       </div>
+      
+      {/* Seperator */}
+      <div className="border-t border-white/5"></div>
+      
+          {/* Bottom */}
+          <div className="p-3 text-[11px] font-medium tracking-[0.15em] text-muted/80 hover:text-white transition-colors cursor-default text-center">
+              <div>
+                © 2026 Paraline. All rights reserved.
+              </div>
+              <div>
+                Paraline is not affiliated with Microsoft Corporation.
+              </div>
+          </div>
     </footer>
   );
 }
