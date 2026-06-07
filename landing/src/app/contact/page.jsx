@@ -91,66 +91,92 @@ export default function ContactPage() {
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <input
-              type="text"
-              name="name"
-              placeholder="Your Name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
-            />
+  <div>
+    <label htmlFor="name" className="block text-white mb-2">
+      Name
+    </label>
+    <input
+      id="name"
+      type="text"
+      name="name"
+      placeholder="Your Name"
+      value={form.name}
+      onChange={handleChange}
+      required
+      className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+    />
+  </div>
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
-            />
+  <div>
+    <label htmlFor="email" className="block text-white mb-2">
+      Email Address
+    </label>
+    <input
+      id="email"
+      type="email"
+      name="email"
+      placeholder="Email Address"
+      value={form.email}
+      onChange={handleChange}
+      required
+      className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+    />
+  </div>
 
-            <input
-              type="text"
-              name="subject"
-              placeholder="Subject"
-              value={form.subject}
-              onChange={handleChange}
-              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
-            />
+  <div>
+    <label htmlFor="subject" className="block text-white mb-2">
+      Subject
+    </label>
+    <input
+      id="subject"
+      type="text"
+      name="subject"
+      placeholder="Subject"
+      value={form.subject}
+      onChange={handleChange}
+      className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+    />
+  </div>
 
-            <textarea
-              name="message"
-              rows="6"
-              placeholder="Message"
-              value={form.message}
-              onChange={handleChange}
-              required
-              className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
-            />
+  <div>
+    <label htmlFor="message" className="block text-white mb-2">
+      Message
+    </label>
+    <textarea
+      id="message"
+      name="message"
+      rows={6}
+      placeholder="Message"
+      value={form.message}
+      onChange={handleChange}
+      required
+      className="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white outline-none"
+    />
+  </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-4 rounded-xl transition"
-            >
-              {loading ? "Sending..." : "Send Message"}
-            </button>
+  <button
+    type="submit"
+    disabled={loading}
+    className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-4 rounded-xl transition"
+  >
+    {loading ? "Sending..." : "Send Message"}
+  </button>
 
-            {status && (
-              <div
-                className={`mt-4 p-4 rounded-xl border ${
-                  status.includes("✅")
-                    ? "bg-green-500/10 border-green-500 text-green-400"
-                    : "bg-red-500/10 border-red-500 text-red-400"
-                }`}
-              >
-                {status}
-              </div>
-            )}
-          </form>
-        </div>
+  {status && (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`mt-4 p-4 rounded-xl border ${
+        status.includes("✅")
+          ? "bg-green-500/10 border-green-500 text-green-400"
+          : "bg-red-500/10 border-red-500 text-red-400"
+      }`}
+    >
+      {status}
+    </div>
+  )}
+</form>
+</div>
 
         {/* Contact Info */}
         <div className="rounded-2xl border border-white/10 bg-black/20 backdrop-blur-sm p-8">
