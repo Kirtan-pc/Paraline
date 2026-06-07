@@ -16,13 +16,10 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("===== CONTACT FORM =====");
-    console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("Subject:", subject);
-    console.log("Message:", message);
-    console.log("========================");
-
+   console.info("[CONTACT_FORM] submission received", {
+  hasSubject: Boolean(subject),
+  messageLength: message.length,
+});
     return NextResponse.json({
       success: true,
       message: "Message received successfully.",
