@@ -21,11 +21,11 @@ Paraline requires two runtimes and one build tool to be installed before any bui
 
 ### Required Tools
 
-| Tool | Minimum Version | Purpose |
-|---|---|---|
-| [Node.js](https://nodejs.org/) | 18 or higher | Electron app runtime and npm scripts |
-| [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8) | 8.0.x | Compiling the C# audio helper |
-| [Git](https://git-scm.com/) | Any recent version | Cloning the repository |
+| Tool                                                         | Minimum Version    | Purpose                              |
+| ------------------------------------------------------------ | ------------------ | ------------------------------------ |
+| [Node.js](https://nodejs.org/)                               | 18 or higher       | Electron app runtime and npm scripts |
+| [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8) | 8.0.x              | Compiling the C# audio helper        |
+| [Git](https://git-scm.com/)                                  | Any recent version | Cloning the repository               |
 
 > **Note:** Paraline is a Windows-only application. The audio helper uses WASAPI Loopback, which is a Windows-specific audio API. All build and packaging commands must be run on a Windows machine (Windows 10 or Windows 11).
 
@@ -76,16 +76,16 @@ This installs `electron` and `electron-builder` (both listed as `devDependencies
 
 All build and packaging commands are defined in `package.json`. Here is a summary of every script available:
 
-| Script | Command | Description |
-|---|---|---|
-| `start` | `electron .` | Launch the Electron app in development mode |
-| `dev` | `electron .` | Alias for `start` (same behavior) |
-| `landing:dev` | `npm --prefix landing run dev` | Start the Vite dev server for the landing page |
-| `landing:build` | `npm --prefix landing run build` | Build the landing page for production |
-| `audio:helper:info` | *(info only)* | Prints a reminder of the build command |
-| `build:helper` | `dotnet publish ...` | Compile and publish the C# audio helper |
-| `pack:win` | `build:helper + electron-builder --dir` | Package the app into an unpacked folder (no installer) |
-| `dist:win` | `build:helper + electron-builder --win nsis` | Build the full NSIS Windows installer |
+| Script              | Command                                      | Description                                            |
+| ------------------- | -------------------------------------------- | ------------------------------------------------------ |
+| `start`             | `electron .`                                 | Launch the Electron app in development mode            |
+| `dev`               | `electron .`                                 | Alias for `start` (same behavior)                      |
+| `landing:dev`       | `npm --prefix landing run dev`               | Start the Next.js dev server for the landing page      |
+| `landing:build`     | `npm --prefix landing run build`             | Build the landing page for production                  |
+| `audio:helper:info` | _(info only)_                                | Prints a reminder of the build command                 |
+| `build:helper`      | `dotnet publish ...`                         | Compile and publish the C# audio helper                |
+| `pack:win`          | `build:helper + electron-builder --dir`      | Package the app into an unpacked folder (no installer) |
+| `dist:win`          | `build:helper + electron-builder --win nsis` | Build the full NSIS Windows installer                  |
 
 ---
 
@@ -131,12 +131,12 @@ The audio helper is a self-contained C# console application (`audio-helper/Paral
 
 ### Project Details
 
-| Property | Value |
-|---|---|
-| Target Framework | `net8.0-windows` |
-| Output Type | `Exe` |
-| Project file | `audio-helper/Paraline.AudioBridge.csproj` |
-| Source file | `audio-helper/Program.cs` |
+| Property         | Value                                      |
+| ---------------- | ------------------------------------------ |
+| Target Framework | `net8.0-windows`                           |
+| Output Type      | `Exe`                                      |
+| Project file     | `audio-helper/Paraline.AudioBridge.csproj` |
+| Source file      | `audio-helper/Program.cs`                  |
 
 ### Development Build
 
@@ -172,14 +172,14 @@ dotnet publish .\audio-helper\Paraline.AudioBridge.csproj \
   -o .\build\audio-helper
 ```
 
-| Flag | Meaning |
-|---|---|
-| `-c Release` | Compiles in Release mode (optimized, no debug symbols) |
-| `-r win-x64` | Targets 64-bit Windows |
-| `--self-contained true` | Bundles the .NET runtime — no SDK required on the end user's machine |
-| `-p:PublishSingleFile=true` | Merges all assemblies into a single `.exe` |
-| `-p:IncludeNativeLibrariesForSelfExtract=true` | Embeds native libraries inside the single-file bundle |
-| `-o .\build\audio-helper` | Writes the output to `build/audio-helper/` |
+| Flag                                           | Meaning                                                              |
+| ---------------------------------------------- | -------------------------------------------------------------------- |
+| `-c Release`                                   | Compiles in Release mode (optimized, no debug symbols)               |
+| `-r win-x64`                                   | Targets 64-bit Windows                                               |
+| `--self-contained true`                        | Bundles the .NET runtime — no SDK required on the end user's machine |
+| `-p:PublishSingleFile=true`                    | Merges all assemblies into a single `.exe`                           |
+| `-p:IncludeNativeLibrariesForSelfExtract=true` | Embeds native libraries inside the single-file bundle                |
+| `-o .\build\audio-helper`                      | Writes the output to `build/audio-helper/`                           |
 
 Output location:
 
@@ -290,13 +290,13 @@ The installer behavior is controlled by the `nsis` block in `package.json`:
 }
 ```
 
-| Setting | Value | Effect |
-|---|---|---|
-| `oneClick` | `false` | Shows the installation wizard — the user steps through the installer |
-| `allowToChangeInstallationDirectory` | `true` | Users can choose a custom install path |
-| `createDesktopShortcut` | `true` | Creates a desktop shortcut after installation |
-| `createStartMenuShortcut` | `true` | Creates a Start Menu entry |
-| `shortcutName` | `"Paraline"` | Name used for the shortcuts |
+| Setting                              | Value        | Effect                                                               |
+| ------------------------------------ | ------------ | -------------------------------------------------------------------- |
+| `oneClick`                           | `false`      | Shows the installation wizard — the user steps through the installer |
+| `allowToChangeInstallationDirectory` | `true`       | Users can choose a custom install path                               |
+| `createDesktopShortcut`              | `true`       | Creates a desktop shortcut after installation                        |
+| `createStartMenuShortcut`            | `true`       | Creates a Start Menu entry                                           |
+| `shortcutName`                       | `"Paraline"` | Name used for the shortcuts                                          |
 
 ### Output Location
 
@@ -357,15 +357,15 @@ The full `build` configuration in `package.json` controls what Electron Builder 
 }
 ```
 
-| Key | Value | Notes |
-|---|---|---|
-| `appId` | `com.paraline.app` | Unique application ID used by Windows |
-| `productName` | `Paraline` | Display name of the application |
-| `output` | `dist` | All build outputs go here |
-| `buildResources` | `assets` | Icons and other resources used by the installer |
-| `files` | *(see above)* | Exact list of source files bundled into the app |
+| Key              | Value                               | Notes                                                      |
+| ---------------- | ----------------------------------- | ---------------------------------------------------------- |
+| `appId`          | `com.paraline.app`                  | Unique application ID used by Windows                      |
+| `productName`    | `Paraline`                          | Display name of the application                            |
+| `output`         | `dist`                              | All build outputs go here                                  |
+| `buildResources` | `assets`                            | Icons and other resources used by the installer            |
+| `files`          | _(see above)_                       | Exact list of source files bundled into the app            |
 | `extraResources` | `build/audio-helper → audio-helper` | Copies only `Paraline.AudioBridge.exe` into the app bundle |
-| `win.icon` | `assets/appicon.ico` | Application icon for the installer and executable |
+| `win.icon`       | `assets/appicon.ico`                | Application icon for the installer and executable          |
 
 > **Note:** The `node_modules/`, `dist/`, and `build/` directories are git-ignored and are never bundled into the app.
 
@@ -382,6 +382,7 @@ Triggered on every push to `main` and on every pull request.
 Runs three parallel jobs:
 
 **`build-helper`** — Verifies the C# audio helper compiles cleanly:
+
 ```yaml
 - Setup Node.js 20
 - Setup .NET 8.0.x
@@ -390,6 +391,7 @@ Runs three parallel jobs:
 ```
 
 **`build-landing`** — Verifies the landing page builds cleanly:
+
 ```yaml
 - Setup Node.js 20
 - npm --prefix landing install
@@ -397,6 +399,7 @@ Runs three parallel jobs:
 ```
 
 **`package-app`** — Verifies the full Electron app packages without errors:
+
 ```yaml
 - Setup Node.js 20
 - Setup .NET 8.0.x
@@ -436,13 +439,13 @@ The `release.yml` workflow will automatically build and publish the installer to
 
 ## Build Artifacts Reference
 
-| Path | Created by | Description |
-|---|---|---|
-| `audio-helper\bin\Debug\net8.0-windows\Paraline.AudioBridge.exe` | `dotnet build` | Debug build for local development |
-| `build\audio-helper\Paraline.AudioBridge.exe` | `npm run build:helper` | Self-contained release binary, bundled into the packaged app |
-| `dist\win-unpacked\` | `npm run pack:win` or `dist:win` | Unpacked Electron application directory |
-| `dist\Paraline-Setup-<version>.exe` | `npm run dist:win` | NSIS installer — the final distributable |
-| `dist\builder-debug.yml` | `electron-builder` | Build metadata generated automatically |
+| Path                                                             | Created by                       | Description                                                  |
+| ---------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------ |
+| `audio-helper\bin\Debug\net8.0-windows\Paraline.AudioBridge.exe` | `dotnet build`                   | Debug build for local development                            |
+| `build\audio-helper\Paraline.AudioBridge.exe`                    | `npm run build:helper`           | Self-contained release binary, bundled into the packaged app |
+| `dist\win-unpacked\`                                             | `npm run pack:win` or `dist:win` | Unpacked Electron application directory                      |
+| `dist\Paraline-Setup-<version>.exe`                              | `npm run dist:win`               | NSIS installer — the final distributable                     |
+| `dist\builder-debug.yml`                                         | `electron-builder`               | Build metadata generated automatically                       |
 
 > **Note:** `dist/` and `build/` are git-ignored. These directories are generated locally during the build process and are never committed to the repository.
 
@@ -455,6 +458,7 @@ The `release.yml` workflow will automatically build and publish the installer to
 **Symptom:** Running any `dotnet` command or `npm run build:helper` results in an error about `dotnet` not being recognized.
 
 **Solution:**
+
 1. Download and install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8).
 2. Restart your terminal (or restart your machine) so the PATH is updated.
 3. Verify with `dotnet --version`. The output must be `8.0.x` or higher.
@@ -466,6 +470,7 @@ The `release.yml` workflow will automatically build and publish the installer to
 **Symptom:** `npm install` exits with errors about missing packages or network issues.
 
 **Solutions:**
+
 - Ensure you have a working internet connection.
 - If you are behind a corporate proxy, configure npm's proxy settings:
   ```bash
@@ -488,16 +493,19 @@ The `release.yml` workflow will automatically build and publish the installer to
 **Solutions:**
 
 1. **Verify .NET 8 is installed:**
+
    ```bash
    dotnet --version
    ```
 
 2. **Restore NuGet packages explicitly:**
+
    ```bash
    dotnet restore .\audio-helper\Paraline.AudioBridge.csproj
    ```
 
 3. **Clean the build and retry:**
+
    ```bash
    dotnet clean .\audio-helper\Paraline.AudioBridge.csproj
    npm run build:helper
@@ -539,6 +547,7 @@ dir build\audio-helper\Paraline.AudioBridge.exe
 **Symptom:** `Paraline.AudioBridge.exe` disappears after being built, or the app fails to launch the helper despite it being compiled successfully.
 
 **Solution:**
+
 - Check your antivirus quarantine log and restore the file if found.
 - Add exceptions for the following directories in your antivirus software:
   - `audio-helper\bin\`
@@ -557,6 +566,7 @@ dir build\audio-helper\Paraline.AudioBridge.exe
 2. **`dist/` directory is locked:** Another process (e.g., Windows Explorer or antivirus) may have a lock on the `dist/` directory. Close all File Explorer windows showing `dist/`, and retry.
 
 3. **Missing icon:** The packaging config references `assets/appicon.ico`. Verify the file exists:
+
    ```bash
    dir assets\appicon.ico
    ```
@@ -577,6 +587,7 @@ dir build\audio-helper\Paraline.AudioBridge.exe
 **Symptom:** Access denied errors when writing to `dist/`, `build/`, or `audio-helper/bin/`.
 
 **Solutions:**
+
 - Do not run build commands from inside a OneDrive-synced or network-shared directory if possible.
 - Run your terminal as a normal user (not as Administrator) unless specifically required.
 - Right-click the `Paraline.AudioBridge.exe` → **Properties** → click **Unblock** if the option is present (this can appear on executables downloaded or copied from a network path).
@@ -588,6 +599,7 @@ dir build\audio-helper\Paraline.AudioBridge.exe
 **Symptom:** The app launches and the tray shows **Audio Capture: Fallback** even after building the helper.
 
 **Diagnostic steps:**
+
 1. Run the helper manually and confirm it produces JSON output:
    ```bash
    .\audio-helper\bin\Debug\net8.0-windows\Paraline.AudioBridge.exe
@@ -608,15 +620,15 @@ For a full audio troubleshooting reference, see [docs/TROUBLESHOOTING.md](./docs
 
 ## Cross-References
 
-| Document | What It Covers |
-|---|---|
-| [README.md](./README.md) | Project overview, feature list, and end-user installation |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution workflow, code style, and pull request guidelines |
-| [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) | Architecture, file structure, settings model, and development workflow |
-| [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) | Detailed runtime, audio, and IPC troubleshooting |
-| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System architecture and component interaction |
-| [docs/THEME_DEVELOPMENT.md](./docs/THEME_DEVELOPMENT.md) | How to create and extend visual themes |
+| Document                                            | What It Covers                                                         |
+| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| [README.md](./README.md)                            | Project overview, feature list, and end-user installation              |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)                | Contribution workflow, code style, and pull request guidelines         |
+| [docs/DEVELOPMENT.md](./DEVELOPMENT.md)             | Architecture, file structure, settings model, and development workflow |
+| [docs/TROUBLESHOOTING.md](./TROUBLESHOOTING.md)     | Detailed runtime, audio, and IPC troubleshooting                       |
+| [docs/ARCHITECTURE.md](./ARCHITECTURE.md)           | System architecture and component interaction                          |
+| [docs/THEME_DEVELOPMENT.md](./THEME_DEVELOPMENT.md) | How to create and extend visual themes                                 |
 
 ---
 
-*For questions about the build process, open an issue on the [Paraline GitHub repository](https://github.com/SamXop123/Paraline).*
+_For questions about the build process, open an issue on the [Paraline GitHub repository](https://github.com/SamXop123/Paraline)._
