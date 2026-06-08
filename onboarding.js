@@ -94,6 +94,8 @@ function dismissOnboarding() {
 
   isClosing = true;
   const root = document.getElementById("onboarding-root");
+  const dontShowAgain = document.getElementById("dont-show-again");
+  const neverShowAgain = dontShowAgain ? dontShowAgain.checked : false;
 
   if (root) {
     root.classList.remove("is-visible");
@@ -102,7 +104,7 @@ function dismissOnboarding() {
 
   window.setTimeout(() => {
     if (window.paralineOnboarding && typeof window.paralineOnboarding.dismiss === "function") {
-      window.paralineOnboarding.dismiss();
+      window.paralineOnboarding.dismiss(neverShowAgain);
     }
   }, FADE_OUT_MS);
 }

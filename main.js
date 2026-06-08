@@ -30,7 +30,7 @@ function showOnboardingWindow() {
   }
 
   console.log("[Paraline] showOnboardingWindow()");
-  onboardingWindow.setAlwaysOnTop(true, "pop-up-menu");
+  onboardingWindow.setAlwaysOnTop(true, "screen-saver");
   onboardingWindow.show();
   onboardingWindow.moveTop();
   onboardingWindow.focus();
@@ -88,10 +88,6 @@ function createOnboardingWindow() {
     console.error("[Paraline] onboarding did-fail-load:", errorCode, errorDescription);
   });
 
-  onboardingWindow.on("close", () => {
-    markOnboardingSeen();
-  });
-
   onboardingWindow.on("closed", () => {
     onboardingWindow = null;
   });
@@ -109,7 +105,11 @@ function markOnboardingSeen() {
   updateSettings({ onboardingSeen: true });
 }
 
-function dismissOnboarding() {
+function dismissOnboarding(dontShowAgain) {
+  if (dontShowAgain) {
+    markOnboardingSeen();
+  }
+
   if (onboardingWindow && !onboardingWindow.isDestroyed()) {
     onboardingWindow.close();
   }
@@ -1882,8 +1882,8 @@ app.whenReady().then(() => {
     openExternalUrl(url);
   });
 
-  ipcMain.handle("onboarding:dismiss", () => {
-    dismissOnboarding();
+  ipcMain.handle("onboarding:dismiss", (_event, payload = {}) => {
+    dismissOnboarding(!!payload.dontShowAgain);
     return { success: true };
   });
 

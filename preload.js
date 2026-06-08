@@ -82,8 +82,8 @@ contextBridge.exposeInMainWorld("visualizerSettings", {
 });
 
 contextBridge.exposeInMainWorld("paralineOnboarding", {
-  dismiss() {
-    return ipcRenderer.invoke("onboarding:dismiss");
+  dismiss(dontShowAgain) {
+    return ipcRenderer.invoke("onboarding:dismiss", { dontShowAgain: !!dontShowAgain });
   }
 });
 
