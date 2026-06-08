@@ -17,11 +17,103 @@ let isHidden = false;
 let settingsStore;
 let visualizerSettings;
 let settingsWindow;
+let onboardingWindow;
 let themeAgent;
 
 // --- Focus Mode state ---
 let focusModeTimer = null;
 let focusModeCurrentlyDimmed = false;
+
+function showOnboardingWindow() {
+  if (!onboardingWindow || onboardingWindow.isDestroyed()) {
+    return;
+  }
+
+  console.log("[Paraline] showOnboardingWindow()");
+  onboardingWindow.setAlwaysOnTop(true, "pop-up-menu");
+  onboardingWindow.show();
+  onboardingWindow.moveTop();
+  onboardingWindow.focus();
+}
+
+function createOnboardingWindow() {
+  console.log("[Paraline] createOnboardingWindow() called");
+
+  if (onboardingWindow) {
+    showOnboardingWindow();
+    return;
+  }
+
+  onboardingWindow = new BrowserWindow({
+    width: 720,
+    height: 640,
+    minWidth: 600,
+    minHeight: 500,
+    title: "Welcome to Paraline",
+    icon: getWindowIconPath(),
+    backgroundColor: "#08090d",
+    center: true,
+    resizable: true,
+    show: false,
+    alwaysOnTop: true,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js")
+    },
+    autoHideMenuBar: true
+  });
+
+  onboardingWindow.loadFile("onboarding.html");
+
+  onboardingWindow.once("ready-to-show", () => {
+    console.log("[Paraline] onboarding ready-to-show");
+    showOnboardingWindow();
+  });
+
+  onboardingWindow.webContents.once("did-finish-load", () => {
+    console.log("[Paraline] onboarding did-finish-load");
+
+    if (onboardingWindow && !onboardingWindow.isDestroyed() && !onboardingWindow.isVisible()) {
+      console.log("[Paraline] onboarding fallback show after did-finish-load");
+      showOnboardingWindow();
+    }
+
+    if (!app.isPackaged) {
+      onboardingWindow.webContents.openDevTools({ mode: "detach" });
+    }
+  });
+
+  onboardingWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription) => {
+    console.error("[Paraline] onboarding did-fail-load:", errorCode, errorDescription);
+  });
+
+  onboardingWindow.on("close", () => {
+    markOnboardingSeen();
+  });
+
+  onboardingWindow.on("closed", () => {
+    onboardingWindow = null;
+  });
+}
+
+function shouldShowOnboarding() {
+  return visualizerSettings && visualizerSettings.onboardingSeen !== true;
+}
+
+function markOnboardingSeen() {
+  if (visualizerSettings.onboardingSeen === true) {
+    return;
+  }
+
+  updateSettings({ onboardingSeen: true });
+}
+
+function dismissOnboarding() {
+  if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+    onboardingWindow.close();
+  }
+}
 
 function createSettingsWindow() {
   if (settingsWindow) {
@@ -1789,6 +1881,23 @@ app.whenReady().then(() => {
   ipcMain.handle("app:open-external", (_event, url) => {
     openExternalUrl(url);
   });
+
+  ipcMain.handle("onboarding:dismiss", () => {
+    dismissOnboarding();
+    return { success: true };
+  });
+
+  const showOnboarding = shouldShowOnboarding();
+  console.log(
+    "[Paraline] onboarding check:",
+    showOnboarding,
+    "onboardingSeen:",
+    visualizerSettings ? visualizerSettings.onboardingSeen : undefined
+  );
+
+  if (showOnboarding) {
+    createOnboardingWindow();
+  }
 
   createOverlayWindow();
   createTray();
