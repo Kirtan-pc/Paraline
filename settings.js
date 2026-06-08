@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updatePresetDropdown();
-    async function refreshThemeProfiles() {
+    async function refreshThemeProfiles(selectedProfileName = "") {
     if (!window.paralineApp) return;
 
     const profiles = await window.paralineApp.getThemeProfiles();
@@ -522,6 +522,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         themeProfileSelector.appendChild(option);
     });
+
+    if (selectedProfileName && Object.prototype.hasOwnProperty.call(profiles, selectedProfileName)) {
+        themeProfileSelector.value = selectedProfileName;
+    }
 }
 
 refreshThemeProfiles();
@@ -719,7 +723,7 @@ refreshThemeProfiles();
                 }
 
                 alert(`Profile duplicated as "${result.profileName}"`);
-                refreshThemeProfiles();
+                await refreshThemeProfiles(result.profileName);
             } catch (error) {
                 alert("Failed to duplicate profile");
                 console.error(error);
