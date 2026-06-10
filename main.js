@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog, nativeTheme, systemPreferences, powerMonitor } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog, nativeTheme, systemPreferences, powerMonitor, globalShortcut } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { createAudioBridge } = require("./audioBridge");
@@ -267,6 +267,9 @@ function updateSettings(nextSettings) {
   if (nextSettings.themeAutomation !== undefined && themeAgent) {
     themeAgent.start();
   }
+  if (nextSettings.shortcuts !== undefined) {
+    registerGlobalShortcuts();
+  }
 
   sendVisualizerSettings();
   refreshTrayMenu();
@@ -291,6 +294,60 @@ function reloadVisualizer() {
 
   stopSimulatedAudioFallback();
   overlayWindow.webContents.reloadIgnoringCache();
+}
+
+function cycleTheme() {
+  const themes = ["ambientWave", "auroraDrift", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids"];
+  const currentTheme = visualizerSettings.selectedTheme;
+  const currentIndex = themes.indexOf(currentTheme);
+  const nextIndex = (currentIndex + 1) % themes.length;
+  const nextTheme = themes[nextIndex];
+  updateSettings({ selectedTheme: nextTheme });
+}
+
+function registerGlobalShortcuts() {
+  globalShortcut.unregisterAll();
+
+  const shortcuts = visualizerSettings.shortcuts;
+  if (!shortcuts) return;
+
+  const formatAccelerator = (uiShortcut) => {
+    if (!uiShortcut || uiShortcut === "None") return null;
+    return uiShortcut;
+  };
+
+  const pauseAcc = formatAccelerator(shortcuts.togglePause);
+  if (pauseAcc) {
+    try {
+      globalShortcut.register(pauseAcc, () => {
+        togglePaused();
+      });
+    } catch (err) {
+      console.error(`Failed to register global shortcut for pause/resume: ${pauseAcc}`, err);
+    }
+  }
+
+  const hideAcc = formatAccelerator(shortcuts.toggleHide);
+  if (hideAcc) {
+    try {
+      globalShortcut.register(hideAcc, () => {
+        toggleHidden();
+      });
+    } catch (err) {
+      console.error(`Failed to register global shortcut for hide/show: ${hideAcc}`, err);
+    }
+  }
+
+  const cycleAcc = formatAccelerator(shortcuts.cycleTheme);
+  if (cycleAcc) {
+    try {
+      globalShortcut.register(cycleAcc, () => {
+        cycleTheme();
+      });
+    } catch (err) {
+      console.error(`Failed to register global shortcut for cycling theme: ${cycleAcc}`, err);
+    }
+  }
 }
 
 // --- Focus Mode polling ---
@@ -1447,6 +1504,7 @@ app.whenReady().then(() => {
   settingsStore = createSettingsStore(app.getPath("userData"));
   visualizerSettings = settingsStore.save(settingsStore.load());
   applyStartupSettings(visualizerSettings.launchOnStartup);
+  registerGlobalShortcuts();
 
   nativeTheme.on("updated", () => {
     sendVisualizerSettings();
@@ -1832,6 +1890,7 @@ app.on("before-quit", () => {
 
 app.on("will-quit", () => {
   stopSimulatedAudioFallback();
+  globalShortcut.unregisterAll();
 });
 
 app.on("window-all-closed", () => {

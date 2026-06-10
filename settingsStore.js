@@ -30,6 +30,11 @@ const DEFAULT_SETTINGS = Object.freeze({
     dayStartHour: 6,
     nightStartHour: 18
   }),
+  shortcuts: Object.freeze({
+    togglePause: "Ctrl+Alt+P",
+    toggleHide: "Ctrl+Alt+H",
+    cycleTheme: "Ctrl+Alt+T"
+  }),
   performanceMode: "balanced",
   fpsLimit: "default",
   ambientWave: Object.freeze({
@@ -211,6 +216,7 @@ function createDefaultSettings() {
     selectedTheme: DEFAULT_SETTINGS.selectedTheme,
     colorMode: DEFAULT_SETTINGS.colorMode,
     themeAutomation: { ...DEFAULT_SETTINGS.themeAutomation },
+    shortcuts: { ...DEFAULT_SETTINGS.shortcuts },
     performanceMode: DEFAULT_SETTINGS.performanceMode,
     focusMode: { ...DEFAULT_SETTINGS.focusMode },
     fpsLimit: DEFAULT_SETTINGS.fpsLimit,
@@ -568,6 +574,14 @@ function sanitizeFocusMode(input = {}) {
   return { enabled, dimOpacity, idleTimeout };
 }
 
+function sanitizeShortcuts(input = {}) {
+  return {
+    togglePause: typeof input.togglePause === "string" ? input.togglePause : DEFAULT_SETTINGS.shortcuts.togglePause,
+    toggleHide: typeof input.toggleHide === "string" ? input.toggleHide : DEFAULT_SETTINGS.shortcuts.toggleHide,
+    cycleTheme: typeof input.cycleTheme === "string" ? input.cycleTheme : DEFAULT_SETTINGS.shortcuts.cycleTheme
+  };
+}
+
 function sanitizeSettings(input = {}) {
   const source = migrateLegacySettings(input);
 
@@ -579,6 +593,7 @@ function sanitizeSettings(input = {}) {
     colorMode: pick(source.colorMode, VALID_COLOR_MODES, DEFAULT_SETTINGS.colorMode),
     customColors: customColors,
     themeAutomation: sanitizeThemeAutomation(source.themeAutomation),
+    shortcuts: sanitizeShortcuts(source.shortcuts),
     performanceMode: pick(source.performanceMode, VALID_PERFORMANCE_MODES, DEFAULT_SETTINGS.performanceMode),
     fpsLimit: pick(source.fpsLimit, VALID_FPS_LIMITS, DEFAULT_SETTINGS.fpsLimit),
     focusMode: sanitizeFocusMode(source.focusMode),
