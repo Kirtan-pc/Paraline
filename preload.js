@@ -81,6 +81,12 @@ contextBridge.exposeInMainWorld("visualizerSettings", {
   }
 });
 
+contextBridge.exposeInMainWorld("paralineOnboarding", {
+  dismiss(dontShowAgain) {
+    return ipcRenderer.invoke("onboarding:dismiss", { dontShowAgain: !!dontShowAgain });
+  }
+});
+
 contextBridge.exposeInMainWorld("paralineApp", {
   togglePause: () => ipcRenderer.invoke("app:toggle-pause"),
   toggleHide: () => ipcRenderer.invoke("app:toggle-hide"),
