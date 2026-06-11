@@ -81,6 +81,12 @@ contextBridge.exposeInMainWorld("visualizerSettings", {
   }
 });
 
+contextBridge.exposeInMainWorld("paralineOnboarding", {
+  dismiss(dontShowAgain) {
+    return ipcRenderer.invoke("onboarding:dismiss", { dontShowAgain: !!dontShowAgain });
+  }
+});
+
 contextBridge.exposeInMainWorld("paralineApp", {
   togglePause: () => ipcRenderer.invoke("app:toggle-pause"),
   toggleHide: () => ipcRenderer.invoke("app:toggle-hide"),
@@ -98,8 +104,8 @@ contextBridge.exposeInMainWorld("paralineApp", {
   deleteThemeProfile: (profileName) =>
     ipcRenderer.invoke("theme-profiles:delete", profileName),
 
-  duplicateThemeProfile: (srcProfileName, destProfileName) =>
-    ipcRenderer.invoke("theme-profiles:duplicate", srcProfileName, destProfileName),
+  duplicateThemeProfile: (profileName) =>
+    ipcRenderer.invoke("theme-profiles:duplicate", profileName),
 
   exportThemeProfile: (profileName) =>
     ipcRenderer.invoke("theme-profiles:export", profileName),
@@ -110,11 +116,6 @@ contextBridge.exposeInMainWorld("paralineApp", {
   resetThemeSettings: () =>
     ipcRenderer.invoke("theme-profiles:reset"),
 
-  duplicateThemeProfile: (profileName) =>
-    ipcRenderer.invoke(
-      'theme-profiles:duplicate',
-      profileName
-    ),
   resetActiveThemeSettings: () =>
     ipcRenderer.invoke("theme-profiles:reset-current")
 });

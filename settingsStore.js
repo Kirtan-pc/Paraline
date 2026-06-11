@@ -17,6 +17,7 @@ function sanitizeCustomColors(input, fallback) {
 }
 
 const DEFAULT_SETTINGS = Object.freeze({
+  onboardingSeen: false,
   launchOnStartup: false,
   selectedTheme: "ambientWave",
   colorMode: "manual",
@@ -207,6 +208,7 @@ const VALID_AURORA_DENSITY = new Set(["light", "balanced", "rich"]);
 
 function createDefaultSettings() {
   return {
+    onboardingSeen: DEFAULT_SETTINGS.onboardingSeen,
     launchOnStartup: DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: DEFAULT_SETTINGS.selectedTheme,
     colorMode: DEFAULT_SETTINGS.colorMode,
@@ -574,6 +576,7 @@ function sanitizeSettings(input = {}) {
   const customColors = sanitizeCustomColors(source.customColors, DEFAULT_SETTINGS.customColors);
 
   return {
+    onboardingSeen: typeof source.onboardingSeen === "boolean" ? source.onboardingSeen : DEFAULT_SETTINGS.onboardingSeen,
     launchOnStartup: typeof source.launchOnStartup === "boolean" ? source.launchOnStartup : DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: pick(source.selectedTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.selectedTheme),
     colorMode: pick(source.colorMode, VALID_COLOR_MODES, DEFAULT_SETTINGS.colorMode),
@@ -608,7 +611,14 @@ function createSettingsStore(userDataPath) {
 
       const fileContent = fs.readFileSync(settingsPath, "utf8");
       const parsed = JSON.parse(fileContent);
-      return sanitizeSettings(parsed);
+      const settings = sanitizeSettings(parsed);
+
+      // Existing installs before onboarding: do not show the welcome overlay on update.
+      if (parsed.onboardingSeen === undefined) {
+        settings.onboardingSeen = true;
+      }
+
+      return settings;
     } catch (_error) {
       return createDefaultSettings();
     }

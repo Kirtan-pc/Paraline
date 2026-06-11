@@ -18,11 +18,103 @@ let isHidden = false;
 let settingsStore;
 let visualizerSettings;
 let settingsWindow;
+let onboardingWindow;
 let themeAgent;
 
 // --- Focus Mode state ---
 let focusModeTimer = null;
 let focusModeCurrentlyDimmed = false;
+
+function showOnboardingWindow() {
+  if (!onboardingWindow || onboardingWindow.isDestroyed()) {
+    return;
+  }
+
+  console.log("[Paraline] showOnboardingWindow()");
+  onboardingWindow.setAlwaysOnTop(true, "screen-saver");
+  onboardingWindow.show();
+  onboardingWindow.moveTop();
+  onboardingWindow.focus();
+}
+
+function createOnboardingWindow() {
+  console.log("[Paraline] createOnboardingWindow() called");
+
+  if (onboardingWindow) {
+    showOnboardingWindow();
+    return;
+  }
+
+  onboardingWindow = new BrowserWindow({
+    width: 720,
+    height: 640,
+    minWidth: 600,
+    minHeight: 500,
+    title: "Welcome to Paraline",
+    icon: getWindowIconPath(),
+    backgroundColor: "#08090d",
+    center: true,
+    resizable: true,
+    show: false,
+    alwaysOnTop: true,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js")
+    },
+    autoHideMenuBar: true
+  });
+
+  onboardingWindow.loadFile("onboarding.html");
+
+  onboardingWindow.once("ready-to-show", () => {
+    console.log("[Paraline] onboarding ready-to-show");
+    showOnboardingWindow();
+  });
+
+  onboardingWindow.webContents.once("did-finish-load", () => {
+    console.log("[Paraline] onboarding did-finish-load");
+
+    if (onboardingWindow && !onboardingWindow.isDestroyed() && !onboardingWindow.isVisible()) {
+      console.log("[Paraline] onboarding fallback show after did-finish-load");
+      showOnboardingWindow();
+    }
+
+    if (!app.isPackaged) {
+      onboardingWindow.webContents.openDevTools({ mode: "detach" });
+    }
+  });
+
+  onboardingWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription) => {
+    console.error("[Paraline] onboarding did-fail-load:", errorCode, errorDescription);
+  });
+
+  onboardingWindow.on("closed", () => {
+    onboardingWindow = null;
+  });
+}
+
+function shouldShowOnboarding() {
+  return visualizerSettings && visualizerSettings.onboardingSeen !== true;
+}
+
+function markOnboardingSeen() {
+  if (visualizerSettings.onboardingSeen === true) {
+    return;
+  }
+
+  updateSettings({ onboardingSeen: true });
+}
+
+function dismissOnboarding(dontShowAgain) {
+  if (dontShowAgain) {
+    markOnboardingSeen();
+  }
+
+  if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+    onboardingWindow.close();
+  }
+}
 
 function createSettingsWindow() {
   if (settingsWindow) {
@@ -528,6 +620,7 @@ function resetAllSettings() {
 // Using these as keys on a plain object pollutes Object.prototype and affects
 // every plain object created in the same process for the rest of its lifetime.
 const RESERVED_PROFILE_NAMES = new Set(["__proto__", "constructor", "prototype"]);
+const MAX_PROFILE_NAME_LENGTH = 64;
 
 // Allowlist pattern: profile names may only contain letters, digits,
 // spaces, hyphens, underscores, and parentheses (max 64 chars).
@@ -537,6 +630,36 @@ function isValidProfileName(name) {
   if (typeof name !== "string" || name.trim() === "") return false;
   if (RESERVED_PROFILE_NAMES.has(name)) return false;
   return SAFE_PROFILE_NAME_RE.test(name);
+}
+
+function hasThemeProfile(profiles, profileName) {
+  return Object.prototype.hasOwnProperty.call(profiles, profileName);
+}
+
+function createDuplicateProfileName(profileName, profiles) {
+  let counter = 1;
+
+  while (true) {
+    const suffix = counter === 1 ? " (Copy)" : ` (Copy ${counter})`;
+    const maxBaseLength = MAX_PROFILE_NAME_LENGTH - suffix.length;
+
+    if (maxBaseLength < 1) {
+      return null;
+    }
+
+    const baseName = profileName.slice(0, maxBaseLength).trimEnd();
+    const copyName = `${baseName}${suffix}`;
+
+    if (!isValidProfileName(copyName)) {
+      return null;
+    }
+
+    if (!hasThemeProfile(profiles, copyName)) {
+      return copyName;
+    }
+
+    counter += 1;
+  }
 }
 
 function saveThemeProfile(profileName) {
@@ -553,35 +676,43 @@ function saveThemeProfile(profileName) {
 }
 
 function duplicateThemeProfile(profileName) {
-    const profiles = settingsStore.loadProfiles();
-
-    if (!profiles[profileName]) {
-        return {
-            success: false,
-            error: "Profile not found"
-        };
-    }
-
-    let newName = `${profileName} (Copy)`;
-    let counter = 2;
-
-    while (profiles[newName]) {
-        newName = `${profileName} (Copy ${counter})`;
-        counter++;
-    }
-
-    const duplicatedProfile = JSON.parse(
-        JSON.stringify(profiles[profileName])
-    );
-
-    profiles[newName] = sanitizeSettings(duplicatedProfile);
-
-    settingsStore.saveProfiles(profiles);
-
+  if (!isValidProfileName(profileName)) {
     return {
-        success: true,
-        profileName: newName
+      success: false,
+      error: "Invalid profile name"
     };
+  }
+
+  const profiles = settingsStore.loadProfiles();
+
+  if (!hasThemeProfile(profiles, profileName)) {
+    return {
+      success: false,
+      error: "Profile not found"
+    };
+  }
+
+  const newName = createDuplicateProfileName(profileName, profiles);
+
+  if (!newName) {
+    return {
+      success: false,
+      error: "Could not create a valid copy name"
+    };
+  }
+
+  const duplicatedProfile = JSON.parse(
+    JSON.stringify(profiles[profileName])
+  );
+
+  profiles[newName] = sanitizeSettings(duplicatedProfile);
+
+  settingsStore.saveProfiles(profiles);
+
+  return {
+    success: true,
+    profileName: newName
+  };
 }
 
 function loadThemeProfile(profileName) {
@@ -612,23 +743,6 @@ function deleteThemeProfile(profileName) {
 
   settingsStore.saveProfiles(profiles);
 
-  return profiles;
-}
-
-function duplicateThemeProfile(srcName, destName) {
-  if (
-    typeof srcName !== "string" || srcName.trim() === "" ||
-    typeof destName !== "string" || destName.trim() === "" ||
-    destName === "__proto__" || destName === "constructor" || destName === "prototype"
-  ) {
-    return null;
-  }
-  const profiles = settingsStore.loadProfiles();
-  if (!profiles[srcName]) {
-    return null;
-  }
-  profiles[destName] = JSON.parse(JSON.stringify(profiles[srcName]));
-  settingsStore.saveProfiles(profiles);
   return profiles;
 }
 
@@ -1880,6 +1994,25 @@ app.whenReady().then(() => {
   });
 
   reconcileOverlayWindows();
+  
+  ipcMain.handle("onboarding:dismiss", (_event, payload = {}) => {
+    dismissOnboarding(!!payload.dontShowAgain);
+    return { success: true };
+  });
+
+  const showOnboarding = shouldShowOnboarding();
+  console.log(
+    "[Paraline] onboarding check:",
+    showOnboarding,
+    "onboardingSeen:",
+    visualizerSettings ? visualizerSettings.onboardingSeen : undefined
+  );
+
+  if (showOnboarding) {
+    createOnboardingWindow();
+  }
+
+  createOverlayWindow();
   createTray();
   sendVisualizerSettings();
 
