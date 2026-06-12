@@ -509,6 +509,7 @@ function resetCurrentThemeSettings() {
 function resetAllSettings() {
   visualizerSettings = settingsStore.save(createDefaultSettings());
   isPaused = false;
+  isHidden = false;
   sendVisualizerSettings();
   refreshTrayMenu();
 }
@@ -621,10 +622,7 @@ function loadThemeProfile(profileName) {
     return null;
   }
 
-  visualizerSettings = settingsStore.save(profiles[profileName]);
-
-  sendVisualizerSettings();
-  refreshTrayMenu();
+  updateSettings(profiles[profileName]);
 
   return visualizerSettings;
 }
