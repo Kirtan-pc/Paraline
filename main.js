@@ -78,10 +78,6 @@ function createOnboardingWindow() {
       console.log("[Paraline] onboarding fallback show after did-finish-load");
       showOnboardingWindow();
     }
-
-    if (!app.isPackaged) {
-      onboardingWindow.webContents.openDevTools({ mode: "detach" });
-    }
   });
 
   onboardingWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription) => {
