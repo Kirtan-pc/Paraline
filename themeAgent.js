@@ -45,9 +45,8 @@ class ThemeAgent {
   evaluateAndApplyTheme(config) {
     if (!config || typeof config !== 'object' || !config.enabled) return;
 
-    if (config.mode !== "dayNight") {
-      // TODO: Support other automation modes (e.g. weekend/weekday, seasonal modes) in the future.
-      console.warn(`[ThemeAgent] Automation mode "${config.mode}" is not currently supported. Only "dayNight" is supported.`);
+    const mode = config.mode || "dayNight";
+    if (mode !== "dayNight") {
       return;
     }
 
