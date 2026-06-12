@@ -45,6 +45,11 @@ class ThemeAgent {
   evaluateAndApplyTheme(config) {
     if (!config || typeof config !== 'object' || !config.enabled) return;
 
+    const mode = config.mode || "dayNight";
+    if (mode !== "dayNight") {
+      return;
+    }
+
     try {
       const currentHour = new Date().getHours();
       const dayStartHour = config.dayStartHour !== undefined ? config.dayStartHour : 6;
