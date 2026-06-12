@@ -826,6 +826,17 @@ refreshThemeProfiles();
             updatePauseButtonState(settings.paused);
             updateHideButtonState(settings.hidden);
             
+            if (settings.version) {
+                const versionBadge = document.querySelector('.sidebar-version');
+                if (versionBadge) {
+                    versionBadge.textContent = `v${settings.version}`;
+                }
+                const aboutVersionBadge = document.querySelector('.about-version-badge');
+                if (aboutVersionBadge) {
+                    aboutVersionBadge.textContent = `v${settings.version} — Stable Release`;
+                }
+            }
+            
             if (settings.selectedTheme) {
                 themeSelector.value = settings.selectedTheme;
                 syncThemeUI(settings.selectedTheme);
@@ -926,6 +937,17 @@ refreshThemeProfiles();
         // Realtime dynamic synchronization when toggled from the tray context menu
         window.visualizerSettings.onChange((nextSettings) => {
             Object.assign(cachedSettings, nextSettings);
+
+            if (nextSettings.version) {
+                const versionBadge = document.querySelector('.sidebar-version');
+                if (versionBadge) {
+                    versionBadge.textContent = `v${nextSettings.version}`;
+                }
+                const aboutVersionBadge = document.querySelector('.about-version-badge');
+                if (aboutVersionBadge) {
+                    aboutVersionBadge.textContent = `v${nextSettings.version} — Stable Release`;
+                }
+            }
 
             if (nextSettings.selectedTheme !== undefined) {
                 if (themeSelector.value !== nextSettings.selectedTheme) {
