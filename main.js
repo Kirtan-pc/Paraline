@@ -14,6 +14,7 @@ let isQuitting = false;
 let tray;
 let isPaused = false;
 let isHidden = false;
+let globalShortcutsSuspended = false;
 let settingsStore;
 let visualizerSettings;
 let settingsWindow;
@@ -60,9 +61,9 @@ function createOnboardingWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       preload: path.join(__dirname, "preload.js")
-    },
-    autoHideMenuBar: true
+    }
   });
+  onboardingWindow.setMenu(null);
 
   onboardingWindow.loadFile("onboarding.html");
 
@@ -128,9 +129,9 @@ function createSettingsWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       preload: path.join(__dirname, "preload.js")
-    },
-    autoHideMenuBar: true
+    }
   });
+  settingsWindow.setMenu(null);
   settingsWindow.loadFile("settings.html");
   settingsWindow.on("closed", () => {
     settingsWindow = null;
@@ -389,6 +390,7 @@ function cycleTheme() {
 
 function registerGlobalShortcuts() {
   globalShortcut.unregisterAll();
+  if (globalShortcutsSuspended) return;
 
   const shortcuts = visualizerSettings.shortcuts;
   if (!shortcuts) return;
@@ -1729,6 +1731,15 @@ app.whenReady().then(() => {
   ipcMain.handle("theme-profiles:reset-current", () => {
     resetCurrentThemeSettings();
     return getRendererSettings();
+  });
+
+  ipcMain.handle("shortcuts:suspend", (_event, suspend) => {
+    globalShortcutsSuspended = suspend;
+    if (suspend) {
+      globalShortcut.unregisterAll();
+    } else {
+      registerGlobalShortcuts();
+    }
   });
 
   ipcMain.handle("theme-profiles:export", async (_event, profileName) => {
