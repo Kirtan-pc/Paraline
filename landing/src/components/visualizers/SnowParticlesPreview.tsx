@@ -18,7 +18,7 @@ interface Flake {
   turbulenceSpeed: number;
 }
 
-export function SnowParticlesPreview({ active }: { active: boolean }) {
+export function SnowParticlesPreview({ active, transparent, className }: { active: boolean; transparent?: boolean; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const flakesRef = useRef<Flake[]>([]);
   const spawnCarryRef = useRef<number>(0);
@@ -181,9 +181,11 @@ export function SnowParticlesPreview({ active }: { active: boolean }) {
 
       ctx.clearRect(0, 0, width, height);
 
-      // Draw faint premium dark backing fill
-      ctx.fillStyle = "rgba(6, 9, 19, 0.92)";
-      ctx.fillRect(0, 0, width, height);
+      if (!transparent) {
+        // Draw faint premium dark backing fill
+        ctx.fillStyle = "rgba(6, 9, 19, 0.92)";
+        ctx.fillRect(0, 0, width, height);
+      }
 
       // Draw aurora lighting at the top
       const auroraGrad = ctx.createLinearGradient(0, 0, 0, height * 0.45);
@@ -234,7 +236,7 @@ export function SnowParticlesPreview({ active }: { active: boolean }) {
   return (
     <canvas 
       ref={canvasRef} 
-      className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 bg-transparent rounded-2xl" 
+      className={className || "absolute inset-0 h-full w-full object-cover transition-opacity duration-700 bg-transparent rounded-2xl"} 
       style={{ opacity: active ? 1 : 0.7 }}
     />
   );

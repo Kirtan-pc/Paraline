@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-export function AmbientWavePreview({ active }: { active: boolean }) {
+export function AmbientWavePreview({ active, transparent, className }: { active: boolean; transparent?: boolean; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -77,9 +77,11 @@ export function AmbientWavePreview({ active }: { active: boolean }) {
 
       ctx.clearRect(0, 0, width, height);
 
-      // Draw faint, premium dark backing fill
-      ctx.fillStyle = "rgba(6, 9, 19, 0.92)";
-      ctx.fillRect(0, 0, width, height);
+      if (!transparent) {
+        // Draw faint, premium dark backing fill
+        ctx.fillStyle = "rgba(6, 9, 19, 0.92)";
+        ctx.fillRect(0, 0, width, height);
+      }
 
       // Create top-to-bottom edge ambient glow haze
       const edgeGradient = ctx.createLinearGradient(0, 0, 0, height);
@@ -194,7 +196,7 @@ export function AmbientWavePreview({ active }: { active: boolean }) {
   return (
     <canvas 
       ref={canvasRef} 
-      className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 bg-transparent" 
+      className={className || "absolute inset-0 h-full w-full object-cover transition-opacity duration-700 bg-transparent"} 
       style={{ opacity: active ? 1 : 0.7 }}
     />
   );
