@@ -692,12 +692,8 @@ function loadThemeProfile(profileName) {
     return null;
   }
 
-  visualizerSettings = settingsStore.save(profiles[profileName]);
-
-  registerGlobalShortcuts();
-  sendVisualizerSettings();
-  refreshTrayMenu();
-
+  updateSettings(profiles[profileName]);
+  
   return visualizerSettings;
 }
 
