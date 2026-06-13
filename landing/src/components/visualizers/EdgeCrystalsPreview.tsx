@@ -14,7 +14,7 @@ interface Stroke {
   opacitySeed: number;
 }
 
-export function EdgeCrystalsPreview({ active }: { active: boolean }) {
+export function EdgeCrystalsPreview({ active, transparent, className }: { active: boolean; transparent?: boolean; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Stroke[]>([]);
   const currentKeyRef = useRef<string>("");
@@ -134,9 +134,11 @@ export function EdgeCrystalsPreview({ active }: { active: boolean }) {
 
       ctx.clearRect(0, 0, width, height);
 
-      // Draw faint dark backing fill
-      ctx.fillStyle = "rgba(6, 9, 19, 0.92)";
-      ctx.fillRect(0, 0, width, height);
+      if (!transparent) {
+        // Draw faint dark backing fill
+        ctx.fillStyle = "rgba(6, 9, 19, 0.92)";
+        ctx.fillRect(0, 0, width, height);
+      }
 
       const profile = {
         baseLength: 10,
@@ -179,7 +181,7 @@ export function EdgeCrystalsPreview({ active }: { active: boolean }) {
   return (
     <canvas 
       ref={canvasRef} 
-      className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 bg-transparent rounded-2xl" 
+      className={className || "absolute inset-0 h-full w-full object-cover transition-opacity duration-700 bg-transparent rounded-2xl"} 
       style={{ opacity: active ? 1 : 0.7 }}
     />
   );
