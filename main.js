@@ -577,6 +577,8 @@ function resetCurrentThemeSettings() {
 function resetAllSettings() {
   visualizerSettings = settingsStore.save(createDefaultSettings());
   isPaused = false;
+  isHidden = false;
+  applyStartupSettings(visualizerSettings.launchOnStartup);
   registerGlobalShortcuts();
   sendVisualizerSettings();
   refreshTrayMenu();
