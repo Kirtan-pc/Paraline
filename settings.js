@@ -531,6 +531,75 @@ document.addEventListener('DOMContentLoaded', () => {
 refreshThemeProfiles();
 
     // ----------------------------------------
+    // HOTKEY RECORDERS
+    // ----------------------------------------
+    function setupHotkeyRecorder(inputId, settingKey) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        input.addEventListener('keydown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Clear hotkey if Backspace or Escape is pressed
+            if (e.key === 'Backspace' || e.key === 'Escape') {
+                input.value = 'None';
+                dispatchHotkeyUpdate(settingKey, 'None');
+                return;
+            }
+
+            // Ignore pure modifier presses
+            if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+                return;
+            }
+
+            const parts = [];
+            if (e.ctrlKey) parts.push('Ctrl');
+            if (e.altKey) parts.push('Alt');
+            if (e.shiftKey) parts.push('Shift');
+
+            const domToElectronKeyMap = {
+                'ArrowUp': 'Up',
+                'ArrowDown': 'Down',
+                'ArrowLeft': 'Left',
+                'ArrowRight': 'Right',
+                '+': 'Plus',
+                ' ': 'Space'
+            };
+
+            let keyName = e.key;
+            if (domToElectronKeyMap[keyName]) {
+                keyName = domToElectronKeyMap[keyName];
+            } else if (keyName.length === 1) {
+                keyName = keyName.toUpperCase();
+            }
+
+            // Guard: Require at least one modifier key or a function key
+            if (parts.length === 0 && !/^F[1-9][0-2]?$/.test(keyName)) {
+                return;
+            }
+
+            parts.push(keyName);
+            const shortcutStr = parts.join('+');
+            input.value = shortcutStr;
+            dispatchHotkeyUpdate(settingKey, shortcutStr);
+        });
+    }
+
+    function dispatchHotkeyUpdate(settingKey, value) {
+        if (!window.visualizerSettings) return;
+        if (!cachedSettings.shortcuts) cachedSettings.shortcuts = {};
+        cachedSettings.shortcuts[settingKey] = value;
+        window.visualizerSettings.update({
+            shortcuts: cachedSettings.shortcuts
+        });
+    }
+
+    setupHotkeyRecorder('hotkey-toggle-pause', 'togglePause');
+    setupHotkeyRecorder('hotkey-toggle-hide', 'toggleHide');
+    setupHotkeyRecorder('hotkey-cycle-theme', 'cycleTheme');
+
+    // ----------------------------------------
     // SLIDER UPDATES
     // ----------------------------------------
     const thicknessSlider = document.getElementById('customThickness');
@@ -866,6 +935,16 @@ refreshThemeProfiles();
                 }
             }
 
+            // Load global hotkeys
+            if (settings.shortcuts) {
+                const pauseInput = document.getElementById('hotkey-toggle-pause');
+                const hideInput = document.getElementById('hotkey-toggle-hide');
+                const cycleInput = document.getElementById('hotkey-cycle-theme');
+                if (pauseInput) pauseInput.value = settings.shortcuts.togglePause || 'None';
+                if (hideInput) hideInput.value = settings.shortcuts.toggleHide || 'None';
+                if (cycleInput) cycleInput.value = settings.shortcuts.cycleTheme || 'None';
+            }
+
             // Load theme automation settings
             if (settings.themeAutomation) {
                 const automation = settings.themeAutomation;
@@ -956,6 +1035,22 @@ refreshThemeProfiles();
                 }
             }
             
+            // Sync global hotkeys
+            if (nextSettings.shortcuts) {
+                const pauseInput = document.getElementById('hotkey-toggle-pause');
+                const hideInput = document.getElementById('hotkey-toggle-hide');
+                const cycleInput = document.getElementById('hotkey-cycle-theme');
+                if (pauseInput && nextSettings.shortcuts.togglePause !== undefined) {
+                    pauseInput.value = nextSettings.shortcuts.togglePause || 'None';
+                }
+                if (hideInput && nextSettings.shortcuts.toggleHide !== undefined) {
+                    hideInput.value = nextSettings.shortcuts.toggleHide || 'None';
+                }
+                if (cycleInput && nextSettings.shortcuts.cycleTheme !== undefined) {
+                    cycleInput.value = nextSettings.shortcuts.cycleTheme || 'None';
+                }
+            }
+
             // Sync theme automation properties if updated from outside
             if (nextSettings.themeAutomation) {
                 const automation = nextSettings.themeAutomation;
