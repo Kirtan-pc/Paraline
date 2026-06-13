@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Plus, X } from "lucide-react";
 import { getThemesEndpoint } from "@/lib/paraline-api";
+import { usePreviewStore } from "@/store/preview";
 
 import { AmbientWavePreview } from "./visualizers/AmbientWavePreview";
 import { FlowBorderPreview } from "./visualizers/FlowBorderPreview";
@@ -24,7 +25,7 @@ export type Theme = {
   category: string;
   description: string;
   className: string;
-  Preview: React.FC<{ active: boolean }>;
+  Preview: React.FC<{ active: boolean; transparent?: boolean; className?: string }>;
   animationStyle: string;
   reactivity: string;
   visualIntensity: string;
@@ -180,6 +181,7 @@ export const specificThemes: Theme[] = [
 ];
 
 export function ThemeShowcase() {
+  const setActivePreviewThemeId = usePreviewStore((state) => state.setActivePreviewThemeId);
   const [hoveredTheme, setHoveredTheme] = useState<string | null>(null);
   const [appliedTheme, setAppliedTheme] = useState<string | null>(null);
   const [compareList, setCompareList] = useState<string[]>([]);
@@ -216,13 +218,15 @@ export function ThemeShowcase() {
     }
   };
 
-  const handleApply = async (themeName: string) => {
+  const handleApply = async (theme: Theme) => {
+    setActivePreviewThemeId(theme.id);
+
     try {
       // Connect to the backend API to physically apply the theme on the desktop
       const response = await fetch(getThemesEndpoint(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "apply_theme", theme: themeName })
+        body: JSON.stringify({ action: "apply_theme", theme: theme.name })
       });
 
       if (!response.ok) {
@@ -237,7 +241,7 @@ export function ThemeShowcase() {
       console.warn("Backend not running, simulating theme application:", e);
     }
 
-    setAppliedTheme(themeName);
+    setAppliedTheme(theme.name);
     setTimeout(() => setAppliedTheme(null), 3000);
   };
 
@@ -274,7 +278,7 @@ export function ThemeShowcase() {
               transition={{ duration: 0.5, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
               onMouseEnter={() => handleMouseEnter(theme.id)}
               onMouseLeave={handleMouseLeave}
-              onClick={() => handleApply(theme.name)}
+              onClick={() => handleApply(theme)}
               className={`group relative flex flex-col sm:flex-row cursor-pointer overflow-hidden rounded-[28px] border border-white/5 bg-[#0a0d16]/80 backdrop-blur-md p-6 sm:p-8 transition-all duration-500 hover:border-cyan-500/30 hover:shadow-[0_20px_60px_-15px_rgba(34,211,238,0.2)] ${theme.className}`}
             >
               {/* Premium Glow effect on hover */}

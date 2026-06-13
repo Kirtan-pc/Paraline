@@ -528,6 +528,36 @@
                 </div>
 
                 <div class="settings-group">
+                    <h3>Global Hotkeys</h3>
+                    <p class="setting-desc">Control Paraline globally even when it is minimized or running in the background. Click "Edit" and press a key combination to customize (e.g. <code>Ctrl+Alt+P</code>). Press <code>Backspace</code> or <code>Escape</code> during edit to clear/disable.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px; max-width: 450px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-toggle-pause" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Pause / Resume Visualizer:</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="hotkey-toggle-pause" class="styled-select" style="width: 140px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                                <button id="btn-edit-toggle-pause" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; min-width: 60px; justify-content: center; height: 32px;">Edit</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-toggle-hide" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Hide / Show Visualizer:</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="hotkey-toggle-hide" class="styled-select" style="width: 140px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                                <button id="btn-edit-toggle-hide" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; min-width: 60px; justify-content: center; height: 32px;">Edit</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-cycle-theme" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Cycle Active Theme:</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="hotkey-cycle-theme" class="styled-select" style="width: 140px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                                <button id="btn-edit-cycle-theme" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; min-width: 60px; justify-content: center; height: 32px;">Edit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="hotkey-status-msg" style="color: #2ecc71; font-size: 13px; margin-top: 10px; font-weight: 500; height: 18px; opacity: 0; transition: opacity 0.3s ease; text-align: right; max-width: 450px;">✓ Hotkey updated successfully</div>
+                </div>
+
+                <div class="settings-group">
                     <h3>Color Mode</h3>
                     <p class="setting-desc">Adaptive mode follows your Windows accent color and light or dark theme in real time. Manual mode keeps your chosen theme colors.</p>
                     <div class="input-group" style="margin-top: 10px;">
@@ -541,10 +571,13 @@
                 <div class="settings-group">
                     <h3>Theme Automation</h3>
                     <p class="setting-desc">Automatically switch between day and night visualizer modes based on the time of day.</p>
-                    <div class="input-group" style="margin-top: 10px;">
-                        <label style="display: flex; align-items: center; gap: 10px;">
+                    <div class="switch-control" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 500; font-size: 15px; color: #e2e8f0;">Enable Time-Based Theme Switching</span>
+                        </div>
+                        <label class="switch">
                             <input type="checkbox" id="enableThemeAutomation" />
-                            Enable Time-Based Theme Switching
+                            <span class="slider-round"></span>
                         </label>
                     </div>
 

@@ -92,6 +92,7 @@ contextBridge.exposeInMainWorld("paralineApp", {
   toggleHide: () => ipcRenderer.invoke("app:toggle-hide"),
   reloadVisualizer: () => ipcRenderer.invoke("app:reload-visualizer"),
   openExternal: (url) => ipcRenderer.invoke("app:open-external", url),
+  suspendGlobalShortcuts: (suspend) => ipcRenderer.invoke("shortcuts:suspend", suspend),
 
   getThemeProfiles: () => ipcRenderer.invoke("theme-profiles:get"),
 
