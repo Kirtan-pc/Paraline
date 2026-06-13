@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog, nativeTheme, systemPreferences, powerMonitor } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog, nativeTheme, systemPreferences, powerMonitor, globalShortcut } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { createAudioBridge } = require("./audioBridge");
@@ -349,6 +349,9 @@ function updateSettings(nextSettings) {
   if (nextSettings.themeAutomation !== undefined && themeAgent) {
     themeAgent.start();
   }
+  if (nextSettings.shortcuts !== undefined) {
+    registerGlobalShortcuts();
+  }
 
   sendVisualizerSettings();
   refreshTrayMenu();
@@ -373,6 +376,69 @@ function reloadVisualizer() {
 
   stopSimulatedAudioFallback();
   overlayWindow.webContents.reloadIgnoringCache();
+}
+
+function cycleTheme() {
+  const themes = ["ambientWave", "auroraDrift", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids"];
+  const currentTheme = visualizerSettings.selectedTheme;
+  const currentIndex = themes.indexOf(currentTheme);
+  const nextIndex = (currentIndex + 1) % themes.length;
+  const nextTheme = themes[nextIndex];
+  updateSettings({ selectedTheme: nextTheme });
+}
+
+function registerGlobalShortcuts() {
+  globalShortcut.unregisterAll();
+
+  const shortcuts = visualizerSettings.shortcuts;
+  if (!shortcuts) return;
+
+  const formatAccelerator = (uiShortcut) => {
+    if (!uiShortcut || uiShortcut === "None") return null;
+    return uiShortcut;
+  };
+
+  const pauseAcc = formatAccelerator(shortcuts.togglePause);
+  if (pauseAcc) {
+    try {
+      const registered = globalShortcut.register(pauseAcc, () => {
+        togglePaused();
+      });
+      if (!registered) {
+        console.error(`Failed to register global shortcut for pause/resume: ${pauseAcc} (possibly registered by another application)`);
+      }
+    } catch (err) {
+      console.error(`Failed to register global shortcut for pause/resume: ${pauseAcc}`, err);
+    }
+  }
+
+  const hideAcc = formatAccelerator(shortcuts.toggleHide);
+  if (hideAcc) {
+    try {
+      const registered = globalShortcut.register(hideAcc, () => {
+        toggleHidden();
+      });
+      if (!registered) {
+        console.error(`Failed to register global shortcut for hide/show: ${hideAcc} (possibly registered by another application)`);
+      }
+    } catch (err) {
+      console.error(`Failed to register global shortcut for hide/show: ${hideAcc}`, err);
+    }
+  }
+
+  const cycleAcc = formatAccelerator(shortcuts.cycleTheme);
+  if (cycleAcc) {
+    try {
+      const registered = globalShortcut.register(cycleAcc, () => {
+        cycleTheme();
+      });
+      if (!registered) {
+        console.error(`Failed to register global shortcut for cycling theme: ${cycleAcc} (possibly registered by another application)`);
+      }
+    } catch (err) {
+      console.error(`Failed to register global shortcut for cycling theme: ${cycleAcc}`, err);
+    }
+  }
 }
 
 // --- Focus Mode polling ---
@@ -510,6 +576,7 @@ function resetAllSettings() {
   visualizerSettings = settingsStore.save(createDefaultSettings());
   isPaused = false;
   applyStartupSettings(visualizerSettings.launchOnStartup);
+  registerGlobalShortcuts();
   sendVisualizerSettings();
   refreshTrayMenu();
 }
@@ -624,6 +691,7 @@ function loadThemeProfile(profileName) {
 
   visualizerSettings = settingsStore.save(profiles[profileName]);
 
+  registerGlobalShortcuts();
   sendVisualizerSettings();
   refreshTrayMenu();
 
@@ -1549,6 +1617,7 @@ app.whenReady().then(() => {
   settingsStore = createSettingsStore(app.getPath("userData"));
   visualizerSettings = settingsStore.save(settingsStore.load());
   applyStartupSettings(visualizerSettings.launchOnStartup);
+  registerGlobalShortcuts();
 
   nativeTheme.on("updated", () => {
     sendVisualizerSettings();
@@ -1862,6 +1931,7 @@ app.whenReady().then(() => {
           themeAgent.start();
       }
 
+      registerGlobalShortcuts();
       sendVisualizerSettings();
       refreshTrayMenu();
 
@@ -1949,6 +2019,7 @@ app.on("before-quit", () => {
 
 app.on("will-quit", () => {
   stopSimulatedAudioFallback();
+  globalShortcut.unregisterAll();
 });
 
 app.on("window-all-closed", () => {

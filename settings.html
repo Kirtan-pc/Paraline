@@ -482,6 +482,26 @@
                 </header>
 
                 <div class="settings-group">
+                    <h3>Global Hotkeys</h3>
+                    <p class="setting-desc">Control Paraline globally even when it is minimized or running in the background. Click inside a field and press a key combination to customize (e.g. <code>Ctrl+Alt+P</code>). Press <code>Backspace</code> or <code>Escape</code> to clear/disable.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px; max-width: 450px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-toggle-pause" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Pause / Resume Visualizer:</label>
+                            <input type="text" id="hotkey-toggle-pause" class="styled-select" style="width: 180px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-toggle-hide" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Hide / Show Visualizer:</label>
+                            <input type="text" id="hotkey-toggle-hide" class="styled-select" style="width: 180px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-cycle-theme" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Cycle Active Theme:</label>
+                            <input type="text" id="hotkey-cycle-theme" class="styled-select" style="width: 180px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
                     <h3>Performance Mode</h3>
                     <p class="setting-desc">Balance visual quality with system performance. Lower modes reduce GPU usage.</p>
                     <div class="input-group" style="margin-top: 10px;">

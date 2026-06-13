@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 
-export function SideBraidsPreview({ active }: { active: boolean }) {
+export function SideBraidsPreview({ active, transparent, className }: { active: boolean; transparent?: boolean; className?: string }) {
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[#060913]/90 z-0" />
+    <div className={className || "absolute inset-0 overflow-hidden"}>
+      {!transparent && <div className="absolute inset-0 bg-[#060913]/90 z-0" />}
       
       {/* Left Braid */}
       <div className="absolute left-0 top-0 bottom-0 w-4 overflow-hidden">
