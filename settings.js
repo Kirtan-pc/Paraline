@@ -533,57 +533,29 @@ refreshThemeProfiles();
     // ----------------------------------------
     // HOTKEY RECORDERS
     // ----------------------------------------
-    function setupHotkeyRecorder(inputId, settingKey) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
+    let activeRecordingKey = null;
+    let originalHotkeyVal = '';
+    const hotkeyNames = {
+        togglePause: 'Pause / Resume',
+        toggleHide: 'Hide / Show',
+        cycleTheme: 'Cycle Active Theme'
+    };
+    let statusTimeout = null;
 
-        input.addEventListener('keydown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Clear hotkey if Backspace or Escape is pressed
-            if (e.key === 'Backspace' || e.key === 'Escape') {
-                input.value = 'None';
-                dispatchHotkeyUpdate(settingKey, 'None');
-                return;
-            }
-
-            // Ignore pure modifier presses
-            if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
-                return;
-            }
-
-            const parts = [];
-            if (e.ctrlKey) parts.push('Ctrl');
-            if (e.altKey) parts.push('Alt');
-            if (e.shiftKey) parts.push('Shift');
-
-            const domToElectronKeyMap = {
-                'ArrowUp': 'Up',
-                'ArrowDown': 'Down',
-                'ArrowLeft': 'Left',
-                'ArrowRight': 'Right',
-                '+': 'Plus',
-                ' ': 'Space'
-            };
-
-            let keyName = e.key;
-            if (domToElectronKeyMap[keyName]) {
-                keyName = domToElectronKeyMap[keyName];
-            } else if (keyName.length === 1) {
-                keyName = keyName.toUpperCase();
-            }
-
-            // Guard: Require at least one modifier key or a function key
-            if (parts.length === 0 && !/^F[1-9][0-2]?$/.test(keyName)) {
-                return;
-            }
-
-            parts.push(keyName);
-            const shortcutStr = parts.join('+');
-            input.value = shortcutStr;
-            dispatchHotkeyUpdate(settingKey, shortcutStr);
-        });
+    function showHotkeyStatus(message) {
+        const statusEl = document.getElementById('hotkey-status-msg');
+        if (!statusEl) return;
+        
+        statusEl.textContent = message;
+        statusEl.style.opacity = '1';
+        
+        if (statusTimeout) {
+            clearTimeout(statusTimeout);
+        }
+        
+        statusTimeout = setTimeout(() => {
+            statusEl.style.opacity = '0';
+        }, 2500);
     }
 
     function dispatchHotkeyUpdate(settingKey, value) {
@@ -595,9 +567,171 @@ refreshThemeProfiles();
         });
     }
 
-    setupHotkeyRecorder('hotkey-toggle-pause', 'togglePause');
-    setupHotkeyRecorder('hotkey-toggle-hide', 'toggleHide');
-    setupHotkeyRecorder('hotkey-cycle-theme', 'cycleTheme');
+    function initHotkeySettings() {
+        const hotkeys = [
+            { inputId: 'hotkey-toggle-pause', btnId: 'btn-edit-toggle-pause', key: 'togglePause' },
+            { inputId: 'hotkey-toggle-hide', btnId: 'btn-edit-toggle-hide', key: 'toggleHide' },
+            { inputId: 'hotkey-cycle-theme', btnId: 'btn-edit-cycle-theme', key: 'cycleTheme' }
+        ];
+
+        hotkeys.forEach(({ inputId, btnId, key }) => {
+            const input = document.getElementById(inputId);
+            const btn = document.getElementById(btnId);
+            if (!input || !btn) return;
+
+            btn.addEventListener('click', () => {
+                if (activeRecordingKey === null) {
+                    // Enter Edit Mode
+                    activeRecordingKey = key;
+                    originalHotkeyVal = input.value;
+                    
+                    // Suspend global shortcuts in main process so they don't fire and block inputs
+                    if (window.paralineApp && typeof window.paralineApp.suspendGlobalShortcuts === 'function') {
+                        window.paralineApp.suspendGlobalShortcuts(true);
+                    }
+
+                    // Update UI for recording state
+                    input.value = '';
+                    input.placeholder = 'Press keys...';
+                    input.style.borderColor = 'var(--accent)';
+                    input.style.boxShadow = '0 0 10px rgba(0, 212, 255, 0.35)';
+                    
+                    btn.textContent = 'Cancel';
+                    btn.style.borderColor = '#e74c3c';
+                    btn.style.color = '#e74c3c';
+                    
+                    // Disable other buttons
+                    hotkeys.forEach(hk => {
+                        if (hk.key !== key) {
+                            const otherBtn = document.getElementById(hk.btnId);
+                            if (otherBtn) otherBtn.disabled = true;
+                        }
+                    });
+                    
+                    input.focus();
+                } else if (activeRecordingKey === key) {
+                    // Cancel Edit Mode
+                    exitEditMode(key, false);
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (activeRecordingKey !== key) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Clear hotkey if Backspace or Escape is pressed
+                if (e.key === 'Backspace' || e.key === 'Escape') {
+                    input.value = 'None';
+                    dispatchHotkeyUpdate(key, 'None');
+                    exitEditMode(key, true);
+                    showHotkeyStatus(`✓ ${hotkeyNames[key]} hotkey cleared`);
+                    return;
+                }
+
+                const parts = [];
+                if (e.ctrlKey) parts.push('Ctrl');
+                if (e.altKey) parts.push('Alt');
+                if (e.shiftKey) parts.push('Shift');
+
+                // If currently pressing a pure modifier key, display it in the box with "+..."
+                if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+                    if (parts.length > 0) {
+                        input.value = parts.join('+') + '+...';
+                    } else {
+                        input.value = '';
+                    }
+                    return;
+                }
+
+                const domToElectronKeyMap = {
+                    'ArrowUp': 'Up',
+                    'ArrowDown': 'Down',
+                    'ArrowLeft': 'Left',
+                    'ArrowRight': 'Right',
+                    '+': 'Plus',
+                    ' ': 'Space'
+                };
+
+                let keyName = e.key;
+                if (domToElectronKeyMap[keyName]) {
+                    keyName = domToElectronKeyMap[keyName];
+                } else if (keyName.length === 1) {
+                    keyName = keyName.toUpperCase();
+                }
+
+                // Guard: Require at least one modifier key or a function key
+                if (parts.length === 0 && !/^F[1-9][0-2]?$/.test(keyName)) {
+                    return;
+                }
+
+                parts.push(keyName);
+                const shortcutStr = parts.join('+');
+                input.value = shortcutStr;
+                dispatchHotkeyUpdate(key, shortcutStr);
+                exitEditMode(key, true);
+                showHotkeyStatus(`✓ ${hotkeyNames[key]} hotkey updated to ${shortcutStr}`);
+            });
+            
+            // Prevent manual focus / typing without edit mode active
+            input.addEventListener('mousedown', (e) => {
+                if (activeRecordingKey !== key) {
+                    e.preventDefault();
+                    input.blur();
+                }
+            });
+
+            // Handle focus loss
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (activeRecordingKey === key && document.activeElement !== btn) {
+                        exitEditMode(key, false);
+                    }
+                }, 150);
+            });
+        });
+
+        function exitEditMode(key, save = false) {
+            const hk = hotkeys.find(h => h.key === key);
+            if (!hk) return;
+            const input = document.getElementById(hk.inputId);
+            const btn = document.getElementById(hk.btnId);
+            if (!input || !btn) return;
+
+            activeRecordingKey = null;
+
+            // Re-enable global shortcuts
+            if (window.paralineApp && typeof window.paralineApp.suspendGlobalShortcuts === 'function') {
+                window.paralineApp.suspendGlobalShortcuts(false);
+            }
+            
+            // Reset input visual style
+            input.placeholder = 'Press keys...';
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+            if (!save) {
+                input.value = originalHotkeyVal;
+            }
+
+            // Reset button style
+            btn.textContent = 'Edit';
+            btn.style.borderColor = '';
+            btn.style.color = '';
+
+            // Re-enable all buttons
+            hotkeys.forEach(h => {
+                const otherBtn = document.getElementById(h.btnId);
+                if (otherBtn) otherBtn.disabled = false;
+            });
+        }
+    }
+
+    initHotkeySettings();
 
     // ----------------------------------------
     // SLIDER UPDATES
@@ -1040,13 +1174,13 @@ refreshThemeProfiles();
                 const pauseInput = document.getElementById('hotkey-toggle-pause');
                 const hideInput = document.getElementById('hotkey-toggle-hide');
                 const cycleInput = document.getElementById('hotkey-cycle-theme');
-                if (pauseInput && nextSettings.shortcuts.togglePause !== undefined) {
+                if (pauseInput && nextSettings.shortcuts.togglePause !== undefined && activeRecordingKey !== 'togglePause') {
                     pauseInput.value = nextSettings.shortcuts.togglePause || 'None';
                 }
-                if (hideInput && nextSettings.shortcuts.toggleHide !== undefined) {
+                if (hideInput && nextSettings.shortcuts.toggleHide !== undefined && activeRecordingKey !== 'toggleHide') {
                     hideInput.value = nextSettings.shortcuts.toggleHide || 'None';
                 }
-                if (cycleInput && nextSettings.shortcuts.cycleTheme !== undefined) {
+                if (cycleInput && nextSettings.shortcuts.cycleTheme !== undefined && activeRecordingKey !== 'cycleTheme') {
                     cycleInput.value = nextSettings.shortcuts.cycleTheme || 'None';
                 }
             }
