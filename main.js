@@ -319,9 +319,12 @@ function registerGlobalShortcuts() {
   const pauseAcc = formatAccelerator(shortcuts.togglePause);
   if (pauseAcc) {
     try {
-      globalShortcut.register(pauseAcc, () => {
+      const registered = globalShortcut.register(pauseAcc, () => {
         togglePaused();
       });
+      if (!registered) {
+        console.error(`Failed to register global shortcut for pause/resume: ${pauseAcc} (possibly registered by another application)`);
+      }
     } catch (err) {
       console.error(`Failed to register global shortcut for pause/resume: ${pauseAcc}`, err);
     }
@@ -330,9 +333,12 @@ function registerGlobalShortcuts() {
   const hideAcc = formatAccelerator(shortcuts.toggleHide);
   if (hideAcc) {
     try {
-      globalShortcut.register(hideAcc, () => {
+      const registered = globalShortcut.register(hideAcc, () => {
         toggleHidden();
       });
+      if (!registered) {
+        console.error(`Failed to register global shortcut for hide/show: ${hideAcc} (possibly registered by another application)`);
+      }
     } catch (err) {
       console.error(`Failed to register global shortcut for hide/show: ${hideAcc}`, err);
     }
@@ -341,9 +347,12 @@ function registerGlobalShortcuts() {
   const cycleAcc = formatAccelerator(shortcuts.cycleTheme);
   if (cycleAcc) {
     try {
-      globalShortcut.register(cycleAcc, () => {
+      const registered = globalShortcut.register(cycleAcc, () => {
         cycleTheme();
       });
+      if (!registered) {
+        console.error(`Failed to register global shortcut for cycling theme: ${cycleAcc} (possibly registered by another application)`);
+      }
     } catch (err) {
       console.error(`Failed to register global shortcut for cycling theme: ${cycleAcc}`, err);
     }
@@ -484,6 +493,7 @@ function resetCurrentThemeSettings() {
 function resetAllSettings() {
   visualizerSettings = settingsStore.save(createDefaultSettings());
   isPaused = false;
+  registerGlobalShortcuts();
   sendVisualizerSettings();
   refreshTrayMenu();
 }
@@ -559,6 +569,7 @@ function loadThemeProfile(profileName) {
 
   visualizerSettings = settingsStore.save(profiles[profileName]);
 
+  registerGlobalShortcuts();
   sendVisualizerSettings();
   refreshTrayMenu();
 
@@ -1820,6 +1831,7 @@ app.whenReady().then(() => {
           themeAgent.start();
       }
 
+      registerGlobalShortcuts();
       sendVisualizerSettings();
       refreshTrayMenu();
 

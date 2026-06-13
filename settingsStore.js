@@ -574,11 +574,12 @@ function sanitizeFocusMode(input = {}) {
   return { enabled, dimOpacity, idleTimeout };
 }
 
-function sanitizeShortcuts(input = {}) {
+function sanitizeShortcuts(input) {
+  const safeInput = (input && typeof input === "object") ? input : {};
   return {
-    togglePause: typeof input.togglePause === "string" ? input.togglePause : DEFAULT_SETTINGS.shortcuts.togglePause,
-    toggleHide: typeof input.toggleHide === "string" ? input.toggleHide : DEFAULT_SETTINGS.shortcuts.toggleHide,
-    cycleTheme: typeof input.cycleTheme === "string" ? input.cycleTheme : DEFAULT_SETTINGS.shortcuts.cycleTheme
+    togglePause: typeof safeInput.togglePause === "string" ? safeInput.togglePause : DEFAULT_SETTINGS.shortcuts.togglePause,
+    toggleHide: typeof safeInput.toggleHide === "string" ? safeInput.toggleHide : DEFAULT_SETTINGS.shortcuts.toggleHide,
+    cycleTheme: typeof safeInput.cycleTheme === "string" ? safeInput.cycleTheme : DEFAULT_SETTINGS.shortcuts.cycleTheme
   };
 }
 

@@ -554,9 +554,21 @@ refreshThemeProfiles();
             if (e.altKey) parts.push('Alt');
             if (e.shiftKey) parts.push('Shift');
 
+            const domToElectronKeyMap = {
+                'ArrowUp': 'Up',
+                'ArrowDown': 'Down',
+                'ArrowLeft': 'Left',
+                'ArrowRight': 'Right',
+                '+': 'Plus',
+                ' ': 'Space'
+            };
+
             let keyName = e.key;
-            if (keyName === ' ') keyName = 'Space';
-            if (keyName.length === 1) keyName = keyName.toUpperCase();
+            if (domToElectronKeyMap[keyName]) {
+                keyName = domToElectronKeyMap[keyName];
+            } else if (keyName.length === 1) {
+                keyName = keyName.toUpperCase();
+            }
 
             // Guard: Require at least one modifier key or a function key
             if (parts.length === 0 && !/^F[1-9][0-2]?$/.test(keyName)) {
