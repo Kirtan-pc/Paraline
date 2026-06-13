@@ -693,12 +693,7 @@ function loadThemeProfile(profileName) {
   }
 
   updateSettings(profiles[profileName]);
-  visualizerSettings = settingsStore.save(profiles[profileName]);
-
-  registerGlobalShortcuts();
-  sendVisualizerSettings();
-  refreshTrayMenu();
-
+  
   return visualizerSettings;
 }
 
