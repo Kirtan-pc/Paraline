@@ -26,11 +26,11 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 ### ⚡ Quick Navigation
 
-![Installation](https://img.shields.io/badge/Installation-yellow?style=for-the-badge)
-![Idea](https://img.shields.io/badge/Idea-yellow?style=for-the-badge)
-![Features](https://img.shields.io/badge/Features-yellow?style=for-the-badge)
-![Themes](https://img.shields.io/badge/Themes-yellow?style=for-the-badge)
-![Notes](https://img.shields.io/badge/Notes-yellow?style=for-the-badge)
+[![Installation](https://img.shields.io/badge/Installation-yellow?style=for-the-badge)](#-installation)
+[![Idea](https://img.shields.io/badge/Idea-yellow?style=for-the-badge)](#-the-idea)
+[![Features](https://img.shields.io/badge/Features-yellow?style=for-the-badge)](#-core-features)
+[![Themes](https://img.shields.io/badge/Themes-yellow?style=for-the-badge)](#-themes)
+[![Notes](https://img.shields.io/badge/Notes-yellow?style=for-the-badge)](#-developer-notes)
 
 </div>
 
