@@ -22,6 +22,12 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 </div>
 
+<div align="center">
+
+**Quick Navigation**  
+[Installation](#-installation) • [Idea](#-the-idea) • [Features](#-core-features) • [Themes](#-themes) • [Notes](#-developer-notes)
+
+</div>
 ---
 
 ## ✦ Preview
