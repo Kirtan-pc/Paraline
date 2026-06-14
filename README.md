@@ -26,25 +26,11 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 ### ⚡ Quick Navigation
 
-<span style="background-color:#FFD700; padding:6px 12px; border-radius:6px; display:inline-block;">
-<a href="#-installation" style="color:black; text-decoration:none;">Installation</a>
-</span>
-&nbsp;
-<span style="background-color:#FFD700; padding:6px 12px; border-radius:6px; display:inline-block;">
-<a href="#-the-idea" style="color:black; text-decoration:none;">Idea</a>
-</span>
-&nbsp;
-<span style="background-color:#FFD700; padding:6px 12px; border-radius:6px; display:inline-block;">
-<a href="#-core-features" style="color:black; text-decoration:none;">Features</a>
-</span>
-&nbsp;
-<span style="background-color:#FFD700; padding:6px 12px; border-radius:6px; display:inline-block;">
-<a href="#-themes" style="color:black; text-decoration:none;">Themes</a>
-</span>
-&nbsp;
-<span style="background-color:#FFD700; padding:6px 12px; border-radius:6px; display:inline-block;">
-<a href="#-developer-notes" style="color:black; text-decoration:none;">Notes</a>
-</span>
+![Installation](https://img.shields.io/badge/Installation-yellow?style=for-the-badge)
+![Idea](https://img.shields.io/badge/Idea-yellow?style=for-the-badge)
+![Features](https://img.shields.io/badge/Features-yellow?style=for-the-badge)
+![Themes](https://img.shields.io/badge/Themes-yellow?style=for-the-badge)
+![Notes](https://img.shields.io/badge/Notes-yellow?style=for-the-badge)
 
 </div>
 
