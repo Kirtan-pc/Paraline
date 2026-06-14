@@ -26,25 +26,11 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 ### ⚡ Quick Navigation
 
-<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
-<a href="#-installation" style="color:black; text-decoration:none;">Installation</a>
-</span>
-
-<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
-<a href="#-the-idea" style="color:black; text-decoration:none;">Idea</a>
-</span>
-
-<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
-<a href="#-core-features" style="color:black; text-decoration:none;">Features</a>
-</span>
-
-<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
-<a href="#-themes" style="color:black; text-decoration:none;">Themes</a>
-</span>
-
-<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
-<a href="#-developer-notes" style="color:black; text-decoration:none;">Notes</a>
-</span>
+<kbd> <a href="#-installation">Installation</a> </kbd>
+<kbd> <a href="#-the-idea">Idea</a> </kbd>
+<kbd> <a href="#-core-features">Features</a> </kbd>
+<kbd> <a href="#-themes">Themes</a> </kbd>
+<kbd> <a href="#-developer-notes">Notes</a> </kbd>
 
 </div>
 
