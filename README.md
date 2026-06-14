@@ -24,8 +24,27 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 <div align="center">
 
-**Quick Navigation**  
-[Installation](#-installation)   [Idea](#-the-idea)    [Features](#-core-features)   [Themes](#-themes)   [Notes](#-developer-notes)
+### ⚡ Quick Navigation
+
+<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
+<a href="#-installation" style="color:black; text-decoration:none;">Installation</a>
+</span>
+
+<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
+<a href="#-the-idea" style="color:black; text-decoration:none;">Idea</a>
+</span>
+
+<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
+<a href="#-core-features" style="color:black; text-decoration:none;">Features</a>
+</span>
+
+<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
+<a href="#-themes" style="color:black; text-decoration:none;">Themes</a>
+</span>
+
+<span style="background-color:#FFD700; padding:6px 10px; border-radius:6px; margin:3px;">
+<a href="#-developer-notes" style="color:black; text-decoration:none;">Notes</a>
+</span>
 
 </div>
 
