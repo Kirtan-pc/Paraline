@@ -377,3 +377,11 @@ If you encounter any setup or runtime issues with audio capture, visualizer reac
 It is a layer of motion for the desktop itself.
 
 </div>
+
+---
+
+## 👥 Contributors
+
+Thanks to all contributors ❤️
+
+[![Contributors](https://contrib.rocks/image?repo=SamXop123/Paraline)](https://github.com/SamXop123/Paraline/graphs/contributors)
