@@ -298,6 +298,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const focusModeControls = document.getElementById('focusModeControls');
     const focusModeDimOpacitySlider = document.getElementById('focus-mode-dim-opacity-slider');
     const focusModeTimeoutSlider = document.getElementById('focus-mode-timeout-slider');
+    const focusModeDimOpacityLabel = document.getElementById('val-focus-mode-dim-opacity');
+    const focusModeTimeoutLabel = document.getElementById('val-focus-mode-timeout');
 
     function toggleFocusModeControls(isEnabled) {
         if (focusModeControls) {
@@ -327,7 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (focusModeDimOpacitySlider) {
         focusModeDimOpacitySlider.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
-            document.getElementById('val-focus-mode-dim-opacity').textContent = val.toFixed(2);
+            if (focusModeDimOpacityLabel) {
+                focusModeDimOpacityLabel.textContent = val.toFixed(2);
+            }
             updateFocusModeSetting({ dimOpacity: val });
         });
     }
@@ -335,32 +339,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (focusModeTimeoutSlider) {
         focusModeTimeoutSlider.addEventListener('input', (e) => {
             const val = parseInt(e.target.value, 10);
-            document.getElementById('val-focus-mode-timeout').textContent = val;
+            if (focusModeTimeoutLabel) {
+                focusModeTimeoutLabel.textContent = val;
+            }
             updateFocusModeSetting({ idleTimeout: val });
         });
     }
 
     const themeSelector = document.getElementById('theme-selector');
-    themeSelector.addEventListener('change', (e) => {
-        const themeId = e.target.value;
-        syncThemeUI(themeId);
+    if (themeSelector) {
+        themeSelector.addEventListener('change', (e) => {
+            const themeId = e.target.value;
+            syncThemeUI(themeId);
 
-        // Also trigger an update to actually switch the active visualizer theme
-        if (window.visualizerSettings) {
-            window.visualizerSettings.update({
-                selectedTheme: themeId
-            });
-        }
-    });
+            // Also trigger an update to actually switch the active visualizer theme
+            if (window.visualizerSettings) {
+                window.visualizerSettings.update({
+                    selectedTheme: themeId
+                });
+            }
+        });
+    }
 
     const performanceModeSelector = document.getElementById('performance-mode-selector');
-    performanceModeSelector.addEventListener('change', (e) => {
-        if (window.visualizerSettings) {
-            window.visualizerSettings.update({
-                performanceMode: e.target.value
-            });
-        }
-    });
+    if (performanceModeSelector) {
+        performanceModeSelector.addEventListener('change', (e) => {
+            if (window.visualizerSettings) {
+                window.visualizerSettings.update({
+                    performanceMode: e.target.value
+                });
+            }
+        });
+    }
 
     const launchCheckbox = document.getElementById('launch-on-startup-checkbox');
     if (launchCheckbox) {
@@ -795,6 +805,7 @@ refreshThemeProfiles();
 
     function dispatchThemeUpdate() {
         if (!window.visualizerSettings) return;
+        if (!themeSelector) return;
         const selectedTheme = themeSelector.value;
         const dropdowns = document.querySelectorAll('#dynamic-theme-settings .theme-trigger');
         
@@ -814,6 +825,7 @@ refreshThemeProfiles();
 
     function dispatchCustomUpdate() {
         if (!window.visualizerSettings) return;
+        if (!themeSelector) return;
         const activeTheme = themeSelector.value;
         
         // Let's ensure the dropdown in the UI switches to "custom" if there's a colorStyle equivalent
@@ -1040,15 +1052,17 @@ refreshThemeProfiles();
                 }
             }
             
-            if (settings.selectedTheme) {
-                themeSelector.value = settings.selectedTheme;
-                syncThemeUI(settings.selectedTheme);
-            } else {
-                themeSelector.value = "ambientWave";
-                syncThemeUI("ambientWave");
+            if (themeSelector) {
+                if (settings.selectedTheme) {
+                    themeSelector.value = settings.selectedTheme;
+                    syncThemeUI(settings.selectedTheme);
+                } else {
+                    themeSelector.value = "ambientWave";
+                    syncThemeUI("ambientWave");
+                }
             }
-            
-            if (settings.performanceMode) {
+
+            if (performanceModeSelector && settings.performanceMode) {
                 performanceModeSelector.value = settings.performanceMode;
             }
 
@@ -1115,11 +1129,15 @@ refreshThemeProfiles();
                 }
                 if (focusModeDimOpacitySlider) {
                     focusModeDimOpacitySlider.value = fm.dimOpacity !== undefined ? fm.dimOpacity : 0.1;
-                    document.getElementById('val-focus-mode-dim-opacity').textContent = parseFloat(focusModeDimOpacitySlider.value).toFixed(2);
+                    if (focusModeDimOpacityLabel) {
+                        focusModeDimOpacityLabel.textContent = parseFloat(focusModeDimOpacitySlider.value).toFixed(2);
+                    }
                 }
                 if (focusModeTimeoutSlider) {
                     focusModeTimeoutSlider.value = fm.idleTimeout !== undefined ? fm.idleTimeout : 5;
-                    document.getElementById('val-focus-mode-timeout').textContent = focusModeTimeoutSlider.value;
+                    if (focusModeTimeoutLabel) {
+                        focusModeTimeoutLabel.textContent = focusModeTimeoutSlider.value;
+                    }
                 }
             }
             
@@ -1162,7 +1180,7 @@ refreshThemeProfiles();
                 }
             }
 
-            if (nextSettings.selectedTheme !== undefined) {
+            if (nextSettings.selectedTheme !== undefined && themeSelector) {
                 if (themeSelector.value !== nextSettings.selectedTheme) {
                     themeSelector.value = nextSettings.selectedTheme;
                     syncThemeUI(nextSettings.selectedTheme);
@@ -1221,11 +1239,15 @@ refreshThemeProfiles();
                 }
                 if (focusModeDimOpacitySlider && fm.dimOpacity !== undefined) {
                     focusModeDimOpacitySlider.value = fm.dimOpacity;
-                    document.getElementById('val-focus-mode-dim-opacity').textContent = parseFloat(fm.dimOpacity).toFixed(2);
+                    if (focusModeDimOpacityLabel) {
+                        focusModeDimOpacityLabel.textContent = parseFloat(fm.dimOpacity).toFixed(2);
+                    }
                 }
                 if (focusModeTimeoutSlider && fm.idleTimeout !== undefined) {
                     focusModeTimeoutSlider.value = fm.idleTimeout;
-                    document.getElementById('val-focus-mode-timeout').textContent = fm.idleTimeout;
+                    if (focusModeTimeoutLabel) {
+                        focusModeTimeoutLabel.textContent = fm.idleTimeout;
+                    }
                 }
             }
 
@@ -1249,7 +1271,7 @@ refreshThemeProfiles();
                 }
             }
             // Sync Aurora advanced controls if they are currently visible
-            if (themeSelector.value === 'auroraDrift' && nextSettings.auroraDrift) {
+            if (themeSelector && themeSelector.value === 'auroraDrift' && nextSettings.auroraDrift) {
                 Object.assign(cachedSettings.auroraDrift || {}, nextSettings.auroraDrift);
                 syncAuroraUI();
             }
