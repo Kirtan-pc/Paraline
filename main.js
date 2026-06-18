@@ -1636,6 +1636,18 @@ app.whenReady().then(() => {
   themeAgent.start();
   // -----------------------------------------
 
+  powerMonitor.on("suspend", () => {
+    isPaused = true;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
+
+  powerMonitor.on("resume", () => {
+    isPaused = false;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
+
   ipcMain.handle("audio-bridge-status", () => {
     if (!audioBridge) {
       return {
