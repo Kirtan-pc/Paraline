@@ -578,11 +578,28 @@ function sanitizeFocusMode(input = {}) {
 
 function sanitizeShortcuts(input) {
   const safeInput = (input && typeof input === "object") ? input : {};
-  return {
+  const shortcuts = {
     togglePause: typeof safeInput.togglePause === "string" ? safeInput.togglePause : DEFAULT_SETTINGS.shortcuts.togglePause,
     toggleHide: typeof safeInput.toggleHide === "string" ? safeInput.toggleHide : DEFAULT_SETTINGS.shortcuts.toggleHide,
     cycleTheme: typeof safeInput.cycleTheme === "string" ? safeInput.cycleTheme : DEFAULT_SETTINGS.shortcuts.cycleTheme
   };
+
+  // Resolve duplicates by resetting subsequent duplicate actions to "None"
+  const seen = new Set();
+  const keys = ["togglePause", "toggleHide", "cycleTheme"];
+  for (const key of keys) {
+    const val = shortcuts[key];
+    if (val && val !== "None") {
+      const normalized = val.toLowerCase().replace(/\s+/g, "");
+      if (seen.has(normalized)) {
+        shortcuts[key] = "None";
+      } else {
+        seen.add(normalized);
+      }
+    }
+  }
+
+  return shortcuts;
 }
 
 function sanitizeSettings(input = {}) {

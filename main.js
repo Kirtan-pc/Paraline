@@ -387,7 +387,6 @@ function cycleTheme() {
   const nextTheme = themes[nextIndex];
   updateSettings({ selectedTheme: nextTheme });
 }
-
 function registerGlobalShortcuts() {
   globalShortcut.unregisterAll();
   if (globalShortcutsSuspended) return;
@@ -401,46 +400,41 @@ function registerGlobalShortcuts() {
   };
 
   const pauseAcc = formatAccelerator(shortcuts.togglePause);
-  if (pauseAcc) {
-    try {
-      const registered = globalShortcut.register(pauseAcc, () => {
-        togglePaused();
-      });
-      if (!registered) {
-        console.error(`Failed to register global shortcut for pause/resume: ${pauseAcc} (possibly registered by another application)`);
-      }
-    } catch (err) {
-      console.error(`Failed to register global shortcut for pause/resume: ${pauseAcc}`, err);
-    }
-  }
-
   const hideAcc = formatAccelerator(shortcuts.toggleHide);
-  if (hideAcc) {
-    try {
-      const registered = globalShortcut.register(hideAcc, () => {
-        toggleHidden();
-      });
-      if (!registered) {
-        console.error(`Failed to register global shortcut for hide/show: ${hideAcc} (possibly registered by another application)`);
-      }
-    } catch (err) {
-      console.error(`Failed to register global shortcut for hide/show: ${hideAcc}`, err);
-    }
-  }
-
   const cycleAcc = formatAccelerator(shortcuts.cycleTheme);
-  if (cycleAcc) {
+
+  // Main-process side validation for duplicate accelerators
+  const registeredAccelerators = new Set();
+
+  const registerIfUnique = (accelerator, name, callback) => {
+    if (!accelerator) return;
+    const normalized = accelerator.toLowerCase().replace(/\s+/g, "");
+    if (registeredAccelerators.has(normalized)) {
+      console.warn(`[Paraline] Duplicate shortcut rejected in main-process validation: ${accelerator} for "${name}"`);
+      return;
+    }
+    registeredAccelerators.add(normalized);
     try {
-      const registered = globalShortcut.register(cycleAcc, () => {
-        cycleTheme();
-      });
+      const registered = globalShortcut.register(accelerator, callback);
       if (!registered) {
-        console.error(`Failed to register global shortcut for cycling theme: ${cycleAcc} (possibly registered by another application)`);
+        console.error(`Failed to register global shortcut for ${name}: ${accelerator} (possibly registered by another application)`);
       }
     } catch (err) {
-      console.error(`Failed to register global shortcut for cycling theme: ${cycleAcc}`, err);
+      console.error(`Failed to register global shortcut for ${name}: ${accelerator}`, err);
     }
-  }
+  };
+
+  registerIfUnique(pauseAcc, "pause/resume", () => {
+    togglePaused();
+  });
+
+  registerIfUnique(hideAcc, "hide/show", () => {
+    toggleHidden();
+  });
+
+  registerIfUnique(cycleAcc, "cycling theme", () => {
+    cycleTheme();
+  });
 }
 
 // --- Focus Mode polling ---
