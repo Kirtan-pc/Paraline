@@ -544,7 +544,7 @@ refreshThemeProfiles();
     };
     let statusTimeout = null;
 
-    function showHotkeyStatus(message, isError = false) {
+    function showHotkeyStatus(message, isError = false, persistent = false) {
         const statusEl = document.getElementById('hotkey-status-msg');
         if (!statusEl) return;
         
@@ -554,11 +554,14 @@ refreshThemeProfiles();
         
         if (statusTimeout) {
             clearTimeout(statusTimeout);
+            statusTimeout = null;
         }
         
-        statusTimeout = setTimeout(() => {
-            statusEl.style.opacity = '0';
-        }, 2500);
+        if (!persistent) {
+            statusTimeout = setTimeout(() => {
+                statusEl.style.opacity = '0';
+            }, 2500);
+        }
     }
 
     function dispatchHotkeyUpdate(settingKey, value) {
@@ -598,6 +601,11 @@ refreshThemeProfiles();
                     input.placeholder = 'Press keys...';
                     input.style.borderColor = 'var(--accent)';
                     input.style.boxShadow = '0 0 10px rgba(0, 212, 255, 0.35)';
+                    
+                    const statusEl = document.getElementById('hotkey-status-msg');
+                    if (statusEl) {
+                        statusEl.style.opacity = '0';
+                    }
                     
                     btn.textContent = 'Cancel';
                     btn.style.borderColor = '#e74c3c';
@@ -752,6 +760,44 @@ refreshThemeProfiles();
     }
 
     initHotkeySettings();
+
+    function checkHotkeyRegistrationFailures(settings) {
+        const pauseInput = document.getElementById('hotkey-toggle-pause');
+        const hideInput = document.getElementById('hotkey-toggle-hide');
+        const cycleInput = document.getElementById('hotkey-cycle-theme');
+        
+        const failures = settings.shortcutRegistrationFailures || {};
+        const checkFailure = (input, key) => {
+            if (!input) return;
+            if (failures[key]) {
+                input.style.borderColor = '#e74c3c';
+                input.style.boxShadow = '0 0 5px rgba(231, 76, 60, 0.35)';
+                input.title = 'Failed to register: Shortcut might be in use by another application.';
+            } else {
+                input.style.borderColor = '';
+                input.style.boxShadow = '';
+                input.title = '';
+            }
+        };
+        checkFailure(pauseInput, 'togglePause');
+        checkFailure(hideInput, 'toggleHide');
+        checkFailure(cycleInput, 'cycleTheme');
+        
+        const failedNames = [];
+        if (failures.togglePause) failedNames.push('Pause / Resume');
+        if (failures.toggleHide) failedNames.push('Hide / Show');
+        if (failures.cycleTheme) failedNames.push('Cycle Theme');
+        
+        if (failedNames.length > 0) {
+            const msg = `⚠️ Failed to register: "${failedNames.join(', ')}" (taken by another app). Try another hotkey.`;
+            showHotkeyStatus(msg, true, true);
+        } else {
+            const statusEl = document.getElementById('hotkey-status-msg');
+            if (statusEl && statusEl.textContent.includes('Failed to register') && !statusTimeout) {
+                statusEl.style.opacity = '0';
+            }
+        }
+    }
 
     // ----------------------------------------
     // SLIDER UPDATES
@@ -1127,6 +1173,7 @@ refreshThemeProfiles();
                 if (hideInput) hideInput.value = settings.shortcuts.toggleHide || 'None';
                 if (cycleInput) cycleInput.value = settings.shortcuts.cycleTheme || 'None';
             }
+            checkHotkeyRegistrationFailures(settings);
 
             // Load theme automation settings
             if (settings.themeAutomation) {
@@ -1233,6 +1280,7 @@ refreshThemeProfiles();
                     cycleInput.value = nextSettings.shortcuts.cycleTheme || 'None';
                 }
             }
+            checkHotkeyRegistrationFailures(nextSettings);
 
             // Sync theme automation properties if updated from outside
             if (nextSettings.themeAutomation) {
