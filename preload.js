@@ -118,5 +118,11 @@ contextBridge.exposeInMainWorld("paralineApp", {
     ipcRenderer.invoke("theme-profiles:reset"),
 
   resetActiveThemeSettings: () =>
-    ipcRenderer.invoke("theme-profiles:reset-current")
+    ipcRenderer.invoke("theme-profiles:reset-current"),
+
+  exportAllSettings: () =>
+    ipcRenderer.invoke("settings:export-all"),
+
+  importAllSettings: () =>
+    ipcRenderer.invoke("settings:import-all")
 });

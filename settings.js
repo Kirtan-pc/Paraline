@@ -421,6 +421,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDeleteThemeProfile = document.getElementById('btn-delete-theme-profile');
     const btnExportThemeProfile = document.getElementById('btn-export-theme-profile');
     const btnImportThemeProfile = document.getElementById('btn-import-theme-profile');
+    const btnExportAllSettings = document.getElementById('btn-export-all-settings');
+    const btnImportAllSettings = document.getElementById('btn-import-all-settings');
     const btnResetThemeProfile = document.getElementById('btn-reset-theme-profile');
     const btnDuplicateThemeProfile = document.getElementById("btnDuplicateThemeProfile");
 
@@ -954,6 +956,35 @@ refreshThemeProfiles();
                 alert(`Failed to import theme: ${res.error}`);
             }
         });
+
+        if (btnExportAllSettings) {
+            btnExportAllSettings.addEventListener('click', async () => {
+                const res = await window.paralineApp.exportAllSettings();
+
+                if (res && res.success) {
+                    alert("Settings backup exported successfully!");
+                } else if (res && res.error) {
+                    alert(`Failed to export settings backup: ${res.error}`);
+                }
+            });
+        }
+
+        if (btnImportAllSettings) {
+            btnImportAllSettings.addEventListener('click', async () => {
+                if (!confirm("Import a settings backup? This will replace your current settings and theme profiles.")) {
+                    return;
+                }
+
+                const res = await window.paralineApp.importAllSettings();
+
+                if (res && res.success) {
+                    alert("Settings backup imported successfully! The app will reload to apply changes.");
+                    location.reload();
+                } else if (res && res.error) {
+                    alert(`Failed to import settings backup: ${res.error}`);
+                }
+            });
+        }
 
         btnResetThemeProfile.addEventListener('click', async () => {
             if (confirm("Are you sure you want to restore default settings? This will reset all your theme customizations.")) {
