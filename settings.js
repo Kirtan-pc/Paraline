@@ -444,6 +444,90 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
 
+    // -----------------------------------------------------------------------
+    // Aurora preset sanitization
+    // -----------------------------------------------------------------------
+    // Numeric fields that every Aurora engine profile may contain, with their
+    // allowed [min, max] range mirroring settingsStore.js sanitizeAuroraDrift().
+    const AURORA_NUMERIC_FIELDS = {
+        baseGlowRadius:       [0.1, 3.0],
+        peakGlowRadius:       [0.1, 3.0],
+        crestBrightness:      [0.1, 3.0],
+        bloomStrength:        [0.0, 3.0],
+        glowFalloff:          [0.1, 3.0],
+        primaryFrequency:     [0.1, 3.0],
+        secondaryFrequency:   [0.1, 3.0],
+        turbulenceComplexity: [0.1, 3.0],
+        motionSmoothness:     [0.1, 3.0],
+        driftSpeed:           [0.0, 3.0],
+        bassInfluence:        [0.0, 3.0],
+        midInfluence:         [0.0, 3.0],
+        highShimmer:          [0.0, 3.0],
+        audioSmoothing:       [0.1, 3.0],
+        peakSensitivity:      [0.1, 3.0],
+        ribbonHeight:         [0.1, 3.0],
+        ribbonWidth:          [0.1, 3.0],
+        edgeSoftness:         [0.1, 3.0],
+        layerSeparation:      [0.1, 3.0],
+        crestSharpness:       [0.1, 3.0],
+        layerCount:           [1,   6],
+        backgroundHaze:       [0.0, 3.0],
+        foregroundHighlight:  [0.0, 3.0],
+        parallaxDepth:        [0.0, 3.0],
+        ambientOpacity:       [0.0, 3.0],
+        colorSaturation:      [0.0, 3.0],
+        atmosphericFade:      [0.0, 3.0],
+        edgeFeathering:       [0.0, 3.0]
+    };
+
+    /**
+     * Accepts a raw value from localStorage and returns a sanitized Aurora
+     * engine-profile object, or null if the input is fundamentally invalid.
+     *
+     * - Only known numeric keys are kept and clamped to their valid ranges.
+     * - gradientStops is validated as an array of {pos, color} pairs.
+     * - All other keys (including prototype-polluting names) are dropped.
+     */
+    function sanitizeAuroraPreset(raw) {
+        if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return null;
+
+        const out = {};
+
+        // Validate and clamp every known numeric field
+        for (const [field, [min, max]] of Object.entries(AURORA_NUMERIC_FIELDS)) {
+            if (Object.prototype.hasOwnProperty.call(raw, field)) {
+                const num = parseFloat(raw[field]);
+                if (Number.isFinite(num)) {
+                    out[field] = field === 'layerCount'
+                        ? Math.round(Math.max(min, Math.min(max, num)))
+                        : Math.max(min, Math.min(max, num));
+                }
+            }
+        }
+
+        // Validate gradientStops
+        if (Array.isArray(raw.gradientStops)) {
+            const stops = raw.gradientStops
+                .filter(s => s !== null && typeof s === 'object' && !Array.isArray(s))
+                .map(s => {
+                    const pos = parseFloat(s.pos);
+                    const color = typeof s.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(s.color)
+                        ? s.color
+                        : null;
+                    return Number.isFinite(pos) && color ? { pos: Math.max(0, Math.min(1, pos)), color } : null;
+                })
+                .filter(Boolean);
+            if (stops.length >= 2 && stops.length <= 6) {
+                out.gradientStops = stops;
+            }
+        }
+
+        // Require at least one meaningful field to be accepted
+        if (Object.keys(out).length === 0) return null;
+
+        return out;
+    }
+
     let presets = {
         "Ocean Blue": ["#00f2fe", "#4facfe", "#8ee2ff"],
         "Sunset": ["#ff512f", "#f09819", "#ffb347"],
@@ -1452,7 +1536,19 @@ refreshThemeProfiles();
     try {
         const saved = localStorage.getItem('paraline_aurora_presets');
         if (saved) {
-            customAuroraPresets = JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            // Only accept plain objects; reject arrays, nulls, and non-objects.
+            if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                for (const [key, val] of Object.entries(parsed)) {
+                    // Reject prototype-polluting or oversized names
+                    if (!isSafePresetName(key)) continue;
+                    // Validate and sanitize the profile shape
+                    const clean = sanitizeAuroraPreset(val);
+                    if (clean !== null) {
+                        customAuroraPresets[key] = clean;
+                    }
+                }
+            }
         }
     } catch(e) {}
 
@@ -1758,14 +1854,24 @@ refreshThemeProfiles();
                 alert("Please enter a profile name!");
                 return;
             }
-            
-            const currentSettings = { ...cachedSettings.auroraDrift };
-            customAuroraPresets[name] = currentSettings;
-            
+            if (!isSafePresetName(name)) {
+                alert("Profile name contains reserved characters. Please choose a different name.");
+                return;
+            }
+
+            // Sanitize the current settings before persisting so only valid,
+            // known fields are ever written to localStorage.
+            const clean = sanitizeAuroraPreset({ ...cachedSettings.auroraDrift });
+            if (!clean) {
+                alert("Could not save profile: current Aurora settings appear invalid.");
+                return;
+            }
+            customAuroraPresets[name] = clean;
+
             try {
                 localStorage.setItem('paraline_aurora_presets', JSON.stringify(customAuroraPresets));
             } catch(e) {}
-            
+
             refreshAuroraPresetsDropdown();
             document.getElementById('aurora-custom-preset-select').value = name;
             inputName.value = '';
