@@ -542,6 +542,48 @@ refreshThemeProfiles();
     };
     let statusTimeout = null;
 
+    /**
+     * Mirrors isValidAccelerator() from settingsStore.js for the renderer.
+     * Returns true when `value` is a string Electron's globalShortcut can accept.
+     *   - "None" is always valid (sentinel for "unset").
+     *   - Standalone F1-F24 keys are allowed without modifiers.
+     *   - All other combos need ≥1 modifier + exactly 1 recognised key token.
+     */
+    const VALID_MODIFIERS_SET = new Set([
+        'ctrl','control','alt','shift','super','meta','cmdorctrl','commandorcontrol'
+    ]);
+    const VALID_KEY_TOKENS = new Set([
+        '0','1','2','3','4','5','6','7','8','9',
+        'a','b','c','d','e','f','g','h','i','j','k','l','m',
+        'n','o','p','q','r','s','t','u','v','w','x','y','z',
+        'f1','f2','f3','f4','f5','f6','f7','f8','f9','f10','f11','f12',
+        'f13','f14','f15','f16','f17','f18','f19','f20','f21','f22','f23','f24',
+        'plus','space','tab','capslock','numlock','scrolllock',
+        'backspace','delete','insert','return','enter',
+        'up','down','left','right',
+        'home','end','pageup','pagedown',
+        'escape','esc',
+        'volumeup','volumedown','volumemute',
+        'medianexttrack','mediaprevioustrack','mediastop','mediaplaypause',
+        'printscreen',
+        'num0','num1','num2','num3','num4','num5','num6','num7','num8','num9',
+        'numdec','numadd','numsub','nummult','numdiv'
+    ]);
+
+    function isValidAccelerator(value) {
+        if (typeof value !== 'string') return false;
+        if (value === 'None') return true;
+        const tokens = value.split('+').map(t => t.trim().toLowerCase());
+        if (tokens.some(t => t === '')) return false;
+        const mods = tokens.filter(t => VALID_MODIFIERS_SET.has(t));
+        const keys = tokens.filter(t => !VALID_MODIFIERS_SET.has(t));
+        if (keys.length !== 1) return false;
+        const key = keys[0];
+        if (/^f([1-9]|1[0-9]|2[0-4])$/.test(key) && mods.length === 0) return true;
+        if (mods.length === 0) return false;
+        return VALID_KEY_TOKENS.has(key);
+    }
+
     function showHotkeyStatus(message) {
         const statusEl = document.getElementById('hotkey-status-msg');
         if (!statusEl) return;
@@ -672,6 +714,26 @@ refreshThemeProfiles();
 
                 parts.push(keyName);
                 const shortcutStr = parts.join('+');
+
+                // Reject invalid accelerators with a clear user-facing message.
+                // The input stays in edit mode so the user can try a different combo.
+                if (!isValidAccelerator(shortcutStr)) {
+                    input.value = shortcutStr;
+                    showHotkeyStatus(
+                        `⚠️ "${shortcutStr}" is not a valid shortcut. ` +
+                        `Use Ctrl / Alt / Shift plus a letter, number, or special key.`
+                    );
+                    // Briefly flash the input red to draw attention
+                    input.style.borderColor = '#e74c3c';
+                    input.style.boxShadow = '0 0 8px rgba(231, 76, 60, 0.5)';
+                    setTimeout(() => {
+                        input.style.borderColor = 'var(--accent)';
+                        input.style.boxShadow = '0 0 10px rgba(0, 212, 255, 0.35)';
+                        input.value = '';
+                    }, 800);
+                    return;
+                }
+
                 input.value = shortcutStr;
                 dispatchHotkeyUpdate(key, shortcutStr);
                 exitEditMode(key, true);

@@ -576,12 +576,82 @@ function sanitizeFocusMode(input = {}) {
   return { enabled, dimOpacity, idleTimeout };
 }
 
+// ---------------------------------------------------------------------------
+// Accelerator validation
+// ---------------------------------------------------------------------------
+// Valid modifier tokens accepted by Electron's globalShortcut.
+const VALID_MODIFIERS = new Set(["ctrl", "control", "alt", "shift", "super", "meta", "cmdorctrl", "commandorcontrol"]);
+
+// All named key tokens Electron accepts beyond plain alpha-numeric keys.
+// Sourced from https://www.electronjs.org/docs/latest/api/accelerator
+const VALID_NAMED_KEYS = new Set([
+  "0","1","2","3","4","5","6","7","8","9",
+  "a","b","c","d","e","f","g","h","i","j","k","l","m",
+  "n","o","p","q","r","s","t","u","v","w","x","y","z",
+  "f1","f2","f3","f4","f5","f6","f7","f8","f9","f10","f11","f12",
+  "f13","f14","f15","f16","f17","f18","f19","f20","f21","f22","f23","f24",
+  "plus","space","tab","capslock","numlock","scrolllock",
+  "backspace","delete","insert","return","enter",
+  "up","down","left","right",
+  "home","end","pageup","pagedown",
+  "escape","esc",
+  "volumeup","volumedown","volumemute",
+  "medianexttrack","mediaprevioustrack","mediastop","mediaplaypause",
+  "printscreen",
+  "num0","num1","num2","num3","num4","num5","num6","num7","num8","num9",
+  "numdec","numadd","numsub","nummult","numdiv"
+]);
+
+/**
+ * Returns true when `value` is a string that Electron's globalShortcut can
+ * accept without throwing.  Rules:
+ *   - "None" is the sentinel for "unset" – always valid.
+ *   - A standalone function key (F1-F24) is valid without modifiers.
+ *   - Any other combination must have at least one modifier token AND exactly
+ *     one non-modifier key token drawn from VALID_NAMED_KEYS.
+ *   - Tokens are split on "+" and matched case-insensitively.
+ */
+function isValidAccelerator(value) {
+  if (typeof value !== "string") return false;
+  if (value === "None") return true;
+
+  const tokens = value.split("+").map(t => t.trim().toLowerCase());
+  if (tokens.some(t => t === "")) return false;
+
+  const modifiers = tokens.filter(t => VALID_MODIFIERS.has(t));
+  const keys = tokens.filter(t => !VALID_MODIFIERS.has(t));
+
+  // Must have exactly one non-modifier key
+  if (keys.length !== 1) return false;
+
+  const key = keys[0];
+
+  // Standalone function keys are allowed without modifiers
+  if (/^f([1-9]|1[0-9]|2[0-4])$/.test(key) && modifiers.length === 0) return true;
+
+  // All other keys require at least one modifier
+  if (modifiers.length === 0) return false;
+
+  // The key itself must be a recognised token
+  return VALID_NAMED_KEYS.has(key);
+}
+
 function sanitizeShortcuts(input) {
   const safeInput = (input && typeof input === "object") ? input : {};
+
+  const sanitizeOne = (value, fallback) => {
+    if (typeof value !== "string") return fallback;
+    if (!isValidAccelerator(value)) {
+      console.warn(`[Paraline] Invalid accelerator rejected by sanitizeShortcuts: "${value}". Falling back to "${fallback}".`);
+      return fallback;
+    }
+    return value;
+  };
+
   return {
-    togglePause: typeof safeInput.togglePause === "string" ? safeInput.togglePause : DEFAULT_SETTINGS.shortcuts.togglePause,
-    toggleHide: typeof safeInput.toggleHide === "string" ? safeInput.toggleHide : DEFAULT_SETTINGS.shortcuts.toggleHide,
-    cycleTheme: typeof safeInput.cycleTheme === "string" ? safeInput.cycleTheme : DEFAULT_SETTINGS.shortcuts.cycleTheme
+    togglePause: sanitizeOne(safeInput.togglePause, DEFAULT_SETTINGS.shortcuts.togglePause),
+    toggleHide:  sanitizeOne(safeInput.toggleHide,  DEFAULT_SETTINGS.shortcuts.toggleHide),
+    cycleTheme:  sanitizeOne(safeInput.cycleTheme,   DEFAULT_SETTINGS.shortcuts.cycleTheme)
   };
 }
 
@@ -691,5 +761,6 @@ module.exports = {
   createDefaultSettings,
   createThemeDefaults,
   createSettingsStore,
-  sanitizeSettings
+  sanitizeSettings,
+  isValidAccelerator
 };
