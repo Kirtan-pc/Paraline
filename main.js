@@ -1619,7 +1619,9 @@ app.whenReady().then(() => {
   applyStartupSettings(visualizerSettings.launchOnStartup);
   registerGlobalShortcuts();
 
-  autoUpdater.checkForUpdatesAndNotify();
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
 
   nativeTheme.on("updated", () => {
     sendVisualizerSettings();
