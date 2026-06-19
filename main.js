@@ -15,6 +15,7 @@ let tray;
 let isPaused = false;
 let isHidden = false;
 let globalShortcutsSuspended = false;
+let shortcutRegistrationFailures = {};
 let settingsStore;
 let visualizerSettings;
 let settingsWindow;
@@ -301,7 +302,8 @@ function getRendererSettings() {
     paused: isPaused,
     hidden: isHidden,
     version: APP_VERSION,
-    helperConnected: helperConnected
+    helperConnected: helperConnected,
+    shortcutRegistrationFailures: shortcutRegistrationFailures
   };
 }
 
@@ -389,6 +391,10 @@ function cycleTheme() {
 }
 function registerGlobalShortcuts() {
   globalShortcut.unregisterAll();
+
+  // Reset failures before re-registering
+  shortcutRegistrationFailures = {};
+
   if (globalShortcutsSuspended) return;
 
   const shortcuts = visualizerSettings.shortcuts;
@@ -406,11 +412,12 @@ function registerGlobalShortcuts() {
   // Main-process side validation for duplicate accelerators
   const registeredAccelerators = new Set();
 
-  const registerIfUnique = (accelerator, name, callback) => {
+  const registerIfUnique = (accelerator, settingKey, name, callback) => {
     if (!accelerator) return;
     const normalized = accelerator.toLowerCase().replace(/\s+/g, "");
     if (registeredAccelerators.has(normalized)) {
       console.warn(`[Paraline] Duplicate shortcut rejected in main-process validation: ${accelerator} for "${name}"`);
+      shortcutRegistrationFailures[settingKey] = true;
       return;
     }
     registeredAccelerators.add(normalized);
@@ -418,23 +425,28 @@ function registerGlobalShortcuts() {
       const registered = globalShortcut.register(accelerator, callback);
       if (!registered) {
         console.error(`Failed to register global shortcut for ${name}: ${accelerator} (possibly registered by another application)`);
+        shortcutRegistrationFailures[settingKey] = true;
       }
     } catch (err) {
       console.error(`Failed to register global shortcut for ${name}: ${accelerator}`, err);
+      shortcutRegistrationFailures[settingKey] = true;
     }
   };
 
-  registerIfUnique(pauseAcc, "pause/resume", () => {
+  registerIfUnique(pauseAcc, "togglePause", "pause/resume", () => {
     togglePaused();
   });
 
-  registerIfUnique(hideAcc, "hide/show", () => {
+  registerIfUnique(hideAcc, "toggleHide", "hide/show", () => {
     toggleHidden();
   });
 
-  registerIfUnique(cycleAcc, "cycling theme", () => {
+  registerIfUnique(cycleAcc, "cycleTheme", "cycling theme", () => {
     cycleTheme();
   });
+
+  // Push updated failure state to the Settings window so the UI can warn the user
+  sendVisualizerSettings();
 }
 
 // --- Focus Mode polling ---
