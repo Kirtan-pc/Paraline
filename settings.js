@@ -347,26 +347,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const themeSelector = document.getElementById('theme-selector');
-    themeSelector.addEventListener('change', (e) => {
-        const themeId = e.target.value;
-        syncThemeUI(themeId);
+    if (themeSelector) {
+        themeSelector.addEventListener('change', (e) => {
+            const themeId = e.target.value;
+            syncThemeUI(themeId);
 
-        // Also trigger an update to actually switch the active visualizer theme
-        if (window.visualizerSettings) {
-            window.visualizerSettings.update({
-                selectedTheme: themeId
-            });
-        }
-    });
+            // Also trigger an update to actually switch the active visualizer theme
+            if (window.visualizerSettings) {
+                window.visualizerSettings.update({
+                    selectedTheme: themeId
+                });
+            }
+        });
+    }
 
     const performanceModeSelector = document.getElementById('performance-mode-selector');
-    performanceModeSelector.addEventListener('change', (e) => {
-        if (window.visualizerSettings) {
-            window.visualizerSettings.update({
-                performanceMode: e.target.value
-            });
-        }
-    });
+    if (performanceModeSelector) {
+        performanceModeSelector.addEventListener('change', (e) => {
+            if (window.visualizerSettings) {
+                window.visualizerSettings.update({
+                    performanceMode: e.target.value
+                });
+            }
+        });
+    }
 
     const launchCheckbox = document.getElementById('launch-on-startup-checkbox');
     if (launchCheckbox) {
@@ -801,6 +805,7 @@ refreshThemeProfiles();
 
     function dispatchThemeUpdate() {
         if (!window.visualizerSettings) return;
+        if (!themeSelector) return;
         const selectedTheme = themeSelector.value;
         const dropdowns = document.querySelectorAll('#dynamic-theme-settings .theme-trigger');
         
@@ -820,6 +825,7 @@ refreshThemeProfiles();
 
     function dispatchCustomUpdate() {
         if (!window.visualizerSettings) return;
+        if (!themeSelector) return;
         const activeTheme = themeSelector.value;
         
         // Let's ensure the dropdown in the UI switches to "custom" if there's a colorStyle equivalent
@@ -1046,15 +1052,17 @@ refreshThemeProfiles();
                 }
             }
             
-            if (settings.selectedTheme) {
-                themeSelector.value = settings.selectedTheme;
-                syncThemeUI(settings.selectedTheme);
-            } else {
-                themeSelector.value = "ambientWave";
-                syncThemeUI("ambientWave");
+            if (themeSelector) {
+                if (settings.selectedTheme) {
+                    themeSelector.value = settings.selectedTheme;
+                    syncThemeUI(settings.selectedTheme);
+                } else {
+                    themeSelector.value = "ambientWave";
+                    syncThemeUI("ambientWave");
+                }
             }
-            
-            if (settings.performanceMode) {
+
+            if (performanceModeSelector && settings.performanceMode) {
                 performanceModeSelector.value = settings.performanceMode;
             }
 
@@ -1172,7 +1180,7 @@ refreshThemeProfiles();
                 }
             }
 
-            if (nextSettings.selectedTheme !== undefined) {
+            if (nextSettings.selectedTheme !== undefined && themeSelector) {
                 if (themeSelector.value !== nextSettings.selectedTheme) {
                     themeSelector.value = nextSettings.selectedTheme;
                     syncThemeUI(nextSettings.selectedTheme);
@@ -1263,7 +1271,7 @@ refreshThemeProfiles();
                 }
             }
             // Sync Aurora advanced controls if they are currently visible
-            if (themeSelector.value === 'auroraDrift' && nextSettings.auroraDrift) {
+            if (themeSelector && themeSelector.value === 'auroraDrift' && nextSettings.auroraDrift) {
                 Object.assign(cachedSettings.auroraDrift || {}, nextSettings.auroraDrift);
                 syncAuroraUI();
             }
