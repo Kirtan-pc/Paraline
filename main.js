@@ -13,6 +13,7 @@ let fakeTimer;
 let isQuitting = false;
 let tray;
 let isPaused = false;
+let wasPausedBeforeSleep = false;
 let isHidden = false;
 let globalShortcutsSuspended = false;
 let settingsStore;
@@ -1637,13 +1638,14 @@ app.whenReady().then(() => {
   // -----------------------------------------
 
   powerMonitor.on("suspend", () => {
+    wasPausedBeforeSleep = isPaused;
     isPaused = true;
     sendVisualizerSettings();
     refreshTrayMenu();
   });
 
   powerMonitor.on("resume", () => {
-    isPaused = false;
+    isPaused = wasPausedBeforeSleep;
     sendVisualizerSettings();
     refreshTrayMenu();
   });
