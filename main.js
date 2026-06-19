@@ -720,19 +720,29 @@ function getThemeProfiles() {
 const ALLOWED_EXTERNAL_SCHEMES = new Set(["https:", "http:"]);
 
 function openExternalUrl(url) {
+  if (typeof url !== "string" || url.trim() === "") {
+    console.warn("[Paraline] openExternalUrl(): invalid url payload:", url);
+    return;
+  }
+
   let parsed;
   try {
     parsed = new URL(url);
   } catch {
+    console.warn("[Paraline] openExternalUrl(): failed to parse URL:", url);
     return;
   }
+
   if (!ALLOWED_EXTERNAL_SCHEMES.has(parsed.protocol)) {
+    console.warn("[Paraline] openExternalUrl(): blocked unsupported protocol:", parsed.protocol, "url:", url);
     return;
   }
+
   shell.openExternal(url).catch(() => {
     // Ignore shell open failures from tray actions.
   });
 }
+
 
 function getWindowIconPath() {
   const iconCandidates = [
