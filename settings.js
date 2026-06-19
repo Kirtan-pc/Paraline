@@ -554,11 +554,12 @@ refreshThemeProfiles();
     };
     let statusTimeout = null;
 
-    function showHotkeyStatus(message) {
+    function showHotkeyStatus(message, isError = false) {
         const statusEl = document.getElementById('hotkey-status-msg');
         if (!statusEl) return;
         
         statusEl.textContent = message;
+        statusEl.style.color = isError ? '#e74c3c' : '#2ecc71';
         statusEl.style.opacity = '1';
         
         if (statusTimeout) {
@@ -684,6 +685,23 @@ refreshThemeProfiles();
 
                 parts.push(keyName);
                 const shortcutStr = parts.join('+');
+
+                // Check for duplicates
+                let duplicateKey = null;
+                const currentShortcuts = cachedSettings.shortcuts || {};
+                for (const [sKey, sVal] of Object.entries(currentShortcuts)) {
+                    if (sKey !== key && sVal && sVal !== 'None' && sVal.toLowerCase().replace(/\s+/g, '') === shortcutStr.toLowerCase().replace(/\s+/g, '')) {
+                        duplicateKey = sKey;
+                        break;
+                    }
+                }
+
+                if (duplicateKey) {
+                    showHotkeyStatus(`✗ Conflict: Already assigned to "${hotkeyNames[duplicateKey]}"`, true);
+                    exitEditMode(key, false);
+                    return;
+                }
+
                 input.value = shortcutStr;
                 dispatchHotkeyUpdate(key, shortcutStr);
                 exitEditMode(key, true);
