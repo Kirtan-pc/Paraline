@@ -316,6 +316,7 @@ function createOverlayWindow(display) {
   overlayWindow.webContents.on("did-finish-load", () => {
     setTimeout(() => {
       sendVisualizerSettingsToWindow(overlayWindow);
+      sendFocusModeOpacityToWindow(overlayWindow, getCurrentFocusModeOpacity());
     }, 100);
   });
 
@@ -324,7 +325,8 @@ function createOverlayWindow(display) {
       overlayWindows.delete(display.id);
     }
 
-    if (!isQuitting && !isReconcilingDisplays && overlayWindows.size === 0 && screen.getAllDisplays().length > 0) {
+    const displayCount = screen.getAllDisplays().length;
+    if (!isQuitting && !isReconcilingDisplays && overlayWindows.size < displayCount) {
       reconcileOverlayWindows();
     }
   });
@@ -464,9 +466,26 @@ function reloadVisualizer() {
 }
 
 // --- Focus Mode polling ---
+function getCurrentFocusModeOpacity() {
+  if (!focusModeCurrentlyDimmed) {
+    return 1.0;
+  }
+
+  const fmSettings = visualizerSettings && visualizerSettings.focusMode;
+  return fmSettings && typeof fmSettings.dimOpacity === "number" ? fmSettings.dimOpacity : 0.1;
+}
+
+function sendFocusModeOpacityToWindow(targetWindow, opacity) {
+  if (!targetWindow || targetWindow.isDestroyed()) {
+    return;
+  }
+
+  targetWindow.webContents.send("focus-mode-opacity", { opacity });
+}
+
 function sendFocusModeOpacity(opacity) {
   for (const overlayWindow of getActiveOverlayWindows()) {
-    overlayWindow.webContents.send("focus-mode-opacity", { opacity });
+    sendFocusModeOpacityToWindow(overlayWindow, opacity);
   }
 }
 
