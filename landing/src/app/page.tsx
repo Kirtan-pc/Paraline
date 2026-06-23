@@ -408,7 +408,7 @@ export default function Home() {
               <DownloadButton location="cta" className="w-full md:w-64 px-10 py-5 rounded-full bg-white text-black hover:bg-white/90 shadow-[0_0_40px_rgba(255,255,255,0.15)] font-semibold tracking-widest text-xs uppercase transition-all duration-300 hover:scale-105" variant="primary">
                 Download Installer
               </DownloadButton>
-              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="w-full md:w-64 rounded-full border border-white/10 bg-white/5 px-10 py-5 text-center text-xs font-semibold text-white uppercase tracking-widest transition-all hover:border-white/30 hover:bg-white/10 backdrop-blur-md">
+              <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" aria-label="View Paraline source code on GitHub" className="w-full md:w-64 rounded-full border border-white/10 bg-white/5 px-10 py-5 text-center text-xs font-semibold text-white uppercase tracking-widest transition-all hover:border-white/30 hover:bg-white/10 backdrop-blur-md">
                 View Source
               </a>
               <p className="mt-4 text-xs font-light tracking-widest text-muted/60 uppercase">Windows 10 / 11 Supported</p>
