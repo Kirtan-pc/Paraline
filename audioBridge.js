@@ -24,6 +24,9 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
   let helperReady = false;
   let stdoutBuffer = "";
   const MAX_STDOUT_BUFFER_BYTES = 64 * 1024;
+  // How many consecutive overflows before we kill and restart the helper
+  const MAX_OVERFLOW_COUNT = 3;
+  let overflowCount = 0;
   let isStopping = false;
   let recoveryTimer = null;
   let successStartTime = null;
@@ -45,7 +48,10 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
     const appPath = app.getAppPath();
 
     const candidates = [
-      path.join(process.resourcesPath, "audio-helper", "Paraline.AudioBridge.exe"),
+      // process.resourcesPath is only defined inside a packaged Electron app
+      ...(process.resourcesPath
+        ? [path.join(process.resourcesPath, "audio-helper", "Paraline.AudioBridge.exe")]
+        : []),
       path.join(appPath, "build", "audio-helper", "Paraline.AudioBridge.exe"),
       path.join(appPath, "audio-helper", "bin", "Release", "net8.0-windows", "win-x64", "publish", "Paraline.AudioBridge.exe"),
       path.join(appPath, "audio-helper", "bin", "Debug", "net8.0-windows", "Paraline.AudioBridge.exe"),
@@ -72,6 +78,7 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
     isStopping = false;
     helperReady = false;
     stdoutBuffer = "";
+    overflowCount = 0;
 
     helperProcess = spawn(helperBinary, [], {
       windowsHide: true,
@@ -83,9 +90,38 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
 
       if (stdoutBuffer.length > MAX_STDOUT_BUFFER_BYTES) {
         stdoutBuffer = "";
-        console.warn("stdout buffer cleared due to overflow");
+        overflowCount++;
+        console.warn(
+          `[AudioBridge] stdout buffer overflow #${overflowCount} — buffer cleared (${MAX_STDOUT_BUFFER_BYTES} bytes exceeded).`
+        );
+
+        // Downgrade status immediately so tray/UI reflects the stall
+        helperReady = false;
+        successStartTime = null;
+        updateStatus({
+          mode: "simulated",
+          reason:
+            `Audio helper stdout overflowed (${overflowCount}/${MAX_OVERFLOW_COUNT}). ` +
+            "Audio levels stalled — attempting recovery."
+        });
+
+        if (overflowCount >= MAX_OVERFLOW_COUNT) {
+          // Too many consecutive overflows — kill the helper and let the
+          // existing exit handler schedule a reconnect.
+          console.error(
+            `[AudioBridge] ${MAX_OVERFLOW_COUNT} consecutive overflows — restarting helper.`
+          );
+          overflowCount = 0;
+          if (helperProcess) {
+            helperProcess.kill();
+          }
+        }
+
         return;
       }
+
+      // A valid chunk resets the consecutive overflow counter
+      overflowCount = 0;
 
       const lines = stdoutBuffer.split(/\r?\n/);
       stdoutBuffer = lines.pop() || "";
@@ -269,5 +305,51 @@ function createAudioBridge(sendLevel, onStatusChange = () => {}) {
 }
 
 module.exports = {
-  createAudioBridge
+  createAudioBridge,
+  /**
+   * Exported for unit testing only.
+   * Creates a self-contained stdout-chunk handler that can be driven without
+   * spawning an Electron process.  Returns { handleChunk, getOverflowCount }.
+   */
+  _createStdoutHandler({
+    maxBytes = 64 * 1024,
+    maxOverflows = 3,
+    onOverflow = () => {},
+    onKill = () => {},
+    onLine = () => {}
+  } = {}) {
+    let buf = "";
+    let overflowCount = 0;
+
+    function handleChunk(chunk) {
+      buf += chunk.toString();
+
+      if (buf.length > maxBytes) {
+        buf = "";
+        overflowCount++;
+        onOverflow(overflowCount, maxOverflows);
+
+        if (overflowCount >= maxOverflows) {
+          overflowCount = 0;
+          onKill();
+        }
+        return;
+      }
+
+      // Valid chunk — reset counter
+      overflowCount = 0;
+
+      const lines = buf.split(/\r?\n/);
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        if (line.trim()) onLine(line);
+      }
+    }
+
+    return {
+      handleChunk,
+      getOverflowCount: () => overflowCount,
+      reset: () => { buf = ""; overflowCount = 0; }
+    };
+  }
 };
