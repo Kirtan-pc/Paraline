@@ -4,15 +4,18 @@ const fs = require("fs");
 const { createAudioBridge } = require("./audioBridge");
 const { createDefaultSettings, createSettingsStore, createThemeDefaults, sanitizeSettings } = require("./settingsStore");
 const ThemeAgent = require('./themeAgent');
+const { autoUpdater } = require("electron-updater");
 
-let overlayWindow;
+const overlayWindows = new Map();
 let lastBridgeMode = null;
 let lastBridgeReason = null;
 let audioBridge;
 let fakeTimer;
 let isQuitting = false;
+let isReconcilingDisplays = false;
 let tray;
 let isPaused = false;
+let wasPausedBeforeSleep = false;
 let isHidden = false;
 let globalShortcutsSuspended = false;
 let shortcutRegistrationFailures = {};
@@ -227,11 +230,61 @@ const THEME_LABELS = {
   auroraDrift: "Aurora Drift"
 };
 
-function createOverlayWindow() {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { bounds } = primaryDisplay;
+function getActiveOverlayWindows() {
+  return Array.from(overlayWindows.values()).filter((overlayWindow) => (
+    overlayWindow && !overlayWindow.isDestroyed()
+  ));
+}
 
-  overlayWindow = new BrowserWindow({
+function hasActiveOverlayWindows() {
+  return getActiveOverlayWindows().length > 0;
+}
+
+function getOverlayWindowFromWebContents(webContents) {
+  return getActiveOverlayWindows().find((overlayWindow) => (
+    overlayWindow.webContents.id === webContents.id
+  ));
+}
+
+function applyOverlayWindowDisplayState(overlayWindow, display) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    return;
+  }
+
+  const { bounds } = display;
+  overlayWindow.setBounds(bounds);
+  overlayWindow.setAlwaysOnTop(true, "screen-saver");
+  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  overlayWindow.moveTop();
+}
+
+function destroyOverlayWindowForDisplay(displayId) {
+  const overlayWindow = overlayWindows.get(displayId);
+  overlayWindows.delete(displayId);
+
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.destroy();
+  }
+}
+
+function destroyAllOverlayWindows() {
+  for (const displayId of Array.from(overlayWindows.keys())) {
+    destroyOverlayWindowForDisplay(displayId);
+  }
+}
+
+function createOverlayWindow(display) {
+  const existingOverlayWindow = overlayWindows.get(display.id);
+
+  if (existingOverlayWindow && !existingOverlayWindow.isDestroyed()) {
+    applyOverlayWindowDisplayState(existingOverlayWindow, display);
+    return existingOverlayWindow;
+  }
+
+  const { bounds } = display;
+
+  const overlayWindow = new BrowserWindow({
     x: bounds.x,
     y: bounds.y,
     width: bounds.width,
@@ -255,28 +308,57 @@ function createOverlayWindow() {
     }
   });
 
-  overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-  overlayWindow.setBounds(bounds);
+  overlayWindows.set(display.id, overlayWindow);
+  applyOverlayWindowDisplayState(overlayWindow, display);
   overlayWindow.showInactive();
-  overlayWindow.moveTop();
   overlayWindow.loadFile("index.html");
 
   overlayWindow.webContents.on("did-finish-load", () => {
     setTimeout(() => {
-      sendVisualizerSettings();
+      sendVisualizerSettingsToWindow(overlayWindow);
+      sendFocusModeOpacityToWindow(overlayWindow, getCurrentFocusModeOpacity());
     }, 100);
   });
 
-  overlayWindow.on("close", () => {
-    stopSimulatedAudioFallback();
+  overlayWindow.on("closed", () => {
+    if (overlayWindows.get(display.id) === overlayWindow) {
+      overlayWindows.delete(display.id);
+    }
+
+    const displayCount = screen.getAllDisplays().length;
+    if (!isQuitting && !isReconcilingDisplays && overlayWindows.size < displayCount) {
+      reconcileOverlayWindows();
+    }
   });
 
-  overlayWindow.on("closed", () => {
-    stopSimulatedAudioFallback();
-    overlayWindow = null;
-  });
+  return overlayWindow;
+}
+
+function reconcileOverlayWindows() {
+  const displays = screen.getAllDisplays();
+
+  if (displays.length === 0) {
+    return;
+  }
+
+  isReconcilingDisplays = true;
+
+  try {
+    const activeDisplayIds = new Set();
+
+    for (const display of displays) {
+      activeDisplayIds.add(display.id);
+      createOverlayWindow(display);
+    }
+
+    for (const displayId of Array.from(overlayWindows.keys())) {
+      if (!activeDisplayIds.has(displayId)) {
+        destroyOverlayWindowForDisplay(displayId);
+      }
+    }
+  } finally {
+    isReconcilingDisplays = false;
+  }
 }
 
 function sendAudioLevel(value, source) {
@@ -284,14 +366,12 @@ function sendAudioLevel(value, source) {
     return;
   }
 
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
-    return;
+  for (const overlayWindow of getActiveOverlayWindows()) {
+    overlayWindow.webContents.send("audio-level", {
+      value,
+      source
+    });
   }
-
-  overlayWindow.webContents.send("audio-level", {
-    value,
-    source
-  });
 }
 
 function getRendererSettings() {
@@ -316,7 +396,10 @@ function sendVisualizerSettingsToWindow(targetWindow) {
 }
 
 function sendVisualizerSettings() {
-  sendVisualizerSettingsToWindow(overlayWindow);
+  for (const overlayWindow of getActiveOverlayWindows()) {
+    sendVisualizerSettingsToWindow(overlayWindow);
+  }
+
   sendVisualizerSettingsToWindow(settingsWindow);
 }
 
@@ -373,12 +456,17 @@ function toggleHidden() {
 }
 
 function reloadVisualizer() {
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
+  const activeOverlayWindows = getActiveOverlayWindows();
+
+  if (activeOverlayWindows.length === 0) {
     return;
   }
 
   stopSimulatedAudioFallback();
-  overlayWindow.webContents.reloadIgnoringCache();
+
+  for (const overlayWindow of activeOverlayWindows) {
+    overlayWindow.webContents.reloadIgnoringCache();
+  }
 }
 
 function cycleTheme() {
@@ -450,11 +538,27 @@ function registerGlobalShortcuts() {
 }
 
 // --- Focus Mode polling ---
-function sendFocusModeOpacity(opacity) {
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
+function getCurrentFocusModeOpacity() {
+  if (!focusModeCurrentlyDimmed) {
+    return 1.0;
+  }
+
+  const fmSettings = visualizerSettings && visualizerSettings.focusMode;
+  return fmSettings && typeof fmSettings.dimOpacity === "number" ? fmSettings.dimOpacity : 0.1;
+}
+
+function sendFocusModeOpacityToWindow(targetWindow, opacity) {
+  if (!targetWindow || targetWindow.isDestroyed()) {
     return;
   }
-  overlayWindow.webContents.send("focus-mode-opacity", { opacity });
+
+  targetWindow.webContents.send("focus-mode-opacity", { opacity });
+}
+
+function sendFocusModeOpacity(opacity) {
+  for (const overlayWindow of getActiveOverlayWindows()) {
+    sendFocusModeOpacityToWindow(overlayWindow, opacity);
+  }
 }
 
 function startFocusModePolling() {
@@ -529,16 +633,33 @@ function stopSimulatedAudioFallback() {
   }
 }
 
-function resizeOverlayToPrimaryDisplay() {
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
-    return;
+function handleDisplayMetricsChanged(_event, display) {
+  const overlayWindow = overlayWindows.get(display.id);
+
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    applyOverlayWindowDisplayState(overlayWindow, display);
   }
 
-  const { bounds } = screen.getPrimaryDisplay();
-  overlayWindow.setBounds(bounds);
-  overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWindow.moveTop();
+  reconcileOverlayWindows();
+}
+
+function handleDisplayAdded(_event, display) {
+  createOverlayWindow(display);
+  reconcileOverlayWindows();
+  sendVisualizerSettings();
+}
+
+function handleDisplayRemoved(_event, display) {
+  isReconcilingDisplays = true;
+
+  try {
+    destroyOverlayWindowForDisplay(display.id);
+  } finally {
+    isReconcilingDisplays = false;
+  }
+
+  reconcileOverlayWindows();
+  sendVisualizerSettings();
 }
 
 function handleAudioBridgeStatusChange(status) {
@@ -1594,10 +1715,18 @@ function refreshTrayMenu() {
 }
 
 function showCustomContextMenu() {
+  const cursorPoint = screen.getCursorScreenPoint();
+  const targetDisplay = screen.getDisplayNearestPoint(cursorPoint);
+  let overlayWindow = overlayWindows.get(targetDisplay.id);
+
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    reconcileOverlayWindows();
+    overlayWindow = overlayWindows.get(targetDisplay.id);
+  }
+
   if (!overlayWindow || overlayWindow.isDestroyed()) {
     return;
   }
-  const cursorPoint = screen.getCursorScreenPoint();
 
   // Force Windows to refresh the window's z-order relative to other topmost windows
   // (like the tray overflow panel) by toggling setAlwaysOnTop and calling moveTop()
@@ -1605,9 +1734,8 @@ function showCustomContextMenu() {
   overlayWindow.setAlwaysOnTop(true, "screen-saver");
   overlayWindow.moveTop();
 
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const localX = cursorPoint.x - primaryDisplay.bounds.x;
-  const localY = cursorPoint.y - primaryDisplay.bounds.y;
+  const localX = cursorPoint.x - targetDisplay.bounds.x;
+  const localY = cursorPoint.y - targetDisplay.bounds.y;
 
   overlayWindow.webContents.send("show-context-menu", {
     x: localX,
@@ -1634,6 +1762,10 @@ app.whenReady().then(() => {
   applyStartupSettings(visualizerSettings.launchOnStartup);
   registerGlobalShortcuts();
 
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+
   nativeTheme.on("updated", () => {
     sendVisualizerSettings();
   });
@@ -1651,6 +1783,19 @@ app.whenReady().then(() => {
   
   themeAgent.start();
   // -----------------------------------------
+
+  powerMonitor.on("suspend", () => {
+    wasPausedBeforeSleep = isPaused;
+    isPaused = true;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
+
+  powerMonitor.on("resume", () => {
+    isPaused = wasPausedBeforeSleep;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
 
   ipcMain.handle("audio-bridge-status", () => {
     if (!audioBridge) {
@@ -1688,13 +1833,17 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on("set-ignore-mouse-events", (event, ignore) => {
-    if (overlayWindow && !overlayWindow.isDestroyed()) {
-      if (ignore) {
-        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-        overlayWindow.blur();
-      } else {
-        overlayWindow.setIgnoreMouseEvents(false);
-      }
+    const overlayWindow = getOverlayWindowFromWebContents(event.sender);
+
+    if (!overlayWindow) {
+      return;
+    }
+
+    if (ignore) {
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      overlayWindow.blur();
+    } else {
+      overlayWindow.setIgnoreMouseEvents(false);
     }
   });
 
@@ -1973,6 +2122,8 @@ app.whenReady().then(() => {
     openExternalUrl(url);
   });
 
+  reconcileOverlayWindows();
+  
   ipcMain.handle("onboarding:dismiss", (_event, payload = {}) => {
     dismissOnboarding(!!payload.dontShowAgain);
     return { success: true };
@@ -1990,7 +2141,6 @@ app.whenReady().then(() => {
     createOnboardingWindow();
   }
 
-  createOverlayWindow();
   createTray();
   sendVisualizerSettings();
 
@@ -2014,27 +2164,26 @@ app.whenReady().then(() => {
 
   refreshTrayMenu();
 
-  screen.on("display-metrics-changed", resizeOverlayToPrimaryDisplay);
-  screen.on("display-added", resizeOverlayToPrimaryDisplay);
-  screen.on("display-removed", resizeOverlayToPrimaryDisplay);
+  screen.on("display-metrics-changed", handleDisplayMetricsChanged);
+  screen.on("display-added", handleDisplayAdded);
+  screen.on("display-removed", handleDisplayRemoved);
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createOverlayWindow();
+    if (!hasActiveOverlayWindows()) {
+      reconcileOverlayWindows();
     }
   });
 });
 
 app.on("second-instance", () => {
-  if (overlayWindow && !overlayWindow.isDestroyed()) {
-    resizeOverlayToPrimaryDisplay();
-    sendVisualizerSettings();
-  }
+  reconcileOverlayWindows();
+  sendVisualizerSettings();
 });
 
 app.on("before-quit", () => {
   isQuitting = true;
   stopSimulatedAudioFallback();
+  destroyAllOverlayWindows();
 
   if (audioBridge) {
     audioBridge.stop();
