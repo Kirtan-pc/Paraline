@@ -12,7 +12,8 @@
     "build:helper": "dotnet publish .\\audio-helper\\Paraline.AudioBridge.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o .\\build\\audio-helper",
     "pack:win": "npm run build:helper && npm run validate:helper && electron-builder --dir --win nsis --x64",
     "dist:win": "npm run build:helper && npm run validate:helper && electron-builder --win nsis --x64",
-    "validate:helper": "node scripts/validate-helper.js"
+    "validate:helper": "node scripts/validate-helper.js",
+    "test": "node --test test/**/*.test.js"
   },
   "keywords": [
     "electron",
