@@ -4,6 +4,7 @@ const fs = require("fs");
 const { createAudioBridge } = require("./audioBridge");
 const { createDefaultSettings, createSettingsStore, createThemeDefaults, sanitizeSettings } = require("./settingsStore");
 const ThemeAgent = require('./themeAgent');
+const { autoUpdater } = require("electron-updater");
 
 const overlayWindows = new Map();
 let lastBridgeMode = null;
@@ -1760,6 +1761,10 @@ app.whenReady().then(() => {
   visualizerSettings = settingsStore.save(settingsStore.load());
   applyStartupSettings(visualizerSettings.launchOnStartup);
   registerGlobalShortcuts();
+
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
 
   nativeTheme.on("updated", () => {
     sendVisualizerSettings();
