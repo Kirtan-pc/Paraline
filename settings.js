@@ -1037,12 +1037,43 @@ refreshThemeProfiles();
                 }
             });
         }
+        function isValidProfileName(name) {
+            if (typeof name !== "string" || name.trim() === "") {
+                return { valid: false, message: "Profile name cannot be empty." };
+            }
+            if (name.length > 64) {
+                return { valid: false, message: "Profile name cannot exceed 64 characters." };
+            }
+            const reserved = new Set(["__proto__", "constructor", "prototype"]);
+            if (reserved.has(name)) {
+                return { valid: false, message: `Profile name "${name}" is a reserved system word. Please use a different name.` };
+            }
+            const safePattern = /^[A-Za-z0-9 _\-()À-ɏ]{1,64}$/;
+            if (!safePattern.test(name)) {
+                return { valid: false, message: "Profile name contains invalid characters. Use only letters, numbers, spaces, hyphens, underscores, or parentheses." };
+            }
+            return { valid: true };
+        }
+
         btnSaveThemeProfile.addEventListener('click', async () => {
             const profileName = themeProfileNameInput.value.trim();
 
-            if (!profileName) return;
+            if (!profileName) {
+                alert("Profile name cannot be empty.");
+                return;
+            }
 
-            await window.paralineApp.saveThemeProfile(profileName);
+            const validation = isValidProfileName(profileName);
+            if (!validation.valid) {
+                alert(validation.message);
+                return;
+            }
+
+            const result = await window.paralineApp.saveThemeProfile(profileName);
+            if (!result) {
+                alert(`Failed to save profile "${profileName}". The name is invalid or rejected by the system.`);
+                return;
+            }
 
             themeProfileNameInput.value = '';
             alert(`Theme profile "${profileName}" saved!`);
