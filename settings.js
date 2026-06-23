@@ -298,6 +298,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const focusModeControls = document.getElementById('focusModeControls');
     const focusModeDimOpacitySlider = document.getElementById('focus-mode-dim-opacity-slider');
     const focusModeTimeoutSlider = document.getElementById('focus-mode-timeout-slider');
+    const focusModeDimOpacityLabel = document.getElementById('val-focus-mode-dim-opacity');
+    const focusModeTimeoutLabel = document.getElementById('val-focus-mode-timeout');
 
     function toggleFocusModeControls(isEnabled) {
         if (focusModeControls) {
@@ -327,7 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (focusModeDimOpacitySlider) {
         focusModeDimOpacitySlider.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
-            document.getElementById('val-focus-mode-dim-opacity').textContent = val.toFixed(2);
+            if (focusModeDimOpacityLabel) {
+                focusModeDimOpacityLabel.textContent = val.toFixed(2);
+            }
             updateFocusModeSetting({ dimOpacity: val });
         });
     }
@@ -335,32 +339,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (focusModeTimeoutSlider) {
         focusModeTimeoutSlider.addEventListener('input', (e) => {
             const val = parseInt(e.target.value, 10);
-            document.getElementById('val-focus-mode-timeout').textContent = val;
+            if (focusModeTimeoutLabel) {
+                focusModeTimeoutLabel.textContent = val;
+            }
             updateFocusModeSetting({ idleTimeout: val });
         });
     }
 
     const themeSelector = document.getElementById('theme-selector');
-    themeSelector.addEventListener('change', (e) => {
-        const themeId = e.target.value;
-        syncThemeUI(themeId);
+    if (themeSelector) {
+        themeSelector.addEventListener('change', (e) => {
+            const themeId = e.target.value;
+            syncThemeUI(themeId);
 
-        // Also trigger an update to actually switch the active visualizer theme
-        if (window.visualizerSettings) {
-            window.visualizerSettings.update({
-                selectedTheme: themeId
-            });
-        }
-    });
+            // Also trigger an update to actually switch the active visualizer theme
+            if (window.visualizerSettings) {
+                window.visualizerSettings.update({
+                    selectedTheme: themeId
+                });
+            }
+        });
+    }
 
     const performanceModeSelector = document.getElementById('performance-mode-selector');
-    performanceModeSelector.addEventListener('change', (e) => {
-        if (window.visualizerSettings) {
-            window.visualizerSettings.update({
-                performanceMode: e.target.value
-            });
-        }
-    });
+    if (performanceModeSelector) {
+        performanceModeSelector.addEventListener('change', (e) => {
+            if (window.visualizerSettings) {
+                window.visualizerSettings.update({
+                    performanceMode: e.target.value
+                });
+            }
+        });
+    }
 
     const launchCheckbox = document.getElementById('launch-on-startup-checkbox');
     if (launchCheckbox) {
@@ -421,6 +431,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDeleteThemeProfile = document.getElementById('btn-delete-theme-profile');
     const btnExportThemeProfile = document.getElementById('btn-export-theme-profile');
     const btnImportThemeProfile = document.getElementById('btn-import-theme-profile');
+    const btnExportAllSettings = document.getElementById('btn-export-all-settings');
+    const btnImportAllSettings = document.getElementById('btn-import-all-settings');
     const btnResetThemeProfile = document.getElementById('btn-reset-theme-profile');
     const btnDuplicateThemeProfile = document.getElementById("btnDuplicateThemeProfile");
 
@@ -442,6 +454,90 @@ document.addEventListener('DOMContentLoaded', () => {
             name.length <= 64 &&
             !RESERVED_PRESET_NAMES.has(name)
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // Aurora preset sanitization
+    // -----------------------------------------------------------------------
+    // Numeric fields that every Aurora engine profile may contain, with their
+    // allowed [min, max] range mirroring settingsStore.js sanitizeAuroraDrift().
+    const AURORA_NUMERIC_FIELDS = {
+        baseGlowRadius:       [0.1, 3.0],
+        peakGlowRadius:       [0.1, 3.0],
+        crestBrightness:      [0.1, 3.0],
+        bloomStrength:        [0.0, 3.0],
+        glowFalloff:          [0.1, 3.0],
+        primaryFrequency:     [0.1, 3.0],
+        secondaryFrequency:   [0.1, 3.0],
+        turbulenceComplexity: [0.1, 3.0],
+        motionSmoothness:     [0.1, 3.0],
+        driftSpeed:           [0.0, 3.0],
+        bassInfluence:        [0.0, 3.0],
+        midInfluence:         [0.0, 3.0],
+        highShimmer:          [0.0, 3.0],
+        audioSmoothing:       [0.1, 3.0],
+        peakSensitivity:      [0.1, 3.0],
+        ribbonHeight:         [0.1, 3.0],
+        ribbonWidth:          [0.1, 3.0],
+        edgeSoftness:         [0.1, 3.0],
+        layerSeparation:      [0.1, 3.0],
+        crestSharpness:       [0.1, 3.0],
+        layerCount:           [1,   6],
+        backgroundHaze:       [0.0, 3.0],
+        foregroundHighlight:  [0.0, 3.0],
+        parallaxDepth:        [0.0, 3.0],
+        ambientOpacity:       [0.0, 3.0],
+        colorSaturation:      [0.0, 3.0],
+        atmosphericFade:      [0.0, 3.0],
+        edgeFeathering:       [0.0, 3.0]
+    };
+
+    /**
+     * Accepts a raw value from localStorage and returns a sanitized Aurora
+     * engine-profile object, or null if the input is fundamentally invalid.
+     *
+     * - Only known numeric keys are kept and clamped to their valid ranges.
+     * - gradientStops is validated as an array of {pos, color} pairs.
+     * - All other keys (including prototype-polluting names) are dropped.
+     */
+    function sanitizeAuroraPreset(raw) {
+        if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return null;
+
+        const out = {};
+
+        // Validate and clamp every known numeric field
+        for (const [field, [min, max]] of Object.entries(AURORA_NUMERIC_FIELDS)) {
+            if (Object.prototype.hasOwnProperty.call(raw, field)) {
+                const num = parseFloat(raw[field]);
+                if (Number.isFinite(num)) {
+                    out[field] = field === 'layerCount'
+                        ? Math.round(Math.max(min, Math.min(max, num)))
+                        : Math.max(min, Math.min(max, num));
+                }
+            }
+        }
+
+        // Validate gradientStops
+        if (Array.isArray(raw.gradientStops)) {
+            const stops = raw.gradientStops
+                .filter(s => s !== null && typeof s === 'object' && !Array.isArray(s))
+                .map(s => {
+                    const pos = parseFloat(s.pos);
+                    const color = typeof s.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(s.color)
+                        ? s.color
+                        : null;
+                    return Number.isFinite(pos) && color ? { pos: Math.max(0, Math.min(1, pos)), color } : null;
+                })
+                .filter(Boolean);
+            if (stops.length >= 2 && stops.length <= 6) {
+                out.gradientStops = stops;
+            }
+        }
+
+        // Require at least one meaningful field to be accepted
+        if (Object.keys(out).length === 0) return null;
+
+        return out;
     }
 
     let presets = {
@@ -542,20 +638,24 @@ refreshThemeProfiles();
     };
     let statusTimeout = null;
 
-    function showHotkeyStatus(message) {
+    function showHotkeyStatus(message, isError = false, persistent = false) {
         const statusEl = document.getElementById('hotkey-status-msg');
         if (!statusEl) return;
         
         statusEl.textContent = message;
+        statusEl.style.color = isError ? '#e74c3c' : '#2ecc71';
         statusEl.style.opacity = '1';
         
         if (statusTimeout) {
             clearTimeout(statusTimeout);
+            statusTimeout = null;
         }
         
-        statusTimeout = setTimeout(() => {
-            statusEl.style.opacity = '0';
-        }, 2500);
+        if (!persistent) {
+            statusTimeout = setTimeout(() => {
+                statusEl.style.opacity = '0';
+            }, 2500);
+        }
     }
 
     function dispatchHotkeyUpdate(settingKey, value) {
@@ -595,6 +695,11 @@ refreshThemeProfiles();
                     input.placeholder = 'Press keys...';
                     input.style.borderColor = 'var(--accent)';
                     input.style.boxShadow = '0 0 10px rgba(0, 212, 255, 0.35)';
+                    
+                    const statusEl = document.getElementById('hotkey-status-msg');
+                    if (statusEl) {
+                        statusEl.style.opacity = '0';
+                    }
                     
                     btn.textContent = 'Cancel';
                     btn.style.borderColor = '#e74c3c';
@@ -672,6 +777,23 @@ refreshThemeProfiles();
 
                 parts.push(keyName);
                 const shortcutStr = parts.join('+');
+
+                // Check for duplicates
+                let duplicateKey = null;
+                const currentShortcuts = cachedSettings.shortcuts || {};
+                for (const [sKey, sVal] of Object.entries(currentShortcuts)) {
+                    if (sKey !== key && sVal && sVal !== 'None' && sVal.toLowerCase().replace(/\s+/g, '') === shortcutStr.toLowerCase().replace(/\s+/g, '')) {
+                        duplicateKey = sKey;
+                        break;
+                    }
+                }
+
+                if (duplicateKey) {
+                    showHotkeyStatus(`✗ Conflict: Already assigned to "${hotkeyNames[duplicateKey]}"`, true);
+                    exitEditMode(key, false);
+                    return;
+                }
+
                 input.value = shortcutStr;
                 dispatchHotkeyUpdate(key, shortcutStr);
                 exitEditMode(key, true);
@@ -732,6 +854,44 @@ refreshThemeProfiles();
     }
 
     initHotkeySettings();
+
+    function checkHotkeyRegistrationFailures(settings) {
+        const pauseInput = document.getElementById('hotkey-toggle-pause');
+        const hideInput = document.getElementById('hotkey-toggle-hide');
+        const cycleInput = document.getElementById('hotkey-cycle-theme');
+        
+        const failures = settings.shortcutRegistrationFailures || {};
+        const checkFailure = (input, key) => {
+            if (!input) return;
+            if (failures[key]) {
+                input.style.borderColor = '#e74c3c';
+                input.style.boxShadow = '0 0 5px rgba(231, 76, 60, 0.35)';
+                input.title = 'Failed to register: Shortcut might be in use by another application.';
+            } else {
+                input.style.borderColor = '';
+                input.style.boxShadow = '';
+                input.title = '';
+            }
+        };
+        checkFailure(pauseInput, 'togglePause');
+        checkFailure(hideInput, 'toggleHide');
+        checkFailure(cycleInput, 'cycleTheme');
+        
+        const failedNames = [];
+        if (failures.togglePause) failedNames.push('Pause / Resume');
+        if (failures.toggleHide) failedNames.push('Hide / Show');
+        if (failures.cycleTheme) failedNames.push('Cycle Theme');
+        
+        if (failedNames.length > 0) {
+            const msg = `⚠️ Failed to register: "${failedNames.join(', ')}" (taken by another app). Try another hotkey.`;
+            showHotkeyStatus(msg, true, true);
+        } else {
+            const statusEl = document.getElementById('hotkey-status-msg');
+            if (statusEl && statusEl.textContent.includes('Failed to register') && !statusTimeout) {
+                statusEl.style.opacity = '0';
+            }
+        }
+    }
 
     // ----------------------------------------
     // SLIDER UPDATES
@@ -795,6 +955,7 @@ refreshThemeProfiles();
 
     function dispatchThemeUpdate() {
         if (!window.visualizerSettings) return;
+        if (!themeSelector) return;
         const selectedTheme = themeSelector.value;
         const dropdowns = document.querySelectorAll('#dynamic-theme-settings .theme-trigger');
         
@@ -814,6 +975,7 @@ refreshThemeProfiles();
 
     function dispatchCustomUpdate() {
         if (!window.visualizerSettings) return;
+        if (!themeSelector) return;
         const activeTheme = themeSelector.value;
         
         // Let's ensure the dropdown in the UI switches to "custom" if there's a colorStyle equivalent
@@ -875,12 +1037,43 @@ refreshThemeProfiles();
                 }
             });
         }
+        function isValidProfileName(name) {
+            if (typeof name !== "string" || name.trim() === "") {
+                return { valid: false, message: "Profile name cannot be empty." };
+            }
+            if (name.length > 64) {
+                return { valid: false, message: "Profile name cannot exceed 64 characters." };
+            }
+            const reserved = new Set(["__proto__", "constructor", "prototype"]);
+            if (reserved.has(name)) {
+                return { valid: false, message: `Profile name "${name}" is a reserved system word. Please use a different name.` };
+            }
+            const safePattern = /^[A-Za-z0-9 _\-()À-ɏ]{1,64}$/;
+            if (!safePattern.test(name)) {
+                return { valid: false, message: "Profile name contains invalid characters. Use only letters, numbers, spaces, hyphens, underscores, or parentheses." };
+            }
+            return { valid: true };
+        }
+
         btnSaveThemeProfile.addEventListener('click', async () => {
             const profileName = themeProfileNameInput.value.trim();
 
-            if (!profileName) return;
+            if (!profileName) {
+                alert("Profile name cannot be empty.");
+                return;
+            }
 
-            await window.paralineApp.saveThemeProfile(profileName);
+            const validation = isValidProfileName(profileName);
+            if (!validation.valid) {
+                alert(validation.message);
+                return;
+            }
+
+            const result = await window.paralineApp.saveThemeProfile(profileName);
+            if (!result) {
+                alert(`Failed to save profile "${profileName}". The name is invalid or rejected by the system.`);
+                return;
+            }
 
             themeProfileNameInput.value = '';
             alert(`Theme profile "${profileName}" saved!`);
@@ -954,6 +1147,35 @@ refreshThemeProfiles();
                 alert(`Failed to import theme: ${res.error}`);
             }
         });
+
+        if (btnExportAllSettings) {
+            btnExportAllSettings.addEventListener('click', async () => {
+                const res = await window.paralineApp.exportAllSettings();
+
+                if (res && res.success) {
+                    alert("Settings backup exported successfully!");
+                } else if (res && res.error) {
+                    alert(`Failed to export settings backup: ${res.error}`);
+                }
+            });
+        }
+
+        if (btnImportAllSettings) {
+            btnImportAllSettings.addEventListener('click', async () => {
+                if (!confirm("Import a settings backup? This will replace your current settings and theme profiles.")) {
+                    return;
+                }
+
+                const res = await window.paralineApp.importAllSettings();
+
+                if (res && res.success) {
+                    alert("Settings backup imported successfully! The app will reload to apply changes.");
+                    location.reload();
+                } else if (res && res.error) {
+                    alert(`Failed to import settings backup: ${res.error}`);
+                }
+            });
+        }
 
         btnResetThemeProfile.addEventListener('click', async () => {
             if (confirm("Are you sure you want to restore default settings? This will reset all your theme customizations.")) {
@@ -1040,15 +1262,17 @@ refreshThemeProfiles();
                 }
             }
             
-            if (settings.selectedTheme) {
-                themeSelector.value = settings.selectedTheme;
-                syncThemeUI(settings.selectedTheme);
-            } else {
-                themeSelector.value = "ambientWave";
-                syncThemeUI("ambientWave");
+            if (themeSelector) {
+                if (settings.selectedTheme) {
+                    themeSelector.value = settings.selectedTheme;
+                    syncThemeUI(settings.selectedTheme);
+                } else {
+                    themeSelector.value = "ambientWave";
+                    syncThemeUI("ambientWave");
+                }
             }
-            
-            if (settings.performanceMode) {
+
+            if (performanceModeSelector && settings.performanceMode) {
                 performanceModeSelector.value = settings.performanceMode;
             }
 
@@ -1078,6 +1302,7 @@ refreshThemeProfiles();
                 if (hideInput) hideInput.value = settings.shortcuts.toggleHide || 'None';
                 if (cycleInput) cycleInput.value = settings.shortcuts.cycleTheme || 'None';
             }
+            checkHotkeyRegistrationFailures(settings);
 
             // Load theme automation settings
             if (settings.themeAutomation) {
@@ -1115,11 +1340,15 @@ refreshThemeProfiles();
                 }
                 if (focusModeDimOpacitySlider) {
                     focusModeDimOpacitySlider.value = fm.dimOpacity !== undefined ? fm.dimOpacity : 0.1;
-                    document.getElementById('val-focus-mode-dim-opacity').textContent = parseFloat(focusModeDimOpacitySlider.value).toFixed(2);
+                    if (focusModeDimOpacityLabel) {
+                        focusModeDimOpacityLabel.textContent = parseFloat(focusModeDimOpacitySlider.value).toFixed(2);
+                    }
                 }
                 if (focusModeTimeoutSlider) {
                     focusModeTimeoutSlider.value = fm.idleTimeout !== undefined ? fm.idleTimeout : 5;
-                    document.getElementById('val-focus-mode-timeout').textContent = focusModeTimeoutSlider.value;
+                    if (focusModeTimeoutLabel) {
+                        focusModeTimeoutLabel.textContent = focusModeTimeoutSlider.value;
+                    }
                 }
             }
             
@@ -1162,7 +1391,7 @@ refreshThemeProfiles();
                 }
             }
 
-            if (nextSettings.selectedTheme !== undefined) {
+            if (nextSettings.selectedTheme !== undefined && themeSelector) {
                 if (themeSelector.value !== nextSettings.selectedTheme) {
                     themeSelector.value = nextSettings.selectedTheme;
                     syncThemeUI(nextSettings.selectedTheme);
@@ -1184,6 +1413,7 @@ refreshThemeProfiles();
                     cycleInput.value = nextSettings.shortcuts.cycleTheme || 'None';
                 }
             }
+            checkHotkeyRegistrationFailures(nextSettings);
 
             // Sync theme automation properties if updated from outside
             if (nextSettings.themeAutomation) {
@@ -1221,11 +1451,15 @@ refreshThemeProfiles();
                 }
                 if (focusModeDimOpacitySlider && fm.dimOpacity !== undefined) {
                     focusModeDimOpacitySlider.value = fm.dimOpacity;
-                    document.getElementById('val-focus-mode-dim-opacity').textContent = parseFloat(fm.dimOpacity).toFixed(2);
+                    if (focusModeDimOpacityLabel) {
+                        focusModeDimOpacityLabel.textContent = parseFloat(fm.dimOpacity).toFixed(2);
+                    }
                 }
                 if (focusModeTimeoutSlider && fm.idleTimeout !== undefined) {
                     focusModeTimeoutSlider.value = fm.idleTimeout;
-                    document.getElementById('val-focus-mode-timeout').textContent = fm.idleTimeout;
+                    if (focusModeTimeoutLabel) {
+                        focusModeTimeoutLabel.textContent = fm.idleTimeout;
+                    }
                 }
             }
 
@@ -1249,7 +1483,7 @@ refreshThemeProfiles();
                 }
             }
             // Sync Aurora advanced controls if they are currently visible
-            if (themeSelector.value === 'auroraDrift' && nextSettings.auroraDrift) {
+            if (themeSelector && themeSelector.value === 'auroraDrift' && nextSettings.auroraDrift) {
                 Object.assign(cachedSettings.auroraDrift || {}, nextSettings.auroraDrift);
                 syncAuroraUI();
             }
@@ -1452,7 +1686,19 @@ refreshThemeProfiles();
     try {
         const saved = localStorage.getItem('paraline_aurora_presets');
         if (saved) {
-            customAuroraPresets = JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            // Only accept plain objects; reject arrays, nulls, and non-objects.
+            if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                for (const [key, val] of Object.entries(parsed)) {
+                    // Reject prototype-polluting or oversized names
+                    if (!isSafePresetName(key)) continue;
+                    // Validate and sanitize the profile shape
+                    const clean = sanitizeAuroraPreset(val);
+                    if (clean !== null) {
+                        customAuroraPresets[key] = clean;
+                    }
+                }
+            }
         }
     } catch(e) {}
 
@@ -1758,14 +2004,24 @@ refreshThemeProfiles();
                 alert("Please enter a profile name!");
                 return;
             }
-            
-            const currentSettings = { ...cachedSettings.auroraDrift };
-            customAuroraPresets[name] = currentSettings;
-            
+            if (!isSafePresetName(name)) {
+                alert("Profile name contains reserved characters. Please choose a different name.");
+                return;
+            }
+
+            // Sanitize the current settings before persisting so only valid,
+            // known fields are ever written to localStorage.
+            const clean = sanitizeAuroraPreset({ ...cachedSettings.auroraDrift });
+            if (!clean) {
+                alert("Could not save profile: current Aurora settings appear invalid.");
+                return;
+            }
+            customAuroraPresets[name] = clean;
+
             try {
                 localStorage.setItem('paraline_aurora_presets', JSON.stringify(customAuroraPresets));
             } catch(e) {}
-            
+
             refreshAuroraPresetsDropdown();
             document.getElementById('aurora-custom-preset-select').value = name;
             inputName.value = '';

@@ -251,7 +251,7 @@ export default function ContactPage() {
           {/* Right Column: Contact Cards */}
           <div className="lg:col-span-5 space-y-6">
             
-            {/* Direct Email Card */}
+            {/* Discord Connect Card */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -259,15 +259,15 @@ export default function ContactPage() {
               className="bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[24px] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] flex items-start gap-4 hover:border-cyan-500/20 hover:bg-white/[0.03] transition-all duration-300 group"
             >
               <div className="flex-shrink-0 w-12 h-12 rounded-[16px] bg-cyan-500/10 flex items-center justify-center border border-cyan-500/30 group-hover:scale-105 transition-transform duration-300">
-                <Mail className="w-5 h-5 text-cyan-400" />
+                <MessageSquare className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold tracking-wide text-white mb-1">Direct Support</h3>
-                <a href="mailto:support@paraline.app" className="text-sm text-cyan-400 hover:underline">
-                  support@paraline.app
+                <h3 className="text-sm font-semibold tracking-wide text-white mb-1">Discord Support</h3>
+                <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-400 hover:underline">
+                  @dot_notsam
                 </a>
                 <p className="text-xs text-muted/60 mt-2 font-light leading-relaxed">
-                  Send us an email directly if you prefer not to use the contact form.
+                  Add me on Discord to chat directly if you prefer not to use the contact form.
                 </p>
               </div>
             </motion.div>
