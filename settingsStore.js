@@ -653,6 +653,45 @@ function createSettingsStore(userDataPath) {
 
       return settings;
     } catch (_error) {
+      console.error("[Paraline] Failed to load settings from:", settingsPath, _error);
+
+      try {
+        if (fs.existsSync(settingsPath)) {
+          let backupPath = settingsPath + ".bak";
+          if (fs.existsSync(backupPath)) {
+            backupPath = `${settingsPath}.${Date.now()}.bak`;
+          }
+          fs.renameSync(settingsPath, backupPath);
+          console.log(`[Paraline] Corrupted settings backed up to: ${backupPath}`);
+        }
+      } catch (backupError) {
+        console.error("[Paraline] Failed to backup corrupted settings:", backupError);
+      }
+
+      try {
+        const { app, dialog, Notification } = require("electron");
+        if (app && app.isReady()) {
+          // Show dialog warning to user
+          dialog.showMessageBoxSync({
+            type: "warning",
+            title: "Settings Reset to Defaults",
+            message: "Paraline detected a corrupted settings file. Your settings have been reset to defaults.",
+            detail: `The corrupted file has been backed up, and default settings have been loaded.\n\nError details:\n${_error.message}`,
+            buttons: ["OK"]
+          });
+
+          // Show tray/system notification
+          if (Notification.isSupported()) {
+            new Notification({
+              title: "Settings Reset to Defaults",
+              body: "A corrupted settings file was detected. Defaults have been applied."
+            }).show();
+          }
+        }
+      } catch (notifyError) {
+        console.error("[Paraline] Failed to notify user about settings corruption:", notifyError);
+      }
+
       return createDefaultSettings();
     }
   }
