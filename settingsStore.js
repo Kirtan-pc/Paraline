@@ -578,11 +578,28 @@ function sanitizeFocusMode(input = {}) {
 
 function sanitizeShortcuts(input) {
   const safeInput = (input && typeof input === "object") ? input : {};
-  return {
+  const shortcuts = {
     togglePause: typeof safeInput.togglePause === "string" ? safeInput.togglePause : DEFAULT_SETTINGS.shortcuts.togglePause,
     toggleHide: typeof safeInput.toggleHide === "string" ? safeInput.toggleHide : DEFAULT_SETTINGS.shortcuts.toggleHide,
     cycleTheme: typeof safeInput.cycleTheme === "string" ? safeInput.cycleTheme : DEFAULT_SETTINGS.shortcuts.cycleTheme
   };
+
+  // Resolve duplicates by resetting subsequent duplicate actions to "None"
+  const seen = new Set();
+  const keys = ["togglePause", "toggleHide", "cycleTheme"];
+  for (const key of keys) {
+    const val = shortcuts[key];
+    if (val && val !== "None") {
+      const normalized = val.toLowerCase().replace(/\s+/g, "");
+      if (seen.has(normalized)) {
+        shortcuts[key] = "None";
+      } else {
+        seen.add(normalized);
+      }
+    }
+  }
+
+  return shortcuts;
 }
 
 function sanitizeSettings(input = {}) {
@@ -636,6 +653,45 @@ function createSettingsStore(userDataPath) {
 
       return settings;
     } catch (_error) {
+      console.error("[Paraline] Failed to load settings from:", settingsPath, _error);
+
+      try {
+        if (fs.existsSync(settingsPath)) {
+          let backupPath = settingsPath + ".bak";
+          if (fs.existsSync(backupPath)) {
+            backupPath = `${settingsPath}.${Date.now()}.bak`;
+          }
+          fs.renameSync(settingsPath, backupPath);
+          console.log(`[Paraline] Corrupted settings backed up to: ${backupPath}`);
+        }
+      } catch (backupError) {
+        console.error("[Paraline] Failed to backup corrupted settings:", backupError);
+      }
+
+      try {
+        const { app, dialog, Notification } = require("electron");
+        if (app && app.isReady()) {
+          // Show dialog warning to user
+          dialog.showMessageBoxSync({
+            type: "warning",
+            title: "Settings Reset to Defaults",
+            message: "Paraline detected a corrupted settings file. Your settings have been reset to defaults.",
+            detail: `The corrupted file has been backed up, and default settings have been loaded.\n\nError details:\n${_error.message}`,
+            buttons: ["OK"]
+          });
+
+          // Show tray/system notification
+          if (Notification.isSupported()) {
+            new Notification({
+              title: "Settings Reset to Defaults",
+              body: "A corrupted settings file was detected. Defaults have been applied."
+            }).show();
+          }
+        }
+      } catch (notifyError) {
+        console.error("[Paraline] Failed to notify user about settings corruption:", notifyError);
+      }
+
       return createDefaultSettings();
     }
   }
