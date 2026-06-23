@@ -2031,7 +2031,6 @@ app.whenReady().then(() => {
     createOnboardingWindow();
   }
 
-  createOverlayWindow();
   createTray();
   sendVisualizerSettings();
 
