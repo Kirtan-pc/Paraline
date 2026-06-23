@@ -14,6 +14,7 @@ let isQuitting = false;
 let isReconcilingDisplays = false;
 let tray;
 let isPaused = false;
+let wasPausedBeforeSleep = false;
 let isHidden = false;
 let globalShortcutsSuspended = false;
 let shortcutRegistrationFailures = {};
@@ -1777,6 +1778,19 @@ app.whenReady().then(() => {
   
   themeAgent.start();
   // -----------------------------------------
+
+  powerMonitor.on("suspend", () => {
+    wasPausedBeforeSleep = isPaused;
+    isPaused = true;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
+
+  powerMonitor.on("resume", () => {
+    isPaused = wasPausedBeforeSleep;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
 
   ipcMain.handle("audio-bridge-status", () => {
     if (!audioBridge) {
