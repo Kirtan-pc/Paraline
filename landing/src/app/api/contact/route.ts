@@ -155,7 +155,10 @@ export async function POST(request: Request) {
             },
             {
               name: "Message",
-              value: trimmedMessage,
+              value:
+                trimmedMessage.length > 1024
+                  ? trimmedMessage.substring(0, 1021) + "..."
+                  : trimmedMessage,
               inline: false,
             },
           ],
