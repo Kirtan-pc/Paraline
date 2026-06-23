@@ -157,6 +157,7 @@ export default function ContactPage() {
                     value={form.name}
                     onChange={handleChange}
                     required
+                    maxLength={100}
                     className="w-full p-4 rounded-2xl bg-[#010206]/40 border border-white/5 text-white outline-none focus:border-cyan-500/40 focus:bg-[#010206]/60 transition-all placeholder:text-white/25 text-sm"
                   />
                 </div>
@@ -173,6 +174,7 @@ export default function ContactPage() {
                     value={form.email}
                     onChange={handleChange}
                     required
+                    maxLength={256}
                     className="w-full p-4 rounded-2xl bg-[#010206]/40 border border-white/5 text-white outline-none focus:border-cyan-500/40 focus:bg-[#010206]/60 transition-all placeholder:text-white/25 text-sm"
                   />
                 </div>
@@ -189,6 +191,7 @@ export default function ContactPage() {
                   placeholder="How can we help?"
                   value={form.subject}
                   onChange={handleChange}
+                  maxLength={200}
                   className="w-full p-4 rounded-2xl bg-[#010206]/40 border border-white/5 text-white outline-none focus:border-cyan-500/40 focus:bg-[#010206]/60 transition-all placeholder:text-white/25 text-sm"
                 />
               </div>
@@ -205,6 +208,7 @@ export default function ContactPage() {
                   value={form.message}
                   onChange={handleChange}
                   required
+                  maxLength={5000}
                   className="w-full p-4 rounded-2xl bg-[#010206]/40 border border-white/5 text-white outline-none focus:border-cyan-500/40 focus:bg-[#010206]/60 transition-all placeholder:text-white/25 text-sm resize-none"
                 />
               </div>
