@@ -279,7 +279,7 @@ And it should still feel good.
 
 ## ✦ Usage
 
-## Tray Controls
+### Tray Controls
 
 Paraline is designed to stay visually present but operationally invisible.
 

@@ -1,0 +1,147 @@
+const test = require("node:test");
+const assert = require("node:assert");
+const {
+  DEFAULT_SETTINGS,
+  createDefaultSettings,
+  createThemeDefaults,
+  sanitizeSettings,
+  isValidAccelerator
+} = require("../settingsStore");
+
+test("settingsStore - Default Settings Creation", () => {
+  const defaults = createDefaultSettings();
+  assert.ok(defaults.onboardingSeen === false);
+  assert.ok(defaults.selectedTheme === "ambientWave");
+  assert.deepStrictEqual(defaults.ambientWave.tone, "blue");
+});
+
+test("settingsStore - sanitizeSettings with empty/invalid inputs", () => {
+  const sanitized = sanitizeSettings({});
+  assert.strictEqual(sanitized.onboardingSeen, false);
+  assert.strictEqual(sanitized.selectedTheme, "ambientWave");
+  assert.deepStrictEqual(sanitized.customColors, ["#00f2fe", "#4facfe", "#8ee2ff"]);
+  assert.strictEqual(sanitized.themeAutomation.enabled, false);
+});
+
+test("settingsStore - sanitizeSettings clamps custom thickness, gap, sensitivity, speed", () => {
+  const input = {
+    selectedTheme: "ambientWave",
+    sideBars: {
+      customThickness: 100,      // should clamp to 20
+      customGap: 0,             // should clamp to 2
+      customSensitivity: -50,   // should clamp to 1
+    },
+    sideBraids: {
+      customSpeed: 500          // should clamp to 100
+    }
+  };
+  const sanitized = sanitizeSettings(input);
+  assert.strictEqual(sanitized.sideBars.customThickness, 20);
+  assert.strictEqual(sanitized.sideBars.customGap, 2);
+  assert.strictEqual(sanitized.sideBars.customSensitivity, 1);
+  assert.strictEqual(sanitized.sideBraids.customSpeed, 100);
+});
+
+test("settingsStore - sanitizeSettings validates customColors array length and format", () => {
+  // Test invalid length
+  const inputInvalidLen = {
+    selectedTheme: "ambientWave",
+    customColors: ["#ffffff", "#000000"]
+  };
+  const sanitized1 = sanitizeSettings(inputInvalidLen);
+  assert.deepStrictEqual(sanitized1.customColors, DEFAULT_SETTINGS.customColors);
+
+  // Test invalid hex format
+  const inputInvalidHex = {
+    selectedTheme: "ambientWave",
+    customColors: ["#ffffff", "#000000", "invalid"]
+  };
+  const sanitized2 = sanitizeSettings(inputInvalidHex);
+  assert.deepStrictEqual(sanitized2.customColors, DEFAULT_SETTINGS.customColors);
+
+  // Test valid hex format
+  const inputValid = {
+    selectedTheme: "ambientWave",
+    customColors: ["#111111", "#222222", "#333333"]
+  };
+  const sanitized3 = sanitizeSettings(inputValid);
+  assert.deepStrictEqual(sanitized3.customColors, ["#111111", "#222222", "#333333"]);
+});
+
+test("settingsStore - Legacy Migration (edgeFlutter to edgeCrystals)", () => {
+  const legacyInput = {
+    selectedTheme: "edgeFlutter",
+    edgeFlutter: {
+      flutterStyle: "energetic",
+      density: "high"
+    }
+  };
+  const sanitized = sanitizeSettings(legacyInput);
+  assert.strictEqual(sanitized.selectedTheme, "edgeCrystals");
+  assert.strictEqual(sanitized.edgeCrystals.flutterStyle, "energetic");
+  assert.strictEqual(sanitized.edgeCrystals.density, "high");
+});
+
+test("settingsStore - Legacy Theme Automation Migration", () => {
+  const input = {
+    selectedTheme: "ambientWave",
+    themeAutomation: {
+      enabled: true,
+      checkIntervalMinutes: 200, // should clamp to 120
+      dayStartHour: 25,          // should fall back to default
+      nightStartHour: -2         // should fall back to default
+    }
+  };
+  const sanitized = sanitizeSettings(input);
+  assert.strictEqual(sanitized.themeAutomation.enabled, true);
+  assert.strictEqual(sanitized.themeAutomation.checkIntervalMinutes, 120);
+  assert.strictEqual(sanitized.themeAutomation.dayStartHour, DEFAULT_SETTINGS.themeAutomation.dayStartHour);
+  assert.strictEqual(sanitized.themeAutomation.nightStartHour, DEFAULT_SETTINGS.themeAutomation.nightStartHour);
+});
+
+test("settingsStore - Legacy Theme conversion (sensitivity mapping)", () => {
+  const legacy = {
+    theme: "rainbow",
+    sensitivity: 5.0
+  };
+  const sanitized = sanitizeSettings(legacy);
+  assert.strictEqual(sanitized.selectedTheme, "reactiveBorder");
+  assert.strictEqual(sanitized.reactiveBorder.intensity, "high");
+});
+
+test("settingsStore - isValidAccelerator", () => {
+  assert.strictEqual(isValidAccelerator("Ctrl+Alt+P"), true);
+  assert.strictEqual(isValidAccelerator("F9"), true);
+  assert.strictEqual(isValidAccelerator("f24"), true);
+  assert.strictEqual(isValidAccelerator("None"), true);
+  assert.strictEqual(isValidAccelerator("ctrl+a"), true);
+  assert.strictEqual(isValidAccelerator("Shift+Space"), true);
+
+  assert.strictEqual(isValidAccelerator("Ctrl+"), false);
+  assert.strictEqual(isValidAccelerator("a"), false);
+  assert.strictEqual(isValidAccelerator("invalid!!key"), false);
+  assert.strictEqual(isValidAccelerator(123), false);
+  assert.strictEqual(isValidAccelerator(null), false);
+});
+
+test("settingsStore - sanitizeShortcuts resolves duplicate shortcuts and invalid shortcuts", () => {
+  const input = {
+    selectedTheme: "ambientWave",
+    shortcuts: {
+      togglePause: "invalid!!key",   // invalid, should fall back to DEFAULT
+      toggleHide: "Ctrl+Alt+P",     // valid, but duplicates DEFAULT togglePause
+      cycleTheme: "Ctrl+Alt+P"      // duplicate of toggleHide, should reset to None
+    }
+  };
+
+  const sanitized = sanitizeSettings(input);
+
+  // togglePause: invalid -> falls back to "Ctrl+Alt+P"
+  assert.strictEqual(sanitized.shortcuts.togglePause, "Ctrl+Alt+P");
+
+  // toggleHide: was "Ctrl+Alt+P", but since "togglePause" is also "Ctrl+Alt+P", it is a duplicate and should reset to "None"
+  assert.strictEqual(sanitized.shortcuts.toggleHide, "None");
+
+  // cycleTheme: also duplicate "Ctrl+Alt+P", should reset to "None"
+  assert.strictEqual(sanitized.shortcuts.cycleTheme, "None");
+});

@@ -66,7 +66,7 @@ export function Footer() {
           <div className="flex flex-col items-start gap-6">
             <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-green-400/80">Support</h1>
             <Link href="/contact" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><HeadphonesIcon />Contact Us</Link>
-            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Github />GitHub</a>
+            <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" aria-label="Open GitHub in new tab" className="flex justify-center items-center gap-2 text-[15px] transition-transform duration-300 hover:translate-x-1"><Github />GitHub</a>
           </div>
           <div className="flex flex-col items-start gap-6">
             <h1 className="text-[12px] font-extrabold uppercase tracking-[0.25em] text-pink-400/80">Legal</h1>
