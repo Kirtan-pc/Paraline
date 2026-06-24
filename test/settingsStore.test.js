@@ -98,6 +98,18 @@ test("settingsStore - Legacy Theme Automation Migration", () => {
   assert.strictEqual(sanitized.themeAutomation.nightStartHour, DEFAULT_SETTINGS.themeAutomation.nightStartHour);
 });
 
+test("settingsStore - Theme Automation avoids equal hours", () => {
+  const input = {
+    themeAutomation: {
+      dayStartHour: 10,
+      nightStartHour: 10
+    }
+  };
+  const sanitized = sanitizeSettings(input);
+  assert.strictEqual(sanitized.themeAutomation.dayStartHour, DEFAULT_SETTINGS.themeAutomation.dayStartHour);
+  assert.strictEqual(sanitized.themeAutomation.nightStartHour, DEFAULT_SETTINGS.themeAutomation.nightStartHour);
+});
+
 test("settingsStore - Legacy Theme conversion (sensitivity mapping)", () => {
   const legacy = {
     theme: "rainbow",
