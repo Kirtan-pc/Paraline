@@ -267,7 +267,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold tracking-wide text-white mb-1">Discord Support</h3>
-                <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-400 hover:underline">
+                <a href="https://discord.gg/YRMUmgNWz" target="_blank" rel="noopener noreferrer" className="text-sm text-cyan-400 hover:underline">
                   @dot_notsam
                 </a>
                 <p className="text-xs text-muted/60 mt-2 font-light leading-relaxed">
