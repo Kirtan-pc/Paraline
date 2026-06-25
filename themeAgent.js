@@ -52,8 +52,13 @@ class ThemeAgent {
 
     try {
       const currentHour = new Date().getHours();
-      const dayStartHour = config.dayStartHour !== undefined ? config.dayStartHour : 6;
-      const nightStartHour = config.nightStartHour !== undefined ? config.nightStartHour : 18;
+      let dayStartHour = config.dayStartHour !== undefined ? config.dayStartHour : 6;
+      let nightStartHour = config.nightStartHour !== undefined ? config.nightStartHour : 18;
+
+      if (dayStartHour === nightStartHour) {
+        dayStartHour = 6;
+        nightStartHour = 18;
+      }
 
       let isDaytime;
       if (dayStartHour < nightStartHour) {

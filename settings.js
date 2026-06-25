@@ -221,6 +221,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    let automationErrorTimeout = null;
+    function showAutomationError(message) {
+        const errorEl = document.getElementById('theme-automation-error');
+        if (!errorEl) return;
+        errorEl.textContent = message;
+        errorEl.style.opacity = '1';
+        if (automationErrorTimeout) clearTimeout(automationErrorTimeout);
+        automationErrorTimeout = setTimeout(() => {
+            errorEl.style.opacity = '0';
+        }, 3000);
+    }
+
     function toggleAutoControls(isEnabled) {
         if (themeAutoControls) {
             themeAutoControls.style.display = isEnabled ? 'block' : 'none';
@@ -272,8 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 val = 6;
                 dayStartHourInput.value = val;
             }
-            updateAutomationSetting({ dayStartHour: val });
             const nightStart = nightStartHourInput ? parseInt(nightStartHourInput.value, 10) : 18;
+            if (val === nightStart) {
+                showAutomationError("Day and Night hours cannot be identical.");
+                val = cachedSettings.themeAutomation?.dayStartHour ?? 6;
+                dayStartHourInput.value = val;
+            }
+            updateAutomationSetting({ dayStartHour: val });
             updateThemeLabels(val, isNaN(nightStart) ? 18 : nightStart);
         });
     }
@@ -285,8 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 val = 18;
                 nightStartHourInput.value = val;
             }
-            updateAutomationSetting({ nightStartHour: val });
             const dayStart = dayStartHourInput ? parseInt(dayStartHourInput.value, 10) : 6;
+            if (val === dayStart) {
+                showAutomationError("Day and Night hours cannot be identical.");
+                val = cachedSettings.themeAutomation?.nightStartHour ?? 18;
+                nightStartHourInput.value = val;
+            }
+            updateAutomationSetting({ nightStartHour: val });
             updateThemeLabels(isNaN(dayStart) ? 6 : dayStart, val);
         });
     }

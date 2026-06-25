@@ -311,6 +311,11 @@ function sanitizeThemeAutomation(input = {}) {
     nightStart = DEFAULT_SETTINGS.themeAutomation.nightStartHour;
   }
 
+  if (dayStart === nightStart) {
+    dayStart = DEFAULT_SETTINGS.themeAutomation.dayStartHour;
+    nightStart = DEFAULT_SETTINGS.themeAutomation.nightStartHour;
+  }
+
   return {
     enabled: typeof input.enabled === "boolean" ? input.enabled : DEFAULT_SETTINGS.themeAutomation.enabled,
     checkIntervalMinutes: typeof input.checkIntervalMinutes === "number"
