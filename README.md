@@ -104,6 +104,9 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 </td>
 <td align="center" width="33%">
+<strong>Crimson Dusk</strong><br/>
+<img src="./previews/crimson-dusk-preview.svg" alt="Crimson Dusk Preview" width="260"/>
+
 </td>
 </tr>
 </table>

@@ -64,12 +64,22 @@
     <rect x="0" y="0" width="260" height="45" fill="url(#topGlow)"/>
 
     <!-- Corner blooms -->
-    <rect width="260" height="180" fill="url(#cornerBL)"/>
-    <rect width="260" height="180" fill="url(#cornerBR)"/>
-    <rect width="260" height="180" fill="url(#cornerTL)"/>
-    <rect width="260" height="180" fill="url(#cornerTR)"/>
+    <rect width="260" height="180" fill="url(#cornerBL)">
+      <animate attributeName="opacity" values="1;0.7;1" dur="5s" repeatCount="indefinite"/>
+    </rect>
+    <rect width="260" height="180" fill="url(#cornerBR)">
+      <animate attributeName="opacity" values="1;0.65;1" dur="4.3s" repeatCount="indefinite"/>
+    </rect>
+    <rect width="260" height="180" fill="url(#cornerTL)">
+      <animate attributeName="opacity" values="1;0.75;1" dur="6s" repeatCount="indefinite"/>
+    </rect>
+    <rect width="260" height="180" fill="url(#cornerTR)">
+      <animate attributeName="opacity" values="1;0.75;1" dur="5.5s" repeatCount="indefinite"/>
+    </rect>
 
     <!-- Ember particles — bottom area -->
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -1.5; 0 0" dur="9s" repeatCount="indefinite"/>
     <!-- Row 1 (bottom) -->
     <circle cx="14" cy="162" r="1.2" fill="#FF6010" opacity="0.9" filter="url(#glow)"/>
     <circle cx="38" cy="155" r="0.8" fill="#FF8020" opacity="0.7"/>
@@ -123,8 +133,10 @@
     <circle cx="85" cy="5" r="0.6" fill="#E04010" opacity="0.25"/>
     <circle cx="175" cy="7" r="0.7" fill="#FF8020" opacity="0.28"/>
     <circle cx="238" cy="6" r="0.6" fill="#CC3008" opacity="0.25"/>
+    </g>
 
     <!-- Waveform bars at bottom edge -->
+    <g>
     <rect x="12" y="173" width="2.5" height="5" fill="#FF6010" opacity="0.8" rx="1"/>
     <rect x="17" y="171" width="2.5" height="7" fill="#FF7018" opacity="0.85" rx="1"/>
     <rect x="22" y="169" width="2.5" height="9" fill="#FF8020" opacity="0.9" rx="1"/>
@@ -173,14 +185,21 @@
     <rect x="237" y="171" width="2.5" height="7" fill="#D83808" opacity="0.76" rx="1"/>
     <rect x="242" y="174" width="2.5" height="4" fill="#CC2A05" opacity="0.7" rx="1"/>
     <rect x="247" y="172" width="2.5" height="6" fill="#E03808" opacity="0.74" rx="1"/>
+    </g>
 
     <!-- Edge border lines -->
     <!-- Bottom -->
-    <line x1="0" y1="179" x2="260" y2="179" stroke="#E8520F" stroke-width="1.5" opacity="0.7" filter="url(#softglow)"/>
+    <line x1="0" y1="179" x2="260" y2="179" stroke="#E8520F" stroke-width="1.5" opacity="0.7" filter="url(#softglow)">
+      <animate attributeName="opacity" values="0.7;0.95;0.7" dur="3.2s" repeatCount="indefinite"/>
+    </line>
     <!-- Left -->
-    <line x1="0.8" y1="0" x2="0.8" y2="180" stroke="#CC3A08" stroke-width="1.5" opacity="0.5" filter="url(#glow)"/>
+    <line x1="0.8" y1="0" x2="0.8" y2="180" stroke="#CC3A08" stroke-width="1.5" opacity="0.5" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.5;0.7;0.5" dur="4s" repeatCount="indefinite"/>
+    </line>
     <!-- Right -->
-    <line x1="259.2" y1="0" x2="259.2" y2="180" stroke="#CC3A08" stroke-width="1.5" opacity="0.5" filter="url(#glow)"/>
+    <line x1="259.2" y1="0" x2="259.2" y2="180" stroke="#CC3A08" stroke-width="1.5" opacity="0.5" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.5;0.7;0.5" dur="4.5s" repeatCount="indefinite"/>
+    </line>
     <!-- Top -->
     <line x1="0" y1="0.8" x2="260" y2="0.8" stroke="#B84010" stroke-width="1" opacity="0.35"/>
 
