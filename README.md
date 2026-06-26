@@ -246,6 +246,11 @@ Paraline is designed to stay running in the background without feeling heavy or 
 <td>Color Style, Braid Density, Motion Style, Glow Strength, Braid Width, Flow Direction</td>
 </tr>
 <tr>
+<td><strong>Crimson Dusk</strong></td>
+<td>Warm ember and crimson glow along screen edges, inspired by desert sunsets.</td>
+<td>Bar Mode (bottom/side/both), Bar Thickness, Bar Count, Glow Strength, Sensitivity</td>
+</tr>
+<tr>
 <td><strong>Aurora Drift</strong></td>
 <td>Cinematic aurora curtains rising from the bottom edge with layered folds and shimmer.</td>
 <td>Gradient stops sculptor (2-6 stops), Glow radius/bloom, primary/secondary frequency & internal complexity, response smoothing, active curtains layer count, ambient fine-tuners, saved presets</td>

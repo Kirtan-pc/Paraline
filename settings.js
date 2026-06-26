@@ -84,6 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
             braidWidth: { label: "Braid Width", options: ["thin", "medium", "thick", "custom"] },
             flowDirection: { label: "Flow Direction", options: ["topDown", "bottomUp"] }
         },
+        crimsonDusk: {
+            barMode: { label: "Bar Mode", options: ["bottom", "side", "both"] },
+            barThickness: { label: "Bar Thickness", options: ["thin", "medium", "thick"] },
+            barCount: { label: "Bar Count", options: ["sparse", "medium", "dense"] },
+            glowStrength: { label: "Glow Strength", options: ["soft", "medium", "strong"] },
+            sensitivity: { label: "Sensitivity", options: ["low", "medium", "high"] }
+        },
         auroraDrift: {
             auroraStyle: { label: "Aurora Style", options: ["ambient", "cinematic", "energetic"] },
             intensity: { label: "Intensity", options: ["subtle", "balanced", "vivid"] },
