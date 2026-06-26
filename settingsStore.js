@@ -391,7 +391,7 @@ function sanitizeSideBars(input = {}) {
 
 function sanitizeCrimsonDusk(input = {}) {
   return {
-    barMode: pick(input.barMode, new Set(["bottom", "side", "both"]), DEFAULT_SETTINGS.crimsonDusk.barMode),
+    barMode: pick(input.barMode, new Set(["bottom", "bottomCompact", "side", "both"]), DEFAULT_SETTINGS.crimsonDusk.barMode),
     barThickness: pick(input.barThickness, new Set(["thin", "medium", "thick"]), DEFAULT_SETTINGS.crimsonDusk.barThickness),
     barCount: pick(input.barCount, new Set(["sparse", "medium", "dense"]), DEFAULT_SETTINGS.crimsonDusk.barCount),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.crimsonDusk.glowStrength),

@@ -1192,6 +1192,7 @@ const THEME_INFOS = {
         label: "Bar Mode",
         choices: [
           { value: "bottom", label: "Bottom" },
+          { value: "bottomCompact", label: "Bottom Compact" },
           { value: "side", label: "Side" },
           { value: "both", label: "Both" }
         ]
@@ -1202,7 +1203,8 @@ const THEME_INFOS = {
         choices: [
           { value: "thin", label: "Thin" },
           { value: "medium", label: "Medium" },
-          { value: "thick", label: "Thick" }
+          { value: "thick", label: "Thick" },
+          { value: "custom", label: "Custom" }
         ]
       },
       {
@@ -1229,7 +1231,8 @@ const THEME_INFOS = {
         choices: [
           { value: "low", label: "Low" },
           { value: "medium", label: "Medium" },
-          { value: "high", label: "High" }
+          { value: "high", label: "High" },
+          { value: "custom", label: "Custom" }
         ]
       },
       {

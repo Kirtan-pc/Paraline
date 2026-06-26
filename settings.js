@@ -85,11 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
             flowDirection: { label: "Flow Direction", options: ["topDown", "bottomUp"] }
         },
         crimsonDusk: {
-            barMode: { label: "Bar Mode", options: ["bottom", "side", "both"] },
-            barThickness: { label: "Bar Thickness", options: ["thin", "medium", "thick"] },
+            barMode: { label: "Bar Mode", options: ["bottom", "bottomCompact", "side", "both"] },
+            barThickness: { label: "Bar Thickness", options: ["thin", "medium", "thick", "custom"] },
             barCount: { label: "Bar Count", options: ["sparse", "medium", "dense"] },
             glowStrength: { label: "Glow Strength", options: ["soft", "medium", "strong"] },
-            sensitivity: { label: "Sensitivity", options: ["low", "medium", "high"] },
+            sensitivity: { label: "Sensitivity", options: ["low", "medium", "high", "custom"] },
             filmGrain: { label: "Film Grain", options: ["off", "on"] }
         },
         auroraDrift: {

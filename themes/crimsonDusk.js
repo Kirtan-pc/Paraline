@@ -167,6 +167,7 @@
                           : 52;
     const barThickness    = settings.barThickness === "thin"   ? 2
                           : settings.barThickness === "thick"  ? 5
+                          : settings.barThickness === "custom" && typeof settings.customThickness === "number" ? settings.customThickness
                           : 3.5;
     const gap             = 2;
     const step            = barThickness + gap;
@@ -224,6 +225,74 @@
   //   • Subtle heat-shimmer horizontal offset on beat
   //   • Bars grow INWARD from edges (not fixed width)
 
+  // --- Bottom Full-width bars ---
+  // Edge-to-edge bars spanning the entire bottom width, more uniform height.
+  // Distinct from "Bottom Compact" (centered, tapering envelope).
+
+  function drawCrimsonDuskBottomFull(options) {
+    const {
+      context,
+      width,
+      height,
+      time,
+      smoothedLevel,
+      settings,
+      performanceMode = 'balanced'
+    } = options;
+
+    const glowMultiplier  = getGlowMultiplier(settings.glowStrength);
+    const perfMultiplier  = getPerformanceMultiplier(performanceMode);
+    const barCount        = settings.barCount === "dense"  ? 90
+                          : settings.barCount === "sparse" ? 45
+                          : 64;
+    const barThickness    = settings.barThickness === "thin"   ? 2
+                          : settings.barThickness === "thick"  ? 4
+                          : settings.barThickness === "custom" && typeof settings.customThickness === "number" ? settings.customThickness
+                          : 3;
+    const step             = width / barCount;
+    const barWidth          = Math.max(1, step - 1.5);
+    const baseY            = height;
+    const maxBarHeight     = 14 + smoothedLevel * 40;
+    const glowBlur         = (5 + smoothedLevel * 9) * glowMultiplier * perfMultiplier;
+
+    context.globalAlpha = 1;
+    context.shadowBlur  = 0;
+
+    for (let i = 0; i < barCount; i++) {
+      const normalizedI = i / (barCount - 1);
+
+      const noise = Math.sin(time * 3.0 + i * 0.37) * 0.35
+                  + Math.sin(time * 1.7 + i * 0.63) * 0.35
+                  + 0.3;
+
+      const barH    = Math.max(1.5, maxBarHeight * Math.max(0.15, noise));
+      const opacity = clamp01(0.5 + smoothedLevel * 0.32);
+      const color   = resolveEmberColor(normalizedI, time, opacity);
+
+      const x = i * step;
+      const y = baseY - barH;
+
+      const grad = context.createLinearGradient(x, y, x, baseY);
+      const [r1, g1, b1] = CRIMSON_COLORS.glowGold;
+      const [r2, g2, b2] = CRIMSON_COLORS.deepCrimson;
+      grad.addColorStop(0, `rgba(${r1},${g1},${b1},${opacity})`);
+      grad.addColorStop(1, `rgba(${r2},${g2},${b2},${(opacity * 0.4).toFixed(3)})`);
+
+      context.fillStyle = grad;
+      applyOptimizedShadow(context, color, glowBlur, performanceMode);
+
+      const radius = Math.min(barThickness, 2);
+      if (typeof context.roundRect === "function") {
+        context.beginPath();
+        context.roundRect(x, y, barWidth, barH, [radius, radius, 0, 0]);
+        context.fill();
+      } else {
+        context.fillRect(x, y, barWidth, barH);
+      }
+    }
+  }
+
+
   function drawCrimsonDuskSide(options) {
     const {
       context,
@@ -239,6 +308,7 @@
     const perfMultiplier = getPerformanceMultiplier(performanceMode);
     const barHeight      = settings.barThickness === "thin"  ? 2
                          : settings.barThickness === "thick" ? 5
+                         : settings.barThickness === "custom" && typeof settings.customThickness === "number" ? settings.customThickness
                          : 3.5;
     const gap            = settings.barCount === "dense"  ? 4
                          : settings.barCount === "sparse" ? 12
@@ -399,11 +469,13 @@
     const barMode = settings.barMode || "bottom";
 
     if (barMode === "bottom") {
+      drawCrimsonDuskBottomFull(options);
+    } else if (barMode === "bottomCompact") {
       drawCrimsonDuskBottom(options);
     } else if (barMode === "side") {
       drawCrimsonDuskSide(options);
     } else if (barMode === "both") {
-      drawCrimsonDuskBottom(options);
+      drawCrimsonDuskBottomFull(options);
       drawCrimsonDuskSide(options);
     }
 
