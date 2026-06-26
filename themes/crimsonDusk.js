@@ -60,6 +60,85 @@
   // A warm audio-reactive waveform strip along the bottom edge.
   // Center bars are tallest (musical emphasis), tapering to edges.
 
+
+  // --- Ember Particle Drift ---
+  // Slow-drifting ember particles, independent of the bar visuals.
+  // Particles rise gently from the bottom/sides and fade as they age.
+
+  let _crimsonParticles = [];
+  let _particlesInitialized = false;
+
+  function initCrimsonParticles(width, height, density) {
+    const count = density === "dense" ? 60 : density === "sparse" ? 20 : 36;
+    _crimsonParticles = [];
+    for (let i = 0; i < count; i++) {
+      _crimsonParticles.push(createEmberParticle(width, height, true));
+    }
+    _particlesInitialized = true;
+  }
+
+  function createEmberParticle(width, height, randomY = false) {
+    return {
+      x: Math.random() * width,
+      y: randomY ? Math.random() * height : height + Math.random() * 30,
+      size: 1 + Math.random() * 2.5,
+      speed: 0.15 + Math.random() * 0.35,
+      drift: (Math.random() - 0.5) * 0.3,
+      life: Math.random(),
+      maxLife: 0.6 + Math.random() * 0.8,
+      colorPos: Math.random(),
+    };
+  }
+
+  function drawCrimsonEmberParticles(options) {
+    const {
+      context,
+      width,
+      height,
+      time,
+      smoothedLevel,
+      settings,
+      performanceMode = "balanced"
+    } = options;
+
+    const density = settings.barCount || "medium";
+    if (!_particlesInitialized) {
+      initCrimsonParticles(width, height, density);
+    }
+
+    const perfMultiplier = getPerformanceMultiplier(performanceMode);
+    const motionScale = options.reducedMotion ? 0.15 : 1;
+    const speedBoost = (1 + smoothedLevel * 0.8) * motionScale;
+
+    context.globalAlpha = 1;
+    context.shadowBlur = 0;
+
+    for (let i = 0; i < _crimsonParticles.length; i++) {
+      const p = _crimsonParticles[i];
+
+      p.y -= p.speed * speedBoost * perfMultiplier;
+      p.x += p.drift * motionScale;
+      p.life += 0.004 * speedBoost;
+
+      if (p.life >= p.maxLife || p.y < -20) {
+        _crimsonParticles[i] = createEmberParticle(width, height, false);
+        continue;
+      }
+
+      const lifeRatio = p.life / p.maxLife;
+      const fadeIn = Math.min(1, lifeRatio * 6);
+      const fadeOut = Math.min(1, (1 - lifeRatio) * 3);
+      const opacity = Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut) * 0.55));
+
+      const color = resolveEmberColor(p.colorPos, time * 0.3, opacity);
+
+      context.beginPath();
+      context.fillStyle = color;
+      context.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+
   function drawCrimsonDuskBottom(options) {
     const {
       context,
@@ -162,8 +241,10 @@
     const glowBlur       = (4 + smoothedLevel * 10) * glowMultiplier * perfMultiplier;
     const sideInset      = 3;
 
-    // Heat shimmer — subtle horizontal offset on strong beats
-    const shimmer = smoothedLevel > 0.6 ? Math.sin(time * 18) * smoothedLevel * 2.5 : 0;
+    // Heat shimmer — subtle horizontal offset on strong beats (disabled for reduced motion)
+    const shimmer = (!options.reducedMotion && smoothedLevel > 0.6)
+      ? Math.sin(time * 18) * smoothedLevel * 2.5
+      : 0;
 
     context.globalAlpha = 1;
     context.shadowBlur  = 0;
@@ -239,6 +320,51 @@
 
   // ─── Main draw entry ────────────────────────────────────────────────────────
 
+
+  // --- Film Grain Overlay (optional) ---
+  // Subtle noise texture over the visualizer area for a vintage film feel.
+  // Only renders when settings.filmGrain === "on".
+
+  let _grainCanvas = null;
+  let _grainCtx = null;
+
+  function buildGrainTexture(width, height) {
+    if (!_grainCanvas) {
+      _grainCanvas = document.createElement("canvas");
+      _grainCtx = _grainCanvas.getContext("2d");
+    }
+    _grainCanvas.width = width;
+    _grainCanvas.height = height;
+    const imageData = _grainCtx.createImageData(width, height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const v = Math.floor(Math.random() * 255);
+      data[i] = v;
+      data[i + 1] = v;
+      data[i + 2] = v;
+      data[i + 3] = 14;
+    }
+    _grainCtx.putImageData(imageData, 0, 0);
+  }
+
+  function drawCrimsonFilmGrain(context, width, height, reducedMotion) {
+    if (!_grainCanvas || _grainCanvas.width !== width || _grainCanvas.height !== height) {
+      buildGrainTexture(width, height);
+    } else if (!reducedMotion && Math.random() < 0.3) {
+      buildGrainTexture(width, height);
+    }
+    context.save();
+    context.globalAlpha = 0.05;
+    context.globalCompositeOperation = "overlay";
+    context.drawImage(_grainCanvas, 0, 0);
+    context.restore();
+  }
+
+  function prefersReducedMotion() {
+    return typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
   function drawCrimsonDusk(options) {
     const {
       context,
@@ -248,10 +374,16 @@
       smoothedLevel,
     } = options;
 
+    const reducedMotion = prefersReducedMotion();
+    options.reducedMotion = reducedMotion;
+
     const glowMultiplier = getGlowMultiplier(settings.glowStrength);
 
     // Always: ambient edge glow
     drawCrimsonEdgeGlow(context, width, height, smoothedLevel, glowMultiplier);
+
+    // Always: drifting ember particles
+    drawCrimsonEmberParticles(options);
 
     // Bar mode: bottom (default) or side
     const barMode = settings.barMode || "bottom";
@@ -263,6 +395,11 @@
     } else if (barMode === "both") {
       drawCrimsonDuskBottom(options);
       drawCrimsonDuskSide(options);
+    }
+
+    // Optional: film grain overlay
+    if (settings.filmGrain === "on") {
+      drawCrimsonFilmGrain(context, width, height, reducedMotion);
     }
   }
 

@@ -248,7 +248,7 @@ Paraline is designed to stay running in the background without feeling heavy or 
 <tr>
 <td><strong>Crimson Dusk</strong></td>
 <td>Warm ember and crimson glow along screen edges, inspired by desert sunsets.</td>
-<td>Bar Mode (bottom/side/both), Bar Thickness, Bar Count, Glow Strength, Sensitivity</td>
+<td>Bar Mode (bottom/side/both), Bar Thickness, Bar Count, Glow Strength, Sensitivity, Film Grain (optional)</td>
 </tr>
 <tr>
 <td><strong>Aurora Drift</strong></td>

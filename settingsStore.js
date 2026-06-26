@@ -67,6 +67,14 @@ const DEFAULT_SETTINGS = Object.freeze({
     customGap: 7,
     customSensitivity: 30
   }),
+  crimsonDusk: Object.freeze({
+    barMode: "bottom",
+    barThickness: "medium",
+    barCount: "medium",
+    glowStrength: "medium",
+    sensitivity: "medium",
+    filmGrain: "off"
+  }),
   flatRipples: Object.freeze({
     mode: "sideRipples",
     intensity: "medium",
@@ -167,7 +175,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   })
 });
 
-const VALID_MAIN_THEMES = new Set(["ambientWave", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids", "auroraDrift"]);
+const VALID_MAIN_THEMES = new Set(["ambientWave", "reactiveBorder", "flowBorder", "sideBars", "crimsonDusk", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids", "auroraDrift"]);
 const VALID_COLOR_MODES = new Set(["manual", "adaptive"]);
 const VALID_PERFORMANCE_MODES = new Set(["performance", "balanced", "quality"]);
 const VALID_FPS_LIMITS = new Set(["default", "battery", "unlocked"]);
@@ -226,6 +234,7 @@ function createDefaultSettings() {
     reactiveBorder: { ...DEFAULT_SETTINGS.reactiveBorder },
     flowBorder: { ...DEFAULT_SETTINGS.flowBorder },
     sideBars: { ...DEFAULT_SETTINGS.sideBars },
+    crimsonDusk: { ...DEFAULT_SETTINGS.crimsonDusk },
     flatRipples: { ...DEFAULT_SETTINGS.flatRipples },
     dotParticles: { ...DEFAULT_SETTINGS.dotParticles },
     rippleFlow: { ...DEFAULT_SETTINGS.rippleFlow },
@@ -242,6 +251,7 @@ function createThemeDefaults() {
     reactiveBorder: { ...DEFAULT_SETTINGS.reactiveBorder },
     flowBorder: { ...DEFAULT_SETTINGS.flowBorder },
     sideBars: { ...DEFAULT_SETTINGS.sideBars },
+    crimsonDusk: { ...DEFAULT_SETTINGS.crimsonDusk },
     flatRipples: { ...DEFAULT_SETTINGS.flatRipples },
     dotParticles: { ...DEFAULT_SETTINGS.dotParticles },
     rippleFlow: { ...DEFAULT_SETTINGS.rippleFlow },
@@ -373,6 +383,17 @@ function sanitizeSideBars(input = {}) {
     customThickness: sanitizeThickness(input.customThickness, DEFAULT_SETTINGS.sideBars.customThickness),
     customGap: sanitizeGap(input.customGap, DEFAULT_SETTINGS.sideBars.customGap),
     customSensitivity: sanitizeSensitivity(input.customSensitivity, DEFAULT_SETTINGS.sideBars.customSensitivity)
+  };
+}
+
+function sanitizeCrimsonDusk(input = {}) {
+  return {
+    barMode: pick(input.barMode, new Set(["bottom", "side", "both"]), DEFAULT_SETTINGS.crimsonDusk.barMode),
+    barThickness: pick(input.barThickness, new Set(["thin", "medium", "thick"]), DEFAULT_SETTINGS.crimsonDusk.barThickness),
+    barCount: pick(input.barCount, new Set(["sparse", "medium", "dense"]), DEFAULT_SETTINGS.crimsonDusk.barCount),
+    glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.crimsonDusk.glowStrength),
+    sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.crimsonDusk.sensitivity),
+    filmGrain: pick(input.filmGrain, new Set(["off", "on"]), DEFAULT_SETTINGS.crimsonDusk.filmGrain)
   };
 }
 
@@ -622,6 +643,7 @@ function sanitizeSettings(input = {}) {
     reactiveBorder: sanitizeReactiveBorder(source.reactiveBorder),
     flowBorder: sanitizeFlowBorder(source.flowBorder),
     sideBars: sanitizeSideBars(source.sideBars),
+    crimsonDusk: sanitizeCrimsonDusk(source.crimsonDusk),
     flatRipples: sanitizeFlatRipples(source.flatRipples),
     dotParticles: sanitizeDotParticles(source.dotParticles),
     rippleFlow: sanitizeRippleFlow(source.rippleFlow),

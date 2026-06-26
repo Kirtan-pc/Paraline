@@ -89,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
             barThickness: { label: "Bar Thickness", options: ["thin", "medium", "thick"] },
             barCount: { label: "Bar Count", options: ["sparse", "medium", "dense"] },
             glowStrength: { label: "Glow Strength", options: ["soft", "medium", "strong"] },
-            sensitivity: { label: "Sensitivity", options: ["low", "medium", "high"] }
+            sensitivity: { label: "Sensitivity", options: ["low", "medium", "high"] },
+            filmGrain: { label: "Film Grain", options: ["off", "on"] }
         },
         auroraDrift: {
             auroraStyle: { label: "Aurora Style", options: ["ambient", "cinematic", "energetic"] },
