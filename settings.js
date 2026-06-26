@@ -637,6 +637,7 @@ refreshThemeProfiles();
         cycleTheme: 'Cycle Active Theme'
     };
     let statusTimeout = null;
+    let invalidShortcutFlashTimeout = null;
 
     /**
      * Mirrors isValidAccelerator() from settingsStore.js for the renderer.
@@ -772,6 +773,11 @@ refreshThemeProfiles();
                 e.preventDefault();
                 e.stopPropagation();
 
+                if (invalidShortcutFlashTimeout) {
+                    clearTimeout(invalidShortcutFlashTimeout);
+                    invalidShortcutFlashTimeout = null;
+                }
+
                 // Clear hotkey if Backspace or Escape is pressed
                 if (e.key === 'Backspace' || e.key === 'Escape') {
                     input.value = 'None';
@@ -813,7 +819,7 @@ refreshThemeProfiles();
                 }
 
                 // Guard: Require at least one modifier key or a function key
-                if (parts.length === 0 && !/^F[1-9][0-2]?$/.test(keyName)) {
+                if (parts.length === 0 && !/^F([1-9]|1[0-9]|2[0-4])$/.test(keyName)) {
                     return;
                 }
 
@@ -832,7 +838,8 @@ refreshThemeProfiles();
                     // Briefly flash the input red to draw attention
                     input.style.borderColor = '#e74c3c';
                     input.style.boxShadow = '0 0 8px rgba(231, 76, 60, 0.5)';
-                    setTimeout(() => {
+                    invalidShortcutFlashTimeout = setTimeout(() => {
+                        invalidShortcutFlashTimeout = null;
                         input.style.borderColor = 'var(--accent)';
                         input.style.boxShadow = '0 0 10px rgba(0, 212, 255, 0.35)';
                         input.value = '';
@@ -888,6 +895,10 @@ refreshThemeProfiles();
             if (!input || !btn) return;
 
             activeRecordingKey = null;
+            if (invalidShortcutFlashTimeout) {
+                clearTimeout(invalidShortcutFlashTimeout);
+                invalidShortcutFlashTimeout = null;
+            }
 
             // Re-enable global shortcuts
             if (window.paralineApp && typeof window.paralineApp.suspendGlobalShortcuts === 'function') {
