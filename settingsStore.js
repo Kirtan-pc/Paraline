@@ -73,7 +73,10 @@ const DEFAULT_SETTINGS = Object.freeze({
     barCount: "medium",
     glowStrength: "medium",
     sensitivity: "medium",
-    filmGrain: "off"
+    filmGrain: "off",
+    customThickness: 4,
+    customGap: 7,
+    customSensitivity: 30
   }),
   flatRipples: Object.freeze({
     mode: "sideRipples",
@@ -393,7 +396,10 @@ function sanitizeCrimsonDusk(input = {}) {
     barCount: pick(input.barCount, new Set(["sparse", "medium", "dense"]), DEFAULT_SETTINGS.crimsonDusk.barCount),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.crimsonDusk.glowStrength),
     sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.crimsonDusk.sensitivity),
-    filmGrain: pick(input.filmGrain, new Set(["off", "on"]), DEFAULT_SETTINGS.crimsonDusk.filmGrain)
+    filmGrain: pick(input.filmGrain, new Set(["off", "on"]), DEFAULT_SETTINGS.crimsonDusk.filmGrain),
+    customThickness: sanitizeThickness(input.customThickness, DEFAULT_SETTINGS.crimsonDusk.customThickness),
+    customGap: sanitizeGap(input.customGap, DEFAULT_SETTINGS.crimsonDusk.customGap),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity, DEFAULT_SETTINGS.crimsonDusk.customSensitivity)
   };
 }
 

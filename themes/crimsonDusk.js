@@ -67,6 +67,9 @@
 
   let _crimsonParticles = [];
   let _particlesInitialized = false;
+  let _particlesDensity = null;
+  let _particlesWidth = null;
+  let _particlesHeight = null;
 
   function initCrimsonParticles(width, height, density) {
     const count = density === "dense" ? 60 : density === "sparse" ? 20 : 36;
@@ -102,8 +105,15 @@
     } = options;
 
     const density = settings.barCount || "medium";
-    if (!_particlesInitialized) {
+    const needsReinit = !_particlesInitialized
+      || density !== _particlesDensity
+      || width !== _particlesWidth
+      || height !== _particlesHeight;
+    if (needsReinit) {
       initCrimsonParticles(width, height, density);
+      _particlesDensity = density;
+      _particlesWidth = width;
+      _particlesHeight = height;
     }
 
     const perfMultiplier = getPerformanceMultiplier(performanceMode);

@@ -127,9 +127,11 @@ let visualizerState = {
   },
   crimsonDusk: {
     barMode: "bottom",
-    colorStyle: "ember",
+    barThickness: "medium",
+    barCount: "medium",
+    glowStrength: "medium",
     sensitivity: "medium",
-    particleDensity: "medium"
+    filmGrain: "off"
   },
   flatRipples: {
     mode: "sideRipples",
