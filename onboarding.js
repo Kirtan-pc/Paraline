@@ -64,6 +64,12 @@ const THEMES = [
     name: "Aurora Drift",
     preview: "previews/aurora-drift-preview.svg",
     description: "Cinematic aurora curtains rising from the bottom with layered shimmer."
+  },
+  {
+    id: "crimsonDusk",
+    name: "Crimson Dusk",
+    preview: "previews/crimson-dusk-preview.svg",
+    description: "Warm ember and crimson glow along screen edges, inspired by desert sunsets."
   }
 ];
 
