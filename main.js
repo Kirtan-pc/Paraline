@@ -1,26 +1,120 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog, nativeTheme, systemPreferences, powerMonitor } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, screen, shell, dialog, nativeTheme, systemPreferences, powerMonitor, globalShortcut } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { createAudioBridge } = require("./audioBridge");
 const { createDefaultSettings, createSettingsStore, createThemeDefaults, sanitizeSettings } = require("./settingsStore");
 const ThemeAgent = require('./themeAgent');
+const { autoUpdater } = require("electron-updater");
 
-let overlayWindow;
+const overlayWindows = new Map();
 let lastBridgeMode = null;
 let lastBridgeReason = null;
 let audioBridge;
 let fakeTimer;
+let isQuitting = false;
+let isReconcilingDisplays = false;
 let tray;
 let isPaused = false;
+let wasPausedBeforeSleep = false;
 let isHidden = false;
+let globalShortcutsSuspended = false;
+let shortcutRegistrationFailures = {};
 let settingsStore;
 let visualizerSettings;
 let settingsWindow;
+let onboardingWindow;
 let themeAgent;
 
 // --- Focus Mode state ---
 let focusModeTimer = null;
 let focusModeCurrentlyDimmed = false;
+
+function showOnboardingWindow() {
+  if (!onboardingWindow || onboardingWindow.isDestroyed()) {
+    return;
+  }
+
+  console.log("[Paraline] showOnboardingWindow()");
+  onboardingWindow.setAlwaysOnTop(true, "screen-saver");
+  onboardingWindow.show();
+  onboardingWindow.moveTop();
+  onboardingWindow.focus();
+}
+
+function createOnboardingWindow() {
+  console.log("[Paraline] createOnboardingWindow() called");
+
+  if (onboardingWindow) {
+    showOnboardingWindow();
+    return;
+  }
+
+  onboardingWindow = new BrowserWindow({
+    width: 720,
+    height: 640,
+    minWidth: 600,
+    minHeight: 500,
+    title: "Welcome to Paraline",
+    icon: getWindowIconPath(),
+    backgroundColor: "#08090d",
+    center: true,
+    resizable: true,
+    show: false,
+    alwaysOnTop: true,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js")
+    }
+  });
+  onboardingWindow.setMenu(null);
+
+  onboardingWindow.loadFile("onboarding.html");
+
+  onboardingWindow.once("ready-to-show", () => {
+    console.log("[Paraline] onboarding ready-to-show");
+    showOnboardingWindow();
+  });
+
+  onboardingWindow.webContents.once("did-finish-load", () => {
+    console.log("[Paraline] onboarding did-finish-load");
+
+    if (onboardingWindow && !onboardingWindow.isDestroyed() && !onboardingWindow.isVisible()) {
+      console.log("[Paraline] onboarding fallback show after did-finish-load");
+      showOnboardingWindow();
+    }
+  });
+
+  onboardingWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription) => {
+    console.error("[Paraline] onboarding did-fail-load:", errorCode, errorDescription);
+  });
+
+  onboardingWindow.on("closed", () => {
+    onboardingWindow = null;
+  });
+}
+
+function shouldShowOnboarding() {
+  return visualizerSettings && visualizerSettings.onboardingSeen !== true;
+}
+
+function markOnboardingSeen() {
+  if (visualizerSettings.onboardingSeen === true) {
+    return;
+  }
+
+  updateSettings({ onboardingSeen: true });
+}
+
+function dismissOnboarding(dontShowAgain) {
+  if (dontShowAgain) {
+    markOnboardingSeen();
+  }
+
+  if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+    onboardingWindow.close();
+  }
+}
 
 function createSettingsWindow() {
   if (settingsWindow) {
@@ -33,14 +127,15 @@ function createSettingsWindow() {
     minWidth: 800,
     minHeight: 600,
     title: "Paraline Settings",
+    icon: getWindowIconPath(),
     backgroundColor: "#08090d",
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
       preload: path.join(__dirname, "preload.js")
-    },
-    autoHideMenuBar: true
+    }
   });
+  settingsWindow.setMenu(null);
   settingsWindow.loadFile("settings.html");
   settingsWindow.on("closed", () => {
     settingsWindow = null;
@@ -135,11 +230,61 @@ const THEME_LABELS = {
   auroraDrift: "Aurora Drift"
 };
 
-function createOverlayWindow() {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { bounds } = primaryDisplay;
+function getActiveOverlayWindows() {
+  return Array.from(overlayWindows.values()).filter((overlayWindow) => (
+    overlayWindow && !overlayWindow.isDestroyed()
+  ));
+}
 
-  overlayWindow = new BrowserWindow({
+function hasActiveOverlayWindows() {
+  return getActiveOverlayWindows().length > 0;
+}
+
+function getOverlayWindowFromWebContents(webContents) {
+  return getActiveOverlayWindows().find((overlayWindow) => (
+    overlayWindow.webContents.id === webContents.id
+  ));
+}
+
+function applyOverlayWindowDisplayState(overlayWindow, display) {
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    return;
+  }
+
+  const { bounds } = display;
+  overlayWindow.setBounds(bounds);
+  overlayWindow.setAlwaysOnTop(true, "screen-saver");
+  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  overlayWindow.moveTop();
+}
+
+function destroyOverlayWindowForDisplay(displayId) {
+  const overlayWindow = overlayWindows.get(displayId);
+  overlayWindows.delete(displayId);
+
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.destroy();
+  }
+}
+
+function destroyAllOverlayWindows() {
+  for (const displayId of Array.from(overlayWindows.keys())) {
+    destroyOverlayWindowForDisplay(displayId);
+  }
+}
+
+function createOverlayWindow(display) {
+  const existingOverlayWindow = overlayWindows.get(display.id);
+
+  if (existingOverlayWindow && !existingOverlayWindow.isDestroyed()) {
+    applyOverlayWindowDisplayState(existingOverlayWindow, display);
+    return existingOverlayWindow;
+  }
+
+  const { bounds } = display;
+
+  const overlayWindow = new BrowserWindow({
     x: bounds.x,
     y: bounds.y,
     width: bounds.width,
@@ -152,8 +297,10 @@ function createOverlayWindow() {
     fullscreenable: false,
     skipTaskbar: true,
     hasShadow: false,
-    focusable: true,
+    focusable: false,
+    show: false,
     backgroundColor: "#00000000",
+    icon: getWindowIconPath(),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -161,21 +308,57 @@ function createOverlayWindow() {
     }
   });
 
-  overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-  overlayWindow.setBounds(bounds);
-  overlayWindow.moveTop();
+  overlayWindows.set(display.id, overlayWindow);
+  applyOverlayWindowDisplayState(overlayWindow, display);
+  overlayWindow.showInactive();
   overlayWindow.loadFile("index.html");
+
   overlayWindow.webContents.on("did-finish-load", () => {
     setTimeout(() => {
-      sendVisualizerSettings();
+      sendVisualizerSettingsToWindow(overlayWindow);
+      sendFocusModeOpacityToWindow(overlayWindow, getCurrentFocusModeOpacity());
     }, 100);
   });
 
   overlayWindow.on("closed", () => {
-    overlayWindow = null;
+    if (overlayWindows.get(display.id) === overlayWindow) {
+      overlayWindows.delete(display.id);
+    }
+
+    const displayCount = screen.getAllDisplays().length;
+    if (!isQuitting && !isReconcilingDisplays && overlayWindows.size < displayCount) {
+      reconcileOverlayWindows();
+    }
   });
+
+  return overlayWindow;
+}
+
+function reconcileOverlayWindows() {
+  const displays = screen.getAllDisplays();
+
+  if (displays.length === 0) {
+    return;
+  }
+
+  isReconcilingDisplays = true;
+
+  try {
+    const activeDisplayIds = new Set();
+
+    for (const display of displays) {
+      activeDisplayIds.add(display.id);
+      createOverlayWindow(display);
+    }
+
+    for (const displayId of Array.from(overlayWindows.keys())) {
+      if (!activeDisplayIds.has(displayId)) {
+        destroyOverlayWindowForDisplay(displayId);
+      }
+    }
+  } finally {
+    isReconcilingDisplays = false;
+  }
 }
 
 function sendAudioLevel(value, source) {
@@ -183,14 +366,12 @@ function sendAudioLevel(value, source) {
     return;
   }
 
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
-    return;
+  for (const overlayWindow of getActiveOverlayWindows()) {
+    overlayWindow.webContents.send("audio-level", {
+      value,
+      source
+    });
   }
-
-  overlayWindow.webContents.send("audio-level", {
-    value,
-    source
-  });
 }
 
 function getRendererSettings() {
@@ -201,7 +382,8 @@ function getRendererSettings() {
     paused: isPaused,
     hidden: isHidden,
     version: APP_VERSION,
-    helperConnected: helperConnected
+    helperConnected: helperConnected,
+    shortcutRegistrationFailures: shortcutRegistrationFailures
   };
 }
 
@@ -214,7 +396,10 @@ function sendVisualizerSettingsToWindow(targetWindow) {
 }
 
 function sendVisualizerSettings() {
-  sendVisualizerSettingsToWindow(overlayWindow);
+  for (const overlayWindow of getActiveOverlayWindows()) {
+    sendVisualizerSettingsToWindow(overlayWindow);
+  }
+
   sendVisualizerSettingsToWindow(settingsWindow);
 }
 
@@ -250,6 +435,9 @@ function updateSettings(nextSettings) {
   if (nextSettings.themeAutomation !== undefined && themeAgent) {
     themeAgent.start();
   }
+  if (nextSettings.shortcuts !== undefined) {
+    registerGlobalShortcuts();
+  }
 
   sendVisualizerSettings();
   refreshTrayMenu();
@@ -268,19 +456,109 @@ function toggleHidden() {
 }
 
 function reloadVisualizer() {
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
+  const activeOverlayWindows = getActiveOverlayWindows();
+
+  if (activeOverlayWindows.length === 0) {
     return;
   }
 
-  overlayWindow.webContents.reloadIgnoringCache();
+  stopSimulatedAudioFallback();
+
+  for (const overlayWindow of activeOverlayWindows) {
+    overlayWindow.webContents.reloadIgnoringCache();
+  }
+}
+
+function cycleTheme() {
+  const themes = ["ambientWave", "auroraDrift", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids"];
+  const currentTheme = visualizerSettings.selectedTheme;
+  const currentIndex = themes.indexOf(currentTheme);
+  const nextIndex = (currentIndex + 1) % themes.length;
+  const nextTheme = themes[nextIndex];
+  updateSettings({ selectedTheme: nextTheme });
+}
+function registerGlobalShortcuts() {
+  globalShortcut.unregisterAll();
+
+  // Reset failures before re-registering
+  shortcutRegistrationFailures = {};
+
+  if (globalShortcutsSuspended) return;
+
+  const shortcuts = visualizerSettings.shortcuts;
+  if (!shortcuts) return;
+
+  const formatAccelerator = (uiShortcut) => {
+    if (!uiShortcut || uiShortcut === "None") return null;
+    return uiShortcut;
+  };
+
+  const pauseAcc = formatAccelerator(shortcuts.togglePause);
+  const hideAcc = formatAccelerator(shortcuts.toggleHide);
+  const cycleAcc = formatAccelerator(shortcuts.cycleTheme);
+
+  // Main-process side validation for duplicate accelerators
+  const registeredAccelerators = new Set();
+
+  const registerIfUnique = (accelerator, settingKey, name, callback) => {
+    if (!accelerator) return;
+    const normalized = accelerator.toLowerCase().replace(/\s+/g, "");
+    if (registeredAccelerators.has(normalized)) {
+      console.warn(`[Paraline] Duplicate shortcut rejected in main-process validation: ${accelerator} for "${name}"`);
+      shortcutRegistrationFailures[settingKey] = true;
+      return;
+    }
+    registeredAccelerators.add(normalized);
+    try {
+      const registered = globalShortcut.register(accelerator, callback);
+      if (!registered) {
+        console.error(`Failed to register global shortcut for ${name}: ${accelerator} (possibly registered by another application)`);
+        shortcutRegistrationFailures[settingKey] = true;
+      }
+    } catch (err) {
+      console.error(`Failed to register global shortcut for ${name}: ${accelerator}`, err);
+      shortcutRegistrationFailures[settingKey] = true;
+    }
+  };
+
+  registerIfUnique(pauseAcc, "togglePause", "pause/resume", () => {
+    togglePaused();
+  });
+
+  registerIfUnique(hideAcc, "toggleHide", "hide/show", () => {
+    toggleHidden();
+  });
+
+  registerIfUnique(cycleAcc, "cycleTheme", "cycling theme", () => {
+    cycleTheme();
+  });
+
+  // Push updated failure state to the Settings window so the UI can warn the user
+  sendVisualizerSettings();
 }
 
 // --- Focus Mode polling ---
-function sendFocusModeOpacity(opacity) {
-  if (!overlayWindow || overlayWindow.isDestroyed()) {
+function getCurrentFocusModeOpacity() {
+  if (!focusModeCurrentlyDimmed) {
+    return 1.0;
+  }
+
+  const fmSettings = visualizerSettings && visualizerSettings.focusMode;
+  return fmSettings && typeof fmSettings.dimOpacity === "number" ? fmSettings.dimOpacity : 0.1;
+}
+
+function sendFocusModeOpacityToWindow(targetWindow, opacity) {
+  if (!targetWindow || targetWindow.isDestroyed()) {
     return;
   }
-  overlayWindow.webContents.send("focus-mode-opacity", { opacity });
+
+  targetWindow.webContents.send("focus-mode-opacity", { opacity });
+}
+
+function sendFocusModeOpacity(opacity) {
+  for (const overlayWindow of getActiveOverlayWindows()) {
+    sendFocusModeOpacityToWindow(overlayWindow, opacity);
+  }
 }
 
 function startFocusModePolling() {
@@ -337,7 +615,9 @@ function applyFocusModeState() {
 }
 
 function startSimulatedAudioFallback() {
-  stopSimulatedAudioFallback();
+  if (fakeTimer) {
+    return;
+  }
 
   fakeTimer = setInterval(() => {
     const now = Date.now();
@@ -353,16 +633,33 @@ function stopSimulatedAudioFallback() {
   }
 }
 
-function resizeOverlayToPrimaryDisplay() {
-  if (!overlayWindow) {
-    return;
+function handleDisplayMetricsChanged(_event, display) {
+  const overlayWindow = overlayWindows.get(display.id);
+
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    applyOverlayWindowDisplayState(overlayWindow, display);
   }
 
-  const { bounds } = screen.getPrimaryDisplay();
-  overlayWindow.setBounds(bounds);
-  overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWindow.moveTop();
+  reconcileOverlayWindows();
+}
+
+function handleDisplayAdded(_event, display) {
+  createOverlayWindow(display);
+  reconcileOverlayWindows();
+  sendVisualizerSettings();
+}
+
+function handleDisplayRemoved(_event, display) {
+  isReconcilingDisplays = true;
+
+  try {
+    destroyOverlayWindowForDisplay(display.id);
+  } finally {
+    isReconcilingDisplays = false;
+  }
+
+  reconcileOverlayWindows();
+  sendVisualizerSettings();
 }
 
 function handleAudioBridgeStatusChange(status) {
@@ -382,8 +679,10 @@ function handleAudioBridgeStatusChange(status) {
   }
   lastBridgeMode = status.mode;
   lastBridgeReason = status.reason;
-  if (status.mode !== "helper") {
+  if (status.mode !== "helper" && !isQuitting) {
     startSimulatedAudioFallback();
+  } else {
+    stopSimulatedAudioFallback();
   }
   refreshTrayMenu();
 }
@@ -405,10 +704,62 @@ function resetCurrentThemeSettings() {
 function resetAllSettings() {
   visualizerSettings = settingsStore.save(createDefaultSettings());
   isPaused = false;
+  isHidden = false;
+  applyStartupSettings(visualizerSettings.launchOnStartup);
+  registerGlobalShortcuts();
   sendVisualizerSettings();
   refreshTrayMenu();
 }
+// Reserved JavaScript property names that must not be used as object keys.
+// Using these as keys on a plain object pollutes Object.prototype and affects
+// every plain object created in the same process for the rest of its lifetime.
+const RESERVED_PROFILE_NAMES = new Set(["__proto__", "constructor", "prototype"]);
+const MAX_PROFILE_NAME_LENGTH = 64;
+
+// Allowlist pattern: profile names may only contain letters, digits,
+// spaces, hyphens, underscores, and parentheses (max 64 chars).
+const SAFE_PROFILE_NAME_RE = /^[A-Za-z0-9 _\-()À-ɏ]{1,64}$/;
+
+function isValidProfileName(name) {
+  if (typeof name !== "string" || name.trim() === "") return false;
+  if (RESERVED_PROFILE_NAMES.has(name)) return false;
+  return SAFE_PROFILE_NAME_RE.test(name);
+}
+
+function hasThemeProfile(profiles, profileName) {
+  return Object.prototype.hasOwnProperty.call(profiles, profileName);
+}
+
+function createDuplicateProfileName(profileName, profiles) {
+  let counter = 1;
+
+  while (true) {
+    const suffix = counter === 1 ? " (Copy)" : ` (Copy ${counter})`;
+    const maxBaseLength = MAX_PROFILE_NAME_LENGTH - suffix.length;
+
+    if (maxBaseLength < 1) {
+      return null;
+    }
+
+    const baseName = profileName.slice(0, maxBaseLength).trimEnd();
+    const copyName = `${baseName}${suffix}`;
+
+    if (!isValidProfileName(copyName)) {
+      return null;
+    }
+
+    if (!hasThemeProfile(profiles, copyName)) {
+      return copyName;
+    }
+
+    counter += 1;
+  }
+}
+
 function saveThemeProfile(profileName) {
+  if (!isValidProfileName(profileName)) {
+    return null;
+  }
   const profiles = settingsStore.loadProfiles();
 
   profiles[profileName] = visualizerSettings;
@@ -418,22 +769,65 @@ function saveThemeProfile(profileName) {
   return profiles;
 }
 
+function duplicateThemeProfile(profileName) {
+  if (!isValidProfileName(profileName)) {
+    return {
+      success: false,
+      error: "Invalid profile name"
+    };
+  }
+
+  const profiles = settingsStore.loadProfiles();
+
+  if (!hasThemeProfile(profiles, profileName)) {
+    return {
+      success: false,
+      error: "Profile not found"
+    };
+  }
+
+  const newName = createDuplicateProfileName(profileName, profiles);
+
+  if (!newName) {
+    return {
+      success: false,
+      error: "Could not create a valid copy name"
+    };
+  }
+
+  const duplicatedProfile = JSON.parse(
+    JSON.stringify(profiles[profileName])
+  );
+
+  profiles[newName] = sanitizeSettings(duplicatedProfile);
+
+  settingsStore.saveProfiles(profiles);
+
+  return {
+    success: true,
+    profileName: newName
+  };
+}
+
 function loadThemeProfile(profileName) {
+  if (!isValidProfileName(profileName)) {
+    return null;
+  }
   const profiles = settingsStore.loadProfiles();
 
   if (!profiles[profileName]) {
     return null;
   }
 
-  visualizerSettings = settingsStore.save(profiles[profileName]);
-
-  sendVisualizerSettings();
-  refreshTrayMenu();
-
+  updateSettings(profiles[profileName]);
+  
   return visualizerSettings;
 }
 
 function deleteThemeProfile(profileName) {
+  if (!isValidProfileName(profileName)) {
+    return settingsStore.loadProfiles();
+  }
   const profiles = settingsStore.loadProfiles();
 
   delete profiles[profileName];
@@ -447,10 +841,55 @@ function getThemeProfiles() {
   return settingsStore.loadProfiles();
 }
 
+// Allowlist of URL schemes that may be passed to shell.openExternal.
+// Any other scheme (e.g. ms-settings:, file:, javascript:) is silently
+// rejected to prevent OS-level command execution via registered protocols.
+const ALLOWED_EXTERNAL_SCHEMES = new Set(["https:", "http:"]);
+
 function openExternalUrl(url) {
+  if (typeof url !== "string" || url.trim() === "") {
+    console.warn("[Paraline] openExternalUrl(): invalid url payload:", url);
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    console.warn("[Paraline] openExternalUrl(): failed to parse URL:", url);
+    return;
+  }
+
+  if (!ALLOWED_EXTERNAL_SCHEMES.has(parsed.protocol)) {
+    console.warn("[Paraline] openExternalUrl(): blocked unsupported protocol:", parsed.protocol, "url:", url);
+    return;
+  }
+
   shell.openExternal(url).catch(() => {
     // Ignore shell open failures from tray actions.
   });
+}
+
+
+function getWindowIconPath() {
+  const iconCandidates = [
+    path.join(process.resourcesPath, "assets", "appicon.ico"),
+    path.join(process.resourcesPath, "assets", "appicon.png"),
+    path.join(process.resourcesPath, "assets", "paraline.png"),
+    path.join(__dirname, "assets", "appicon.ico"),
+    path.join(__dirname, "assets", "appicon.png"),
+    path.join(__dirname, "assets", "paraline.png")
+  ];
+
+  const iconPath = iconCandidates.find((candidatePath) => {
+    try {
+      return require("fs").existsSync(candidatePath);
+    } catch {
+      return false;
+    }
+  });
+
+  return iconPath || path.join(__dirname, "assets", "appicon.png");
 }
 
 function createTrayIcon() {
@@ -493,6 +932,7 @@ function createTrayIcon() {
 function buildMainThemeMenuItems() {
   const themeOptions = [
     { value: "ambientWave", label: "Ambient Wave" },
+    { value: "auroraDrift", label: "Aurora Drift" },
     { value: "reactiveBorder", label: "Reactive Border" },
     { value: "flowBorder", label: "Flow Border" },
     { value: "sideBars", label: "Side Bars" },
@@ -501,8 +941,7 @@ function buildMainThemeMenuItems() {
     { value: "rippleFlow", label: "Ripple Flow" },
     { value: "snowBubbleParticles", label: "Snow Particles" },
     { value: "edgeCrystals", label: "Edge Crystals" },
-    { value: "sideBraids", label: "Side Braids" },
-    { value: "auroraDrift", label: "Aurora Drift" }
+    { value: "sideBraids", label: "Side Braids" }
   ];
 
   return themeOptions.map((themeOption) => ({
@@ -1276,22 +1715,27 @@ function refreshTrayMenu() {
 }
 
 function showCustomContextMenu() {
+  const cursorPoint = screen.getCursorScreenPoint();
+  const targetDisplay = screen.getDisplayNearestPoint(cursorPoint);
+  let overlayWindow = overlayWindows.get(targetDisplay.id);
+
+  if (!overlayWindow || overlayWindow.isDestroyed()) {
+    reconcileOverlayWindows();
+    overlayWindow = overlayWindows.get(targetDisplay.id);
+  }
+
   if (!overlayWindow || overlayWindow.isDestroyed()) {
     return;
   }
-  const cursorPoint = screen.getCursorScreenPoint();
 
   // Force Windows to refresh the window's z-order relative to other topmost windows
-  // (like the tray overflow panel) by toggling setAlwaysOnTop and calling show()/focus()
+  // (like the tray overflow panel) by toggling setAlwaysOnTop and calling moveTop()
   overlayWindow.setAlwaysOnTop(false);
   overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.show();
-  overlayWindow.focus();
   overlayWindow.moveTop();
 
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const localX = cursorPoint.x - primaryDisplay.bounds.x;
-  const localY = cursorPoint.y - primaryDisplay.bounds.y;
+  const localX = cursorPoint.x - targetDisplay.bounds.x;
+  const localY = cursorPoint.y - targetDisplay.bounds.y;
 
   overlayWindow.webContents.send("show-context-menu", {
     x: localX,
@@ -1316,6 +1760,11 @@ app.whenReady().then(() => {
   settingsStore = createSettingsStore(app.getPath("userData"));
   visualizerSettings = settingsStore.save(settingsStore.load());
   applyStartupSettings(visualizerSettings.launchOnStartup);
+  registerGlobalShortcuts();
+
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
 
   nativeTheme.on("updated", () => {
     sendVisualizerSettings();
@@ -1335,6 +1784,19 @@ app.whenReady().then(() => {
   themeAgent.start();
   // -----------------------------------------
 
+  powerMonitor.on("suspend", () => {
+    wasPausedBeforeSleep = isPaused;
+    isPaused = true;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
+
+  powerMonitor.on("resume", () => {
+    isPaused = wasPausedBeforeSleep;
+    sendVisualizerSettings();
+    refreshTrayMenu();
+  });
+
   ipcMain.handle("audio-bridge-status", () => {
     if (!audioBridge) {
       return {
@@ -1348,10 +1810,6 @@ app.whenReady().then(() => {
 
   ipcMain.handle("visualizer-settings:get", () => {
     return getRendererSettings();
-  });
-
-  ipcMain.on("visualizer-settings:update", (event, patch) => {
-    updateSettings(patch);
   });
 
   ipcMain.on("visualizer-action", (event, { action, data }) => {
@@ -1375,13 +1833,17 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on("set-ignore-mouse-events", (event, ignore) => {
-    if (overlayWindow && !overlayWindow.isDestroyed()) {
-      if (ignore) {
-        overlayWindow.setIgnoreMouseEvents(true, { forward: true });
-        overlayWindow.blur();
-      } else {
-        overlayWindow.setIgnoreMouseEvents(false);
-      }
+    const overlayWindow = getOverlayWindowFromWebContents(event.sender);
+
+    if (!overlayWindow) {
+      return;
+    }
+
+    if (ignore) {
+      overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+      overlayWindow.blur();
+    } else {
+      overlayWindow.setIgnoreMouseEvents(false);
     }
   });
 
@@ -1425,6 +1887,24 @@ app.whenReady().then(() => {
     return getRendererSettings();
   });
 
+  ipcMain.handle("theme-profiles:duplicate", async (_, profileName) => {
+    return duplicateThemeProfile(profileName);
+  });
+
+  ipcMain.handle("theme-profiles:reset-current", () => {
+    resetCurrentThemeSettings();
+    return getRendererSettings();
+  });
+
+  ipcMain.handle("shortcuts:suspend", (_event, suspend) => {
+    globalShortcutsSuspended = suspend;
+    if (suspend) {
+      globalShortcut.unregisterAll();
+    } else {
+      registerGlobalShortcuts();
+    }
+  });
+
   ipcMain.handle("theme-profiles:export", async (_event, profileName) => {
     const profiles = settingsStore.loadProfiles();
 
@@ -1458,6 +1938,37 @@ app.whenReady().then(() => {
     return { success: true };
   });
 
+  ipcMain.handle("settings:export-all", async () => {
+    const backup = {
+        version: 1,
+        settings: settingsStore.load(),
+        profiles: settingsStore.loadProfiles()
+    };
+    const dialogParent = settingsWindow && !settingsWindow.isDestroyed()
+      ? settingsWindow
+      : BrowserWindow.getFocusedWindow();
+    const result = await dialog.showSaveDialog(dialogParent, {
+      title: "Export Settings Backup",
+      defaultPath: "paraline-settings-backup.json",
+      filters: [
+        {
+          name: "JSON Files",
+          extensions: ["json"]
+        }
+      ]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { success: false };
+    }
+
+    require("fs").writeFileSync(
+      result.filePath,
+      JSON.stringify(backup, null, 2)
+    );
+
+    return { success: true };
+  });
   ipcMain.handle("theme-profiles:import", async () => {
     try {
       const dialogParent = settingsWindow && !settingsWindow.isDestroyed()
@@ -1499,7 +2010,11 @@ app.whenReady().then(() => {
       // Sanitize the imported profile to prevent prototype pollution and arbitrary property injection
       const sanitizedProfile = sanitizeSettings(importedProfile);
 
-      const profileName = path.basename(filePath, ".json");
+      const rawProfileName = path.basename(filePath, ".json");
+      if (!isValidProfileName(rawProfileName)) {
+        return { success: false, error: "Invalid profile name: the filename contains reserved or disallowed characters." };
+      }
+      const profileName = rawProfileName;
       const profiles = settingsStore.loadProfiles();
 
       profiles[profileName] = sanitizedProfile;
@@ -1515,11 +2030,117 @@ app.whenReady().then(() => {
     }
   });
   
+  ipcMain.handle("settings:import-all", async () => {
+    try {
+      const dialogParent = settingsWindow && !settingsWindow.isDestroyed()
+        ? settingsWindow
+        : BrowserWindow.getFocusedWindow();
+
+      const result = await dialog.showOpenDialog(dialogParent, {
+        title: "Import Settings Backup",
+        filters: [
+          {
+            name: "JSON Files",
+            extensions: ["json"]
+          }
+        ],
+        properties: ["openFile"]
+      });
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false };
+      }
+
+      const filePath = result.filePaths[0];
+
+      // Check file size (100KB limit to prevent DoS attacks)
+      const stats = fs.statSync(filePath);
+      const MAX_FILE_SIZE = 100 * 1024; // 100KB
+      if (stats.size > MAX_FILE_SIZE) {
+        return { success: false, error: "File too large. Maximum size is 100KB." };
+      }
+
+      const importedBackup = JSON.parse(
+          require("fs").readFileSync(filePath, "utf8")
+      );
+
+      if (
+          !importedBackup ||
+          typeof importedBackup !== "object" ||
+          Array.isArray(importedBackup)
+      ) {
+          return { success: false, error: "Invalid backup format" };
+      }
+      const cleanSettings = sanitizeSettings(
+          importedBackup.settings || {}
+      );
+
+      settingsStore.save(cleanSettings);
+
+    const safeProfiles = {};
+
+    for (const [name, profile] of Object.entries(importedBackup.profiles || {})) {
+
+        if (
+            typeof name !== "string" ||
+            name === "__proto__" ||
+            name === "constructor" ||
+            name === "prototype"
+        ) {
+            continue;
+        }
+
+        safeProfiles[name] = sanitizeSettings(profile || {});
+    }
+
+    settingsStore.saveProfiles(safeProfiles);
+
+      visualizerSettings = cleanSettings;
+
+      applyStartupSettings(visualizerSettings.launchOnStartup);
+      applyFocusModeState();
+
+      if (themeAgent) {
+          themeAgent.start();
+      }
+
+      registerGlobalShortcuts();
+      sendVisualizerSettings();
+      refreshTrayMenu();
+
+      return {                                    
+        success: true,
+      };
+    }
+    catch (error) {
+      console.error("Failed to import settings backup:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
   ipcMain.handle("app:open-external", (_event, url) => {
     openExternalUrl(url);
   });
 
-  createOverlayWindow();
+  reconcileOverlayWindows();
+  
+  ipcMain.handle("onboarding:dismiss", (_event, payload = {}) => {
+    dismissOnboarding(!!payload.dontShowAgain);
+    return { success: true };
+  });
+
+  const showOnboarding = shouldShowOnboarding();
+  console.log(
+    "[Paraline] onboarding check:",
+    showOnboarding,
+    "onboardingSeen:",
+    visualizerSettings ? visualizerSettings.onboardingSeen : undefined
+  );
+
+  if (showOnboarding) {
+    createOnboardingWindow();
+  }
+
   createTray();
   sendVisualizerSettings();
 
@@ -1533,28 +2154,51 @@ app.whenReady().then(() => {
     stopSimulatedAudioFallback();
     sendAudioLevel(value, "helper");
   }, handleAudioBridgeStatusChange);
-  audioBridge.start();
+
+  // Defer starting the audio bridge to prevent startup resource contention and SmartScreen lags from blocking Electron initialization
+  setTimeout(() => {
+    if (!isQuitting) {
+      audioBridge.start();
+    }
+  }, 4000);
+
   refreshTrayMenu();
 
-  screen.on("display-metrics-changed", resizeOverlayToPrimaryDisplay);
-  screen.on("display-added", resizeOverlayToPrimaryDisplay);
-  screen.on("display-removed", resizeOverlayToPrimaryDisplay);
+  screen.on("display-metrics-changed", handleDisplayMetricsChanged);
+  screen.on("display-added", handleDisplayAdded);
+  screen.on("display-removed", handleDisplayRemoved);
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createOverlayWindow();
+    if (!hasActiveOverlayWindows()) {
+      reconcileOverlayWindows();
     }
   });
 });
 
 app.on("second-instance", () => {
-  if (overlayWindow && !overlayWindow.isDestroyed()) {
-    resizeOverlayToPrimaryDisplay();
-    sendVisualizerSettings();
+  reconcileOverlayWindows();
+  sendVisualizerSettings();
+});
+
+app.on("before-quit", () => {
+  isQuitting = true;
+  stopSimulatedAudioFallback();
+  destroyAllOverlayWindows();
+
+  if (audioBridge) {
+    audioBridge.stop();
   }
 });
 
+app.on("will-quit", () => {
+  stopSimulatedAudioFallback();
+  globalShortcut.unregisterAll();
+});
+
 app.on("window-all-closed", () => {
+  isQuitting = true;
+  stopSimulatedAudioFallback();
+
   if (audioBridge) {
     audioBridge.stop();
   }

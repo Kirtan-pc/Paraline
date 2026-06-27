@@ -23,7 +23,7 @@
             <div class="sidebar-header">
                 <h2>Paraline</h2>
                 <span class="sidebar-brand-tag">Audio Visualizer</span>
-                <div class="sidebar-version">v1.2.0</div>
+                <div class="sidebar-version">v2.1.0</div>
             </div>
             <ul class="nav-links">
                 <li>
@@ -108,62 +108,13 @@
                     <p>Standard presets. Changes are applied instantly.</p>
                 </header>
 
-                <div class="settings-group">
-                    
-  <h3>Theme Automation</h3>
-
-  <div class="input-group" style="margin-top: 10px;">
-    <label style="display: flex; align-items: center; gap: 10px;">
-      <input type="checkbox" id="enableThemeAutomation" />
-      Enable Time-Based Theme Switching
-    </label>
-  </div>
-
-  <div id="themeAutoControls" style="display: none; margin-top: 15px;">
-    <div class="input-group" style="margin-top: 10px;">
-      <label>Check Interval (Minutes):</label>
-      <input type="number" id="intervalMinutes" min="1" max="120" value="30" style="width: 60px; margin-left: 10px;" />
-    </div>
-
-    <div class="input-group" style="margin-top: 10px;">
-      <label>Daytime Theme (6 AM - 6 PM):</label>
-      <select class="styled-select" id="dayThemeSelect" style="margin-top: 5px;">
-        <option value="ambientWave">Ambient Wave</option>
-        <option value="reactiveBorder">Reactive Border</option>
-        <option value="flowBorder">Flow Border</option>
-        <option value="sideBars">Side Bars</option>
-        <option value="flatRipples">Pulse Lines</option>
-        <option value="dotParticles">Dot Particles</option>
-        <option value="rippleFlow">Ripple Flow</option>
-        <option value="snowBubbleParticles">Snow Particles</option>
-        <option value="edgeCrystals">Edge Crystals</option>
-        <option value="sideBraids">Side Braids</option>
-      </select>
-    </div>
-
-    <div class="input-group" style="margin-top: 10px;">
-      <label>Nighttime Theme (6 PM - 6 AM):</label>
-      <select class="styled-select" id="nightThemeSelect" style="margin-top: 5px;">
-        <option value="ambientWave">Ambient Wave</option>
-        <option value="reactiveBorder">Reactive Border</option>
-        <option value="flowBorder">Flow Border</option>
-        <option value="sideBars">Side Bars</option>
-        <option value="flatRipples">Pulse Lines</option>
-        <option value="dotParticles">Dot Particles</option>
-        <option value="rippleFlow">Ripple Flow</option>
-        <option value="snowBubbleParticles">Snow Particles</option>
-        <option value="edgeCrystals">Edge Crystals</option>
-        <option value="sideBraids">Side Braids</option>
-      </select>
-    </div>
-  </div>
-</div>
 
                 <div class="settings-group">
                     <h3>Visualizer Mode</h3>
                     <div class="input-group" style="margin-top: 10px;">
                         <select class="styled-select" id="theme-selector">
                             <option value="ambientWave">Ambient Wave</option>
+                            <option value="auroraDrift">Aurora Drift</option>
                             <option value="reactiveBorder">Reactive Border</option>
                             <option value="flowBorder">Flow Border</option>
                             <option value="sideBars">Side Bars</option>
@@ -173,22 +124,11 @@
                             <option value="snowBubbleParticles">Snow Particles</option>
                             <option value="edgeCrystals">Edge Crystals</option>
                             <option value="sideBraids">Side Braids</option>
-                            <option value="auroraDrift">Aurora Drift</option>
                         </select>
                     </div>
                 </div>
 
 
-                <div class="settings-group">
-                    <h3>Color Mode</h3>
-                    <p class="setting-desc">Adaptive mode follows your Windows accent color and light or dark theme in real time. Manual mode keeps your chosen theme colors.</p>
-                    <div class="input-group" style="margin-top: 10px;">
-                        <select class="styled-select" id="color-mode-selector">
-                            <option value="manual">Manual</option>
-                            <option value="adaptive">Adaptive</option>
-                        </select>
-                    </div>
-                </div>
 
                 <div class="settings-group">
                     <h3>Theme Properties</h3>
@@ -226,15 +166,15 @@
 
                         <div class="color-picker-container" id="gradient-colors" style="margin-top: 20px;">
                             <div class="color-stop">
-                                <input type="color" class="color-input custom-trigger" id="color1">
+                                <input type="color" class="color-input custom-trigger" id="color1" value="#00f2fe">
                                 <label for="color1">Start</label>
                             </div>
                             <div class="color-stop">
-                                <input type="color" class="color-input custom-trigger" id="color2">
+                                <input type="color" class="color-input custom-trigger" id="color2" value="#4facfe">
                                 <label for="color2">Middle</label>
                             </div>
                             <div class="color-stop">
-                                <input type="color" class="color-input custom-trigger" id="color3">
+                                <input type="color" class="color-input custom-trigger" id="color3" value="#8ee2ff">
                                 <label for="color3">End</label>
                             </div>
                         </div>
@@ -527,6 +467,26 @@
                         <button id="btn-reset-theme-profile" class="btn-secondary">
                             Restore Defaults
                         </button>
+                        <button id="btnDuplicateThemeProfile" class="btn-secondary">
+                            Duplicate
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Settings Backup</h3>
+                    <p class="setting-desc">
+                        Export or restore all app settings and theme profiles in one backup file.
+                    </p>
+
+                    <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+                        <button id="btn-export-all-settings" class="btn-secondary">
+                            Export All Settings
+                        </button>
+
+                        <button id="btn-import-all-settings" class="btn-secondary">
+                            Import Settings Backup
+                        </button>
                     </div>
                 </div>
             </section>
@@ -595,6 +555,55 @@
                         </div>
                         <label class="switch">
                             <input type="checkbox" id="focus-mode-checkbox">
+                    <h3>Global Hotkeys</h3>
+                    <p class="setting-desc">Control Paraline globally even when it is minimized or running in the background. Click "Edit" and press a key combination to customize (e.g. <code>Ctrl+Alt+P</code>). Press <code>Backspace</code> or <code>Escape</code> during edit to clear/disable.</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px; max-width: 450px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-toggle-pause" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Pause / Resume Visualizer:</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="hotkey-toggle-pause" class="styled-select" style="width: 140px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                                <button id="btn-edit-toggle-pause" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; min-width: 60px; justify-content: center; height: 32px;">Edit</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-toggle-hide" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Hide / Show Visualizer:</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="hotkey-toggle-hide" class="styled-select" style="width: 140px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                                <button id="btn-edit-toggle-hide" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; min-width: 60px; justify-content: center; height: 32px;">Edit</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label for="hotkey-cycle-theme" style="margin-bottom: 0; font-size: 14px; color: #e2e8f0; font-weight: 500;">Cycle Active Theme:</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="text" id="hotkey-cycle-theme" class="styled-select" style="width: 140px; text-align: center; font-family: monospace; font-size: 13px; font-weight: 600; background: rgba(0, 0, 0, 0.2);" readonly placeholder="Press keys..." />
+                                <button id="btn-edit-cycle-theme" class="btn-secondary" style="padding: 6px 12px; font-size: 12px; min-width: 60px; justify-content: center; height: 32px;">Edit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="hotkey-status-msg" style="color: #2ecc71; font-size: 13px; margin-top: 10px; font-weight: 500; height: 18px; opacity: 0; transition: opacity 0.3s ease; text-align: right; max-width: 450px;">✓ Hotkey updated successfully</div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Color Mode</h3>
+                    <p class="setting-desc">Adaptive mode follows your Windows accent color and light or dark theme in real time. Manual mode keeps your chosen theme colors.</p>
+                    <div class="input-group" style="margin-top: 10px;">
+                        <select class="styled-select" id="color-mode-selector">
+                            <option value="manual">Manual</option>
+                            <option value="adaptive">Adaptive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Theme Automation</h3>
+                    <p class="setting-desc">Automatically switch between day and night visualizer modes based on the time of day.</p>
+                    <div class="switch-control" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 500; font-size: 15px; color: #e2e8f0;">Enable Time-Based Theme Switching</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="enableThemeAutomation" />
                             <span class="slider-round"></span>
                         </label>
                     </div>
@@ -622,6 +631,89 @@
                                 <span class="slider-value" id="val-focus-mode-transition-duration">1.5s</span>
                             </div>
                             <input type="range" id="focus-mode-transition-duration" min="0.1" max="10" step="0.1" value="1.5">
+                    <div id="themeAutoControls" style="display: none; margin-top: 15px;">
+                        <div class="input-group" style="margin-top: 10px;">
+                            <label>Check Interval (Minutes):</label>
+                            <input type="number" id="intervalMinutes" min="1" max="120" value="30" style="width: 60px; margin-left: 10px;" />
+                        </div>
+
+                        <div class="input-group" style="margin-top: 10px; display: flex; gap: 20px;">
+                            <div style="display: flex; align-items: center;">
+                                <label for="dayStartHourInput" style="margin-bottom: 0;">Day Start Hour:</label>
+                                <input type="number" id="dayStartHourInput" min="0" max="23" value="6" style="width: 60px; margin-left: 10px;" />
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                <label for="nightStartHourInput" style="margin-bottom: 0;">Night Start Hour:</label>
+                                <input type="number" id="nightStartHourInput" min="0" max="23" value="18" style="width: 60px; margin-left: 10px;" />
+                            </div>
+                        </div>
+                        <div id="theme-automation-error" style="color: #e74c3c; font-size: 13px; margin-top: 5px; font-weight: 500; height: 18px; opacity: 0; transition: opacity 0.3s ease;"></div>
+
+                        <div class="input-group" style="margin-top: 10px;">
+                            <label id="dayThemeLabel">Daytime Theme (6 AM - 6 PM):</label>
+                            <select class="styled-select" id="dayThemeSelect" style="margin-top: 5px;">
+                                <option value="ambientWave">Ambient Wave</option>
+                                <option value="reactiveBorder">Reactive Border</option>
+                                <option value="flowBorder">Flow Border</option>
+                                <option value="sideBars">Side Bars</option>
+                                <option value="flatRipples">Pulse Lines</option>
+                                <option value="dotParticles">Dot Particles</option>
+                                <option value="rippleFlow">Ripple Flow</option>
+                                <option value="snowBubbleParticles">Snow Particles</option>
+                                <option value="edgeCrystals">Edge Crystals</option>
+                                <option value="sideBraids">Side Braids</option>
+                                <option value="auroraDrift">Aurora Drift</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group" style="margin-top: 10px;">
+                            <label id="nightThemeLabel">Nighttime Theme (6 PM - 6 AM):</label>
+                            <select class="styled-select" id="nightThemeSelect" style="margin-top: 5px;">
+                                <option value="ambientWave">Ambient Wave</option>
+                                <option value="reactiveBorder">Reactive Border</option>
+                                <option value="flowBorder">Flow Border</option>
+                                <option value="sideBars">Side Bars</option>
+                                <option value="flatRipples">Pulse Lines</option>
+                                <option value="dotParticles">Dot Particles</option>
+                                <option value="rippleFlow">Ripple Flow</option>
+                                <option value="snowBubbleParticles">Snow Particles</option>
+                                <option value="edgeCrystals">Edge Crystals</option>
+                                <option value="sideBraids">Side Braids</option>
+                                <option value="auroraDrift">Aurora Drift</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Focus Mode</h3>
+                    <p class="setting-desc">Dim the visualizer when you are actively using your computer to reduce distractions, and restore full opacity when idle.</p>
+                    <div class="switch-control" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 500; font-size: 15px; color: #e2e8f0;">Enable Focus Mode</span>
+                            <p class="setting-desc" style="margin-top: 4px; margin-bottom: 0;">Dim the visualizer during active user input.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="focus-mode-enabled-checkbox">
+                            <span class="slider-round"></span>
+                        </label>
+                    </div>
+
+                    <div id="focusModeControls" style="display: none; margin-top: 20px;">
+                        <div class="slider-control" style="margin-bottom: 20px;">
+                            <div class="slider-header">
+                                <label for="focus-mode-dim-opacity-slider">Dimmed Opacity</label>
+                                <span class="slider-value" id="val-focus-mode-dim-opacity">0.10</span>
+                            </div>
+                            <input type="range" id="focus-mode-dim-opacity-slider" min="0.0" max="1.0" step="0.05" value="0.10">
+                        </div>
+
+                        <div class="slider-control">
+                            <div class="slider-header">
+                                <label for="focus-mode-timeout-slider">Activity Idle Timeout (seconds)</label>
+                                <span class="slider-value" id="val-focus-mode-timeout">5</span>
+                            </div>
+                            <input type="range" id="focus-mode-timeout-slider" min="1" max="60" step="1" value="5">
                         </div>
                     </div>
                 </div>
@@ -643,46 +735,55 @@
             </section>
 
             <!-- About Tab -->
-            <section id="about" class="tab-content">
-                <header>
+            <section id="about" class="tab-content about-tab">
+                <header style="display: none;">
                     <h1><span class="header-accent"></span>About Paraline</h1>
                 </header>
 
-                <div class="settings-group" style="padding: 40px 24px;">
-                    <div class="about-brand">
-                        <div class="about-logo-text">PARALINE</div>
-                        <p class="about-tagline">Desktop Audio Visualizer for Windows</p>
-                        <div class="about-version-badge">v1.2.0 — Stable Release</div>
+                <div class="about-stage">
+                    <div class="about-shell">
+                        <div class="about-brand">
+                            <div class="about-logo-text">PARALINE</div>
+                            <p class="about-tagline">Desktop Audio Visualizer for Windows</p>
+                            <div class="about-version-badge">v2.1.0 — Stable Release</div>
+                        </div>
+
+                        <div class="about-divider"></div>
+
+                        <p class="about-description">
+                            A transparent desktop overlay that reacts to your system audio in real-time.
+                            Choose from multiple visualizer themes, customize colors, adjust sensitivity,
+                            and let your music come alive on screen.
+                        </p>
+
+                        <div class="about-links">
+                            <button class="btn-secondary" id="btn-github">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                                </svg>
+                                GitHub Repository
+                            </button>
+                            <button class="btn-secondary" id="btn-updates">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
+                                Check for Updates
+                            </button>
+                            <button class="btn-secondary" id="btn-landing">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                </svg>
+                                Landing Page
+                            </button>
+                        </div>
+
+                        <p class="about-credit">
+                            Built with care by <a href="https://github.com/SamXop123" target="_blank" rel="noopener noreferrer">SamXop123</a>
+                        </p>
                     </div>
-
-                    <div class="about-divider"></div>
-
-                    <p class="about-description">
-                        A transparent desktop overlay that reacts to your system audio in real-time.
-                        Choose from multiple visualizer themes, customize colors, adjust sensitivity,
-                        and let your music come alive on screen.
-                    </p>
-
-                    <div class="about-links">
-                        <button class="btn-secondary" id="btn-github">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                            </svg>
-                            GitHub Repository
-                        </button>
-                        <button class="btn-secondary" id="btn-landing">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="2" y1="12" x2="22" y2="12"></line>
-                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                            </svg>
-                            Landing Page
-                        </button>
-                    </div>
-
-                    <p class="about-credit">
-                        Built with care by <a href="https://github.com/SamXop123" target="_blank">SamXop123</a>
-                    </p>
                 </div>
             </section>
         </main>
@@ -691,3 +792,4 @@
 </body>
 
 </html>
+

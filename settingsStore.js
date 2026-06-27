@@ -1,16 +1,40 @@
 const fs = require("fs");
 const path = require("path");
 
+// Validates that a value is a CSS hex color string (#RRGGBB).
+function isValidHex(val) {
+  return typeof val === "string" && /^#[0-9a-fA-F]{6}$/.test(val);
+}
+
+// Returns input.customColors if it is an array of exactly 3 valid hex strings;
+// otherwise returns the provided fallback. Used by all sanitize functions that
+// expose a customColors field so corrupted settings cannot reach the renderer.
+function sanitizeCustomColors(input, fallback) {
+  if (Array.isArray(input) && input.length === 3 && input.every(isValidHex)) {
+    return input;
+  }
+  return fallback;
+}
+
 const DEFAULT_SETTINGS = Object.freeze({
+  onboardingSeen: false,
   launchOnStartup: false,
   selectedTheme: "ambientWave",
   colorMode: "manual",
+  customColors: Object.freeze(["#00f2fe", "#4facfe", "#8ee2ff"]),
   themeAutomation: Object.freeze({
     enabled: false,
     checkIntervalMinutes: 30, 
     mode: "dayNight",         
     dayTheme: "ambientWave", 
-    nightTheme: "reactiveBorder"
+    nightTheme: "reactiveBorder",
+    dayStartHour: 6,
+    nightStartHour: 18
+  }),
+  shortcuts: Object.freeze({
+    togglePause: "Ctrl+Alt+P",
+    toggleHide: "Ctrl+Alt+H",
+    cycleTheme: "Ctrl+Alt+T"
   }),
   performanceMode: "balanced",
   fpsLimit: "default",
@@ -190,10 +214,12 @@ const VALID_AURORA_DENSITY = new Set(["light", "balanced", "rich"]);
 
 function createDefaultSettings() {
   return {
+    onboardingSeen: DEFAULT_SETTINGS.onboardingSeen,
     launchOnStartup: DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: DEFAULT_SETTINGS.selectedTheme,
     colorMode: DEFAULT_SETTINGS.colorMode,
     themeAutomation: { ...DEFAULT_SETTINGS.themeAutomation },
+    shortcuts: { ...DEFAULT_SETTINGS.shortcuts },
     performanceMode: DEFAULT_SETTINGS.performanceMode,
     focusMode: { ...DEFAULT_SETTINGS.focusMode },
     fpsLimit: DEFAULT_SETTINGS.fpsLimit,
@@ -247,7 +273,50 @@ function legacySensitivityToLevel(value) {
   return "high";
 }
 
+// Validates and clamps a custom thickness value (range: 1 to 20, default: 4).
+function sanitizeThickness(val, fallback = 4) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(1, Math.min(20, num)) : fallback;
+}
+
+// Validates and clamps a custom gap value (range: 2 to 30, default: 7).
+function sanitizeGap(val, fallback = 7) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(2, Math.min(30, num)) : fallback;
+}
+
+// Validates and clamps a custom sensitivity value (range: 1 to 100, default: 30).
+function sanitizeSensitivity(val, fallback = 30) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(1, Math.min(100, num)) : fallback;
+}
+
+// Validates and clamps a custom speed value (range: 1 to 100, default: 30).
+function sanitizeSpeed(val, fallback = 30) {
+  const num = typeof val === "number" ? val : parseInt(val, 10);
+  return Number.isFinite(num) ? Math.max(1, Math.min(100, num)) : fallback;
+}
+
 function sanitizeThemeAutomation(input = {}) {
+  let dayStart = typeof input.dayStartHour === "number"
+    ? input.dayStartHour
+    : (input.dayStartHour !== undefined ? parseInt(input.dayStartHour, 10) : DEFAULT_SETTINGS.themeAutomation.dayStartHour);
+  if (isNaN(dayStart) || dayStart < 0 || dayStart > 23) {
+    dayStart = DEFAULT_SETTINGS.themeAutomation.dayStartHour;
+  }
+
+  let nightStart = typeof input.nightStartHour === "number"
+    ? input.nightStartHour
+    : (input.nightStartHour !== undefined ? parseInt(input.nightStartHour, 10) : DEFAULT_SETTINGS.themeAutomation.nightStartHour);
+  if (isNaN(nightStart) || nightStart < 0 || nightStart > 23) {
+    nightStart = DEFAULT_SETTINGS.themeAutomation.nightStartHour;
+  }
+
+  if (dayStart === nightStart) {
+    dayStart = DEFAULT_SETTINGS.themeAutomation.dayStartHour;
+    nightStart = DEFAULT_SETTINGS.themeAutomation.nightStartHour;
+  }
+
   return {
     enabled: typeof input.enabled === "boolean" ? input.enabled : DEFAULT_SETTINGS.themeAutomation.enabled,
     checkIntervalMinutes: typeof input.checkIntervalMinutes === "number"
@@ -255,7 +324,9 @@ function sanitizeThemeAutomation(input = {}) {
       : DEFAULT_SETTINGS.themeAutomation.checkIntervalMinutes,
     mode: typeof input.mode === "string" ? input.mode : DEFAULT_SETTINGS.themeAutomation.mode,
     dayTheme: pick(input.dayTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.themeAutomation.dayTheme),
-    nightTheme: pick(input.nightTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.themeAutomation.nightTheme)
+    nightTheme: pick(input.nightTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.themeAutomation.nightTheme),
+    dayStartHour: dayStart,
+    nightStartHour: nightStart
   };
 }
 
@@ -265,8 +336,8 @@ function sanitizeAmbientWave(input = {}) {
     sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.ambientWave.sensitivity),
     edgeMode: pick(input.edgeMode, VALID_EDGE_MODES, DEFAULT_SETTINGS.ambientWave.edgeMode),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.ambientWave.glowStrength),
-    customColors: input.customColors,
-    customSensitivity: input.customSensitivity
+    customColors: sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.customColors),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity)
   };
 }
 
@@ -276,9 +347,9 @@ function sanitizeReactiveBorder(input = {}) {
     intensity: pick(input.intensity, VALID_LEVELS, DEFAULT_SETTINGS.reactiveBorder.intensity),
     borderThickness: pick(input.borderThickness, VALID_BORDER_THICKNESS, DEFAULT_SETTINGS.reactiveBorder.borderThickness),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.reactiveBorder.glowStrength),
-    customColors: input.customColors,
-    customThickness: input.customThickness,
-    customSensitivity: input.customSensitivity
+    customColors: sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.customColors),
+    customThickness: sanitizeThickness(input.customThickness),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity)
   };
 }
 
@@ -289,17 +360,15 @@ function sanitizeFlowBorder(input = {}) {
     segmentLength: pick(input.segmentLength, VALID_FLOW_SEGMENTS, DEFAULT_SETTINGS.flowBorder.segmentLength),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.flowBorder.glowStrength),
     colorStyle: pick(input.colorStyle, VALID_FLOW_COLOR_STYLES, DEFAULT_SETTINGS.flowBorder.colorStyle),
-    customColors: input.customColors,
-    customThickness: input.customThickness,
-    customSensitivity: input.customSensitivity,
-    customSpeed: input.customSpeed
+    customColors: sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.customColors),
+    customThickness: sanitizeThickness(input.customThickness),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
 function sanitizeSideBars(input = {}) {
-  const customColors = Array.isArray(input.customColors) && input.customColors.length === 3 
-      ? input.customColors 
-      : DEFAULT_SETTINGS.sideBars.customColors;
+  const customColors = sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.sideBars.customColors);
 
   return {
     colorStyle: pick(input.colorStyle, VALID_SIDE_BARS_COLOR_STYLES, DEFAULT_SETTINGS.sideBars.colorStyle),
@@ -307,9 +376,9 @@ function sanitizeSideBars(input = {}) {
     sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.sideBars.sensitivity),
     barDensity: pick(input.barDensity, VALID_SIDE_BARS_DENSITY, DEFAULT_SETTINGS.sideBars.barDensity),
     customColors,
-    customThickness: typeof input.customThickness === "number" ? input.customThickness : DEFAULT_SETTINGS.sideBars.customThickness,
-    customGap: typeof input.customGap === "number" ? input.customGap : DEFAULT_SETTINGS.sideBars.customGap,
-    customSensitivity: typeof input.customSensitivity === "number" ? input.customSensitivity : DEFAULT_SETTINGS.sideBars.customSensitivity
+    customThickness: sanitizeThickness(input.customThickness, DEFAULT_SETTINGS.sideBars.customThickness),
+    customGap: sanitizeGap(input.customGap, DEFAULT_SETTINGS.sideBars.customGap),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity, DEFAULT_SETTINGS.sideBars.customSensitivity)
   };
 }
 
@@ -319,9 +388,9 @@ function sanitizeFlatRipples(input = {}) {
     intensity: pick(input.intensity, VALID_LEVELS, DEFAULT_SETTINGS.flatRipples.intensity),
     colorStyle: pick(input.colorStyle, VALID_FLAT_RIPPLES_COLORS, DEFAULT_SETTINGS.flatRipples.colorStyle),
     speed: pick(input.speed, VALID_FLAT_RIPPLES_SPEEDS, DEFAULT_SETTINGS.flatRipples.speed),
-    customColors: input.customColors,
-    customSensitivity: input.customSensitivity,
-    customSpeed: input.customSpeed
+    customColors: sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.customColors),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
@@ -331,8 +400,8 @@ function sanitizeDotParticles(input = {}) {
     motionStyle: pick(input.motionStyle, VALID_DOT_PARTICLES_MOTION_STYLES, DEFAULT_SETTINGS.dotParticles.motionStyle),
     directionBehavior: pick(input.directionBehavior, VALID_DOT_PARTICLES_DIRECTIONS, DEFAULT_SETTINGS.dotParticles.directionBehavior),
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.dotParticles.glowStrength),
-    customGap: input.customGap,
-    customSpeed: input.customSpeed
+    customGap: sanitizeGap(input.customGap),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
@@ -342,8 +411,8 @@ function sanitizeRippleFlow(input = {}) {
     intensity: pick(input.intensity, VALID_LEVELS, DEFAULT_SETTINGS.rippleFlow.intensity),
     sensitivity: pick(input.sensitivity, VALID_LEVELS, DEFAULT_SETTINGS.rippleFlow.sensitivity),
     colorStyle: pick(input.colorStyle, VALID_RIPPLE_FLOW_COLORS, DEFAULT_SETTINGS.rippleFlow.colorStyle),
-    customColors: input.customColors,
-    customSensitivity: input.customSensitivity
+    customColors: sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.customColors),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity)
   };
 }
 
@@ -364,10 +433,10 @@ function sanitizeEdgeCrystals(input = {}) {
     glowStrength: pick(input.glowStrength, VALID_GLOW_STRENGTHS, DEFAULT_SETTINGS.edgeCrystals.glowStrength),
     colorStyle: pick(input.colorStyle, VALID_EDGE_FLUTTER_COLORS, DEFAULT_SETTINGS.edgeCrystals.colorStyle),
     edgeMode: pick(input.edgeMode, VALID_EDGE_FLUTTER_MODES, DEFAULT_SETTINGS.edgeCrystals.edgeMode),
-    customColors: input.customColors,
-    customGap: input.customGap,
-    customSensitivity: input.customSensitivity,
-    customSpeed: input.customSpeed
+    customColors: sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.customColors),
+    customGap: sanitizeGap(input.customGap),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed)
   };
 }
 
@@ -379,11 +448,11 @@ function sanitizeSideBraids(input = {}) {
     braidWidth: pick(input.braidWidth, VALID_BRAID_WIDTH, DEFAULT_SETTINGS.sideBraids.braidWidth),
     colorStyle: pick(input.colorStyle, VALID_BRAID_COLORS, DEFAULT_SETTINGS.sideBraids.colorStyle),
     flowDirection: pick(input.flowDirection, VALID_BRAID_DIRECTION, DEFAULT_SETTINGS.sideBraids.flowDirection),
-    customColors: input.customColors,
-    customThickness: typeof input.customThickness === "number" ? input.customThickness : DEFAULT_SETTINGS.sideBraids.customThickness,
-    customGap: typeof input.customGap === "number" ? input.customGap : DEFAULT_SETTINGS.sideBraids.customGap,
-    customSensitivity: typeof input.customSensitivity === "number" ? input.customSensitivity : DEFAULT_SETTINGS.sideBraids.customSensitivity,
-    customSpeed: typeof input.customSpeed === "number" ? input.customSpeed : DEFAULT_SETTINGS.sideBraids.customSpeed
+    customColors: sanitizeCustomColors(input.customColors, DEFAULT_SETTINGS.sideBraids.customColors),
+    customThickness: sanitizeThickness(input.customThickness, DEFAULT_SETTINGS.sideBraids.customThickness),
+    customGap: sanitizeGap(input.customGap, DEFAULT_SETTINGS.sideBraids.customGap),
+    customSensitivity: sanitizeSensitivity(input.customSensitivity, DEFAULT_SETTINGS.sideBraids.customSensitivity),
+    customSpeed: sanitizeSpeed(input.customSpeed, DEFAULT_SETTINGS.sideBraids.customSpeed)
   };
 }
 
@@ -516,14 +585,45 @@ function sanitizeFocusMode(input = {}) {
   return { enabled, dimOpacity, idleTimeout, transitionDuration };
 }
 
+function sanitizeShortcuts(input) {
+  const safeInput = (input && typeof input === "object") ? input : {};
+  const shortcuts = {
+    togglePause: typeof safeInput.togglePause === "string" ? safeInput.togglePause : DEFAULT_SETTINGS.shortcuts.togglePause,
+    toggleHide: typeof safeInput.toggleHide === "string" ? safeInput.toggleHide : DEFAULT_SETTINGS.shortcuts.toggleHide,
+    cycleTheme: typeof safeInput.cycleTheme === "string" ? safeInput.cycleTheme : DEFAULT_SETTINGS.shortcuts.cycleTheme
+  };
+
+  // Resolve duplicates by resetting subsequent duplicate actions to "None"
+  const seen = new Set();
+  const keys = ["togglePause", "toggleHide", "cycleTheme"];
+  for (const key of keys) {
+    const val = shortcuts[key];
+    if (val && val !== "None") {
+      const normalized = val.toLowerCase().replace(/\s+/g, "");
+      if (seen.has(normalized)) {
+        shortcuts[key] = "None";
+      } else {
+        seen.add(normalized);
+      }
+    }
+  }
+
+  return shortcuts;
+}
+
 function sanitizeSettings(input = {}) {
   const source = migrateLegacySettings(input);
 
+  const customColors = sanitizeCustomColors(source.customColors, DEFAULT_SETTINGS.customColors);
+
   return {
+    onboardingSeen: typeof source.onboardingSeen === "boolean" ? source.onboardingSeen : DEFAULT_SETTINGS.onboardingSeen,
     launchOnStartup: typeof source.launchOnStartup === "boolean" ? source.launchOnStartup : DEFAULT_SETTINGS.launchOnStartup,
     selectedTheme: pick(source.selectedTheme, VALID_MAIN_THEMES, DEFAULT_SETTINGS.selectedTheme),
     colorMode: pick(source.colorMode, VALID_COLOR_MODES, DEFAULT_SETTINGS.colorMode),
+    customColors: customColors,
     themeAutomation: sanitizeThemeAutomation(source.themeAutomation),
+    shortcuts: sanitizeShortcuts(source.shortcuts),
     performanceMode: pick(source.performanceMode, VALID_PERFORMANCE_MODES, DEFAULT_SETTINGS.performanceMode),
     fpsLimit: pick(source.fpsLimit, VALID_FPS_LIMITS, DEFAULT_SETTINGS.fpsLimit),
     focusMode: sanitizeFocusMode(source.focusMode),
@@ -553,8 +653,54 @@ function createSettingsStore(userDataPath) {
 
       const fileContent = fs.readFileSync(settingsPath, "utf8");
       const parsed = JSON.parse(fileContent);
-      return sanitizeSettings(parsed);
+      const settings = sanitizeSettings(parsed);
+
+      // Existing installs before onboarding: do not show the welcome overlay on update.
+      if (parsed.onboardingSeen === undefined) {
+        settings.onboardingSeen = true;
+      }
+
+      return settings;
     } catch (_error) {
+      console.error("[Paraline] Failed to load settings from:", settingsPath, _error);
+
+      try {
+        if (fs.existsSync(settingsPath)) {
+          let backupPath = settingsPath + ".bak";
+          if (fs.existsSync(backupPath)) {
+            backupPath = `${settingsPath}.${Date.now()}.bak`;
+          }
+          fs.renameSync(settingsPath, backupPath);
+          console.log(`[Paraline] Corrupted settings backed up to: ${backupPath}`);
+        }
+      } catch (backupError) {
+        console.error("[Paraline] Failed to backup corrupted settings:", backupError);
+      }
+
+      try {
+        const { app, dialog, Notification } = require("electron");
+        if (app && app.isReady()) {
+          // Show dialog warning to user
+          dialog.showMessageBoxSync({
+            type: "warning",
+            title: "Settings Reset to Defaults",
+            message: "Paraline detected a corrupted settings file. Your settings have been reset to defaults.",
+            detail: `The corrupted file has been backed up, and default settings have been loaded.\n\nError details:\n${_error.message}`,
+            buttons: ["OK"]
+          });
+
+          // Show tray/system notification
+          if (Notification.isSupported()) {
+            new Notification({
+              title: "Settings Reset to Defaults",
+              body: "A corrupted settings file was detected. Defaults have been applied."
+            }).show();
+          }
+        }
+      } catch (notifyError) {
+        console.error("[Paraline] Failed to notify user about settings corruption:", notifyError);
+      }
+
       return createDefaultSettings();
     }
   }
@@ -572,7 +718,13 @@ function createSettingsStore(userDataPath) {
       }
 
       const fileContent = fs.readFileSync(profilesPath, "utf8");
-      return JSON.parse(fileContent);
+      const parsed = JSON.parse(fileContent);
+      // JSON.parse can return null, arrays, or primitives. Guard against any
+      // non-plain-object result so callers always receive a key-value map.
+      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return {};
+      }
+      return parsed;
     } catch (_error) {
       return {};
     }

@@ -11,6 +11,8 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -45,5 +47,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.exe
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -55,7 +55,7 @@ contextBridge.exposeInMainWorld("visualizerSettings", {
     return ipcRenderer.invoke("visualizer-settings:get");
   },
   update(patch) {
-    ipcRenderer.send("visualizer-settings:update", patch);
+    return ipcRenderer.invoke("visualizer-settings:update", patch);
   },
   action(action, data) {
     ipcRenderer.send("visualizer-action", { action, data });
@@ -70,7 +70,6 @@ contextBridge.exposeInMainWorld("visualizerSettings", {
     return () => {
       ipcRenderer.removeListener("show-context-menu", wrapped);
     };
-    return ipcRenderer.invoke("visualizer-settings:update", patch);
   },
   onFocusModeOpacity(listener) {
     const wrapped = (_event, payload) => listener(payload);
@@ -82,11 +81,18 @@ contextBridge.exposeInMainWorld("visualizerSettings", {
   }
 });
 
+contextBridge.exposeInMainWorld("paralineOnboarding", {
+  dismiss(dontShowAgain) {
+    return ipcRenderer.invoke("onboarding:dismiss", { dontShowAgain: !!dontShowAgain });
+  }
+});
+
 contextBridge.exposeInMainWorld("paralineApp", {
   togglePause: () => ipcRenderer.invoke("app:toggle-pause"),
   toggleHide: () => ipcRenderer.invoke("app:toggle-hide"),
   reloadVisualizer: () => ipcRenderer.invoke("app:reload-visualizer"),
   openExternal: (url) => ipcRenderer.invoke("app:open-external", url),
+  suspendGlobalShortcuts: (suspend) => ipcRenderer.invoke("shortcuts:suspend", suspend),
 
   getThemeProfiles: () => ipcRenderer.invoke("theme-profiles:get"),
 
@@ -99,6 +105,9 @@ contextBridge.exposeInMainWorld("paralineApp", {
   deleteThemeProfile: (profileName) =>
     ipcRenderer.invoke("theme-profiles:delete", profileName),
 
+  duplicateThemeProfile: (profileName) =>
+    ipcRenderer.invoke("theme-profiles:duplicate", profileName),
+
   exportThemeProfile: (profileName) =>
     ipcRenderer.invoke("theme-profiles:export", profileName),
 
@@ -106,5 +115,14 @@ contextBridge.exposeInMainWorld("paralineApp", {
     ipcRenderer.invoke("theme-profiles:import"),
 
   resetThemeSettings: () =>
-    ipcRenderer.invoke("theme-profiles:reset")
+    ipcRenderer.invoke("theme-profiles:reset"),
+
+  resetActiveThemeSettings: () =>
+    ipcRenderer.invoke("theme-profiles:reset-current"),
+
+  exportAllSettings: () =>
+    ipcRenderer.invoke("settings:export-all"),
+
+  importAllSettings: () =>
+    ipcRenderer.invoke("settings:import-all")
 });

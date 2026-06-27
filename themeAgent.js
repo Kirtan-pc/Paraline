@@ -45,9 +45,28 @@ class ThemeAgent {
   evaluateAndApplyTheme(config) {
     if (!config || typeof config !== 'object' || !config.enabled) return;
 
+    const mode = config.mode || "dayNight";
+    if (mode !== "dayNight") {
+      return;
+    }
+
     try {
       const currentHour = new Date().getHours();
-      const isDaytime = currentHour >= 6 && currentHour < 18; // 6 AM to 6 PM
+      let dayStartHour = config.dayStartHour !== undefined ? config.dayStartHour : 6;
+      let nightStartHour = config.nightStartHour !== undefined ? config.nightStartHour : 18;
+
+      if (dayStartHour === nightStartHour) {
+        dayStartHour = 6;
+        nightStartHour = 18;
+      }
+
+      let isDaytime;
+      if (dayStartHour < nightStartHour) {
+        isDaytime = currentHour >= dayStartHour && currentHour < nightStartHour;
+      } else {
+        // Wraps around midnight (e.g. day starts at 20 (8 PM) and ends at 6 (6 AM))
+        isDaytime = currentHour >= dayStartHour || currentHour < nightStartHour;
+      }
       const targetTheme = isDaytime ? config.dayTheme : config.nightTheme;
 
       const storeData = this.settingsStore.load() || {};

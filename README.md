@@ -22,6 +22,18 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 </div>
 
+<div align="center">
+
+### ⚡ Quick Navigation
+
+[![Installation](https://img.shields.io/badge/Installation-yellow?style=for-the-badge)](#-installation)
+[![Idea](https://img.shields.io/badge/Idea-yellow?style=for-the-badge)](#-the-idea)
+[![Features](https://img.shields.io/badge/Features-yellow?style=for-the-badge)](#-core-features)
+[![Themes](https://img.shields.io/badge/Themes-yellow?style=for-the-badge)](#-themes)
+[![Notes](https://img.shields.io/badge/Notes-yellow?style=for-the-badge)](#-developer-notes)
+
+</div>
+
 ---
 
 ## ✦ Preview
@@ -87,6 +99,9 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 </td>
 <td align="center" width="33%">
+<strong>Aurora Drift</strong><br/>
+<img src="./previews/aurora-drift-preview.svg" alt="Aurora Drift Preview" width="260"/>
+
 </td>
 <td align="center" width="33%">
 </td>
@@ -233,7 +248,7 @@ Paraline is designed to stay running in the background without feeling heavy or 
 <tr>
 <td><strong>Aurora Drift</strong></td>
 <td>Cinematic aurora curtains rising from the bottom edge with layered folds and shimmer.</td>
-<td>Intensity, Turbulence, Glow, Speed, Layer Density</td>
+<td>Gradient stops sculptor (2-6 stops), Glow radius/bloom, primary/secondary frequency & internal complexity, response smoothing, active curtains layer count, ambient fine-tuners, saved presets</td>
 </tr>
 </table>
 
@@ -264,7 +279,7 @@ And it should still feel good.
 
 ## ✦ Usage
 
-## Tray Controls
+### Tray Controls
 
 Paraline is designed to stay visually present but operationally invisible.
 
@@ -341,6 +356,18 @@ If you want to explore the implementation details, local setup, or development w
 
 **[Open Developer Notes](./docs/DEVELOPMENT.md)**
 
+For the complete build, packaging, and distribution workflow — including how to compile the audio helper, generate a packaged app, and produce a Windows installer:
+
+**[Open Build & Distribution Guide](./BUILD.md)**
+
+---
+
+## ✦ Troubleshooting & Support
+
+If you encounter any setup or runtime issues with audio capture, visualizer reaction, C# compilation, or background behavior:
+
+**[Open Troubleshooting Guide](./docs/TROUBLESHOOTING.md)**
+
 ---
 
 <div align="center">
@@ -350,3 +377,11 @@ If you want to explore the implementation details, local setup, or development w
 It is a layer of motion for the desktop itself.
 
 </div>
+
+---
+
+## 👥 Contributors
+
+Thanks to all contributors ❤️
+
+[![Contributors](https://contrib.rocks/image?repo=SamXop123/Paraline)](https://github.com/SamXop123/Paraline/graphs/contributors)
