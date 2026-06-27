@@ -45,9 +45,15 @@ export function CrimsonDuskPreview({ active, transparent, className }: { active:
       return `rgba(${r}, ${g}, ${b}, ${opacity.toFixed(3)})`;
     };
 
+    const prefersReducedMotion = () =>
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const render = (now: number) => {
       const deltaTime = Math.min(0.1, (now - lastTime) / 1000);
       lastTime = now;
+      const reducedMotion = prefersReducedMotion();
 
       const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
       const rect = canvas.getBoundingClientRect();
@@ -61,9 +67,10 @@ export function CrimsonDuskPreview({ active, transparent, className }: { active:
       const width = rect.width;
       const height = rect.height;
 
-      time += deltaTime * (active ? 0.9 : 0.3);
+      const motionScale = reducedMotion ? 0.15 : 1;
+      time += deltaTime * (active ? 0.9 : 0.3) * motionScale;
 
-      if (active) {
+      if (active && !reducedMotion) {
         beatTimer += deltaTime;
         if (beatTimer > nextBeatTime) {
           beatSpike = 0.35 + Math.random() * 0.45;
@@ -74,6 +81,12 @@ export function CrimsonDuskPreview({ active, transparent, className }: { active:
         const baseAmbient = 0.12 + 0.06 * Math.sin(time * 1.5);
         const target = baseAmbient + beatSpike;
         smoothedLevel += (target - smoothedLevel) * (1 - Math.exp(-8.0 * deltaTime));
+      } else if (active && reducedMotion) {
+        // Reduced motion: hold a gentle constant level, no beat spikes
+        const target = 0.16;
+        smoothedLevel += (target - smoothedLevel) * (1 - Math.exp(-2.0 * deltaTime));
+        beatSpike = 0;
+        beatTimer = 0;
       } else {
         const idleTarget = 0.04 + 0.015 * Math.sin(time * 0.5);
         smoothedLevel += (idleTarget - smoothedLevel) * (1 - Math.exp(-2.5 * deltaTime));
@@ -132,8 +145,8 @@ export function CrimsonDuskPreview({ active, transparent, className }: { active:
       const particleCount = 14;
       for (let i = 0; i < particleCount; i++) {
         const seed = i * 71.3;
-        const px = ((Math.sin(seed) * 0.5 + 0.5) * width + time * 6 * (0.3 + (i % 3) * 0.2)) % width;
-        const driftCycle = (time * 0.15 + i * 0.37) % 1;
+        const px = ((Math.sin(seed) * 0.5 + 0.5) * width + time * 6 * (0.3 + (i % 3) * 0.2) * motionScale) % width;
+        const driftCycle = (time * 0.15 * motionScale + i * 0.37) % 1;
         const py = height - driftCycle * height;
         const size = 0.8 + (i % 3) * 0.6;
         const fade = Math.sin(driftCycle * Math.PI);

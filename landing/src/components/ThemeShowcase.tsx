@@ -184,6 +184,7 @@ export const specificThemes: Theme[] = [
     name: "Crimson Dusk",
     category: "EMBER GLOW",
     description: "Warm ember and crimson glow along screen edges, inspired by desert sunsets and vintage film.",
+    className: "lg:col-span-1",
     Preview: CrimsonDuskPreview,
     animationStyle: "Pulse",
     reactivity: "Medium",
