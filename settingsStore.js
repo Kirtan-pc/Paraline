@@ -91,7 +91,8 @@ const DEFAULT_SETTINGS = Object.freeze({
   focusMode: Object.freeze({
     enabled: false,
     dimOpacity: 0.1,
-    idleTimeout: 5
+    idleTimeout: 5,
+    transitionDuration: 1.5
   }),
   auroraDrift: Object.freeze({
     // Standard settings
@@ -509,7 +510,10 @@ function sanitizeFocusMode(input = {}) {
   const idleTimeout = typeof input.idleTimeout === "number" && input.idleTimeout >= 1 && input.idleTimeout <= 60
     ? input.idleTimeout
     : DEFAULT_SETTINGS.focusMode.idleTimeout;
-  return { enabled, dimOpacity, idleTimeout };
+  const transitionDuration = typeof input.transitionDuration === "number" && input.transitionDuration >= 0.1 && input.transitionDuration <= 10
+    ? input.transitionDuration
+    : DEFAULT_SETTINGS.focusMode.transitionDuration;
+  return { enabled, dimOpacity, idleTimeout, transitionDuration };
 }
 
 function sanitizeSettings(input = {}) {

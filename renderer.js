@@ -867,6 +867,10 @@ if (window.visualizerSettings) {
   // Focus Mode: smoothly fade canvas opacity based on user activity
   if (typeof window.visualizerSettings.onFocusModeOpacity === "function") {
     window.visualizerSettings.onFocusModeOpacity(({ opacity }) => {
+      const duration = (visualizerState.focusMode && typeof visualizerState.focusMode.transitionDuration === "number")
+        ? visualizerState.focusMode.transitionDuration
+        : 1.5;
+      canvas.style.transition = `opacity ${duration}s ease`;
       canvas.style.opacity = typeof opacity === "number" ? String(opacity) : "1";
     });
   }

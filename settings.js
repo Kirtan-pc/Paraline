@@ -246,6 +246,64 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ----------------------------------------
+    // FOCUS MODE BINDINGS
+    // ----------------------------------------
+    const focusModeCheckbox = document.getElementById('focus-mode-checkbox');
+    const focusModeSettingsContainer = document.getElementById('focus-mode-settings-container');
+    const focusModeDimOpacity = document.getElementById('focus-mode-dim-opacity');
+    const focusModeIdleTimeout = document.getElementById('focus-mode-idle-timeout');
+    const focusModeTransitionDuration = document.getElementById('focus-mode-transition-duration');
+
+    function toggleFocusModeControls(isEnabled) {
+        if (focusModeSettingsContainer) {
+            focusModeSettingsContainer.style.display = isEnabled ? 'block' : 'none';
+        }
+    }
+
+    function updateFocusModeSetting(patch) {
+        if (window.visualizerSettings) {
+            const currentFocusMode = cachedSettings.focusMode || {};
+            const nextFocusMode = { ...currentFocusMode, ...patch };
+            cachedSettings.focusMode = nextFocusMode; // Optimistic local cache update
+            window.visualizerSettings.update({
+                focusMode: nextFocusMode
+            });
+        }
+    }
+
+    if (focusModeCheckbox) {
+        focusModeCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            toggleFocusModeControls(isChecked);
+            updateFocusModeSetting({ enabled: isChecked });
+        });
+    }
+
+    if (focusModeDimOpacity) {
+        focusModeDimOpacity.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) / 100;
+            document.getElementById('val-focus-mode-dim-opacity').textContent = `${e.target.value}%`;
+            updateFocusModeSetting({ dimOpacity: val });
+        });
+    }
+
+    if (focusModeIdleTimeout) {
+        focusModeIdleTimeout.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value, 10) || 5;
+            document.getElementById('val-focus-mode-idle-timeout').textContent = `${val}s`;
+            updateFocusModeSetting({ idleTimeout: val });
+        });
+    }
+
+    if (focusModeTransitionDuration) {
+        focusModeTransitionDuration.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) || 1.5;
+            document.getElementById('val-focus-mode-transition-duration').textContent = `${val.toFixed(1)}s`;
+            updateFocusModeSetting({ transitionDuration: val });
+        });
+    }
+
     const themeSelector = document.getElementById('theme-selector');
     themeSelector.addEventListener('change', (e) => {
         renderThemeSettings(e.target.value);
@@ -671,6 +729,33 @@ refreshThemeProfiles();
                     nightThemeSelect.value = automation.nightTheme || "reactiveBorder";
                 }
             }
+
+            // Load focus mode settings
+            if (settings.focusMode) {
+                const fm = settings.focusMode;
+                if (focusModeCheckbox) {
+                    focusModeCheckbox.checked = !!fm.enabled;
+                    toggleFocusModeControls(fm.enabled);
+                }
+                if (focusModeDimOpacity) {
+                    const pct = Math.round((fm.dimOpacity !== undefined ? fm.dimOpacity : 0.1) * 100);
+                    focusModeDimOpacity.value = pct;
+                    const valEl = document.getElementById('val-focus-mode-dim-opacity');
+                    if (valEl) valEl.textContent = `${pct}%`;
+                }
+                if (focusModeIdleTimeout) {
+                    const secs = fm.idleTimeout !== undefined ? fm.idleTimeout : 5;
+                    focusModeIdleTimeout.value = secs;
+                    const valEl = document.getElementById('val-focus-mode-idle-timeout');
+                    if (valEl) valEl.textContent = `${secs}s`;
+                }
+                if (focusModeTransitionDuration) {
+                    const duration = fm.transitionDuration !== undefined ? fm.transitionDuration : 1.5;
+                    focusModeTransitionDuration.value = duration;
+                    const valEl = document.getElementById('val-focus-mode-transition-duration');
+                    if (valEl) valEl.textContent = `${duration.toFixed(1)}s`;
+                }
+            }
             
             // set custom variables into UI if they exist globally or on the active theme
             if (settings.customColors && settings.customColors.length === 3) {
@@ -710,6 +795,31 @@ refreshThemeProfiles();
                 }
                 if (nightThemeSelect && automation.nightTheme !== undefined) {
                     nightThemeSelect.value = automation.nightTheme;
+                }
+            }
+
+            // Sync focus mode properties if updated from outside
+            if (nextSettings.focusMode) {
+                const fm = nextSettings.focusMode;
+                if (focusModeCheckbox && fm.enabled !== undefined) {
+                    focusModeCheckbox.checked = !!fm.enabled;
+                    toggleFocusModeControls(fm.enabled);
+                }
+                if (focusModeDimOpacity && fm.dimOpacity !== undefined) {
+                    const pct = Math.round(fm.dimOpacity * 100);
+                    focusModeDimOpacity.value = pct;
+                    const valEl = document.getElementById('val-focus-mode-dim-opacity');
+                    if (valEl) valEl.textContent = `${pct}%`;
+                }
+                if (focusModeIdleTimeout && fm.idleTimeout !== undefined) {
+                    focusModeIdleTimeout.value = fm.idleTimeout;
+                    const valEl = document.getElementById('val-focus-mode-idle-timeout');
+                    if (valEl) valEl.textContent = `${fm.idleTimeout}s`;
+                }
+                if (focusModeTransitionDuration && fm.transitionDuration !== undefined) {
+                    focusModeTransitionDuration.value = fm.transitionDuration;
+                    const valEl = document.getElementById('val-focus-mode-transition-duration');
+                    if (valEl) valEl.textContent = `${fm.transitionDuration.toFixed(1)}s`;
                 }
             }
 
