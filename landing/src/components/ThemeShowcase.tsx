@@ -16,6 +16,7 @@ import { RippleFlowPreview } from "./visualizers/RippleFlowPreview";
 import { EdgeCrystalsPreview } from "./visualizers/EdgeCrystalsPreview";
 import { SideBraidsPreview } from "./visualizers/SideBraidsPreview";
 import { AuroraDriftPreview } from "./visualizers/AuroraDriftPreview";
+import { CrimsonDuskPreview } from "./visualizers/CrimsonDuskPreview";
 import { SnowParticlesPreview } from "./visualizers/SnowParticlesPreview";
 import { ThemeComparisonModal } from "./ThemeComparisonModal";
 
@@ -177,6 +178,18 @@ export const specificThemes: Theme[] = [
     visualIntensity: "Dynamic",
     performanceImpact: "Medium",
     bestFor: "Cinematic / Music"
+  },
+  {
+    id: "crimson-dusk",
+    name: "Crimson Dusk",
+    category: "EMBER GLOW",
+    description: "Warm ember and crimson glow along screen edges, inspired by desert sunsets and vintage film.",
+    Preview: CrimsonDuskPreview,
+    animationStyle: "Pulse",
+    reactivity: "Medium",
+    visualIntensity: "Warm",
+    performanceImpact: "Low",
+    bestFor: "Ambient / Lo-fi"
   }
 ];
 
