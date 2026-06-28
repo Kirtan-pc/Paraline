@@ -545,16 +545,6 @@
                 </div>
 
                 <div class="settings-group">
-                    <h3>Focus Mode</h3>
-                    <p class="setting-desc">Dims the visualizer during user activity to keep the desktop clean, and restores full brightness when idle.</p>
-                    
-                    <div class="switch-control" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <span style="font-weight: 500; font-size: 15px; color: #e2e8f0;">Enable Focus Mode</span>
-                            <p class="setting-desc" style="margin-top: 4px; margin-bottom: 0;">Automatically dim visualizer when you are active.</p>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="focus-mode-checkbox">
                     <h3>Global Hotkeys</h3>
                     <p class="setting-desc">Control Paraline globally even when it is minimized or running in the background. Click "Edit" and press a key combination to customize (e.g. <code>Ctrl+Alt+P</code>). Press <code>Backspace</code> or <code>Escape</code> during edit to clear/disable.</p>
                     
@@ -608,29 +598,6 @@
                         </label>
                     </div>
 
-                    <div id="focus-mode-settings-container" style="display: none; margin-top: 16px;">
-                        <div class="slider-control">
-                            <div class="slider-header">
-                                <label for="focus-mode-dim-opacity">Dimmed Opacity</label>
-                                <span class="slider-value" id="val-focus-mode-dim-opacity">10%</span>
-                            </div>
-                            <input type="range" id="focus-mode-dim-opacity" min="0" max="100" value="10">
-                        </div>
-
-                        <div class="slider-control" style="margin-top: 16px;">
-                            <div class="slider-header">
-                                <label for="focus-mode-idle-timeout">Idle Timeout (seconds)</label>
-                                <span class="slider-value" id="val-focus-mode-idle-timeout">5s</span>
-                            </div>
-                            <input type="range" id="focus-mode-idle-timeout" min="1" max="60" value="5">
-                        </div>
-
-                        <div class="slider-control" style="margin-top: 16px;">
-                            <div class="slider-header">
-                                <label for="focus-mode-transition-duration">Fade Duration (seconds)</label>
-                                <span class="slider-value" id="val-focus-mode-transition-duration">1.5s</span>
-                            </div>
-                            <input type="range" id="focus-mode-transition-duration" min="0.1" max="10" step="0.1" value="1.5">
                     <div id="themeAutoControls" style="display: none; margin-top: 15px;">
                         <div class="input-group" style="margin-top: 10px;">
                             <label>Check Interval (Minutes):</label>
@@ -687,33 +654,42 @@
 
                 <div class="settings-group">
                     <h3>Focus Mode</h3>
-                    <p class="setting-desc">Dim the visualizer when you are actively using your computer to reduce distractions, and restore full opacity when idle.</p>
+                    <p class="setting-desc">Dims the visualizer during user activity to keep the desktop clean, and restores full brightness when idle.</p>
+                    
                     <div class="switch-control" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <span style="font-weight: 500; font-size: 15px; color: #e2e8f0;">Enable Focus Mode</span>
-                            <p class="setting-desc" style="margin-top: 4px; margin-bottom: 0;">Dim the visualizer during active user input.</p>
+                            <p class="setting-desc" style="margin-top: 4px; margin-bottom: 0;">Automatically dim visualizer when you are active.</p>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" id="focus-mode-enabled-checkbox">
+                            <input type="checkbox" id="focus-mode-checkbox">
                             <span class="slider-round"></span>
                         </label>
                     </div>
 
-                    <div id="focusModeControls" style="display: none; margin-top: 20px;">
-                        <div class="slider-control" style="margin-bottom: 20px;">
-                            <div class="slider-header">
-                                <label for="focus-mode-dim-opacity-slider">Dimmed Opacity</label>
-                                <span class="slider-value" id="val-focus-mode-dim-opacity">0.10</span>
-                            </div>
-                            <input type="range" id="focus-mode-dim-opacity-slider" min="0.0" max="1.0" step="0.05" value="0.10">
-                        </div>
-
+                    <div id="focus-mode-settings-container" style="display: none; margin-top: 16px;">
                         <div class="slider-control">
                             <div class="slider-header">
-                                <label for="focus-mode-timeout-slider">Activity Idle Timeout (seconds)</label>
-                                <span class="slider-value" id="val-focus-mode-timeout">5</span>
+                                <label for="focus-mode-dim-opacity">Dimmed Opacity</label>
+                                <span class="slider-value" id="val-focus-mode-dim-opacity">10%</span>
                             </div>
-                            <input type="range" id="focus-mode-timeout-slider" min="1" max="60" step="1" value="5">
+                            <input type="range" id="focus-mode-dim-opacity" min="0" max="100" value="10">
+                        </div>
+
+                        <div class="slider-control" style="margin-top: 16px;">
+                            <div class="slider-header">
+                                <label for="focus-mode-idle-timeout">Idle Timeout (seconds)</label>
+                                <span class="slider-value" id="val-focus-mode-idle-timeout">5s</span>
+                            </div>
+                            <input type="range" id="focus-mode-idle-timeout" min="1" max="60" value="5">
+                        </div>
+
+                        <div class="slider-control" style="margin-top: 16px;">
+                            <div class="slider-header">
+                                <label for="focus-mode-transition-duration">Fade Duration (seconds)</label>
+                                <span class="slider-value" id="val-focus-mode-transition-duration">1.5s</span>
+                            </div>
+                            <input type="range" id="focus-mode-transition-duration" min="0.1" max="10" step="0.1" value="1.5">
                         </div>
                     </div>
                 </div>

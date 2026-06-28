@@ -119,3 +119,36 @@ test("settingsStore - Legacy Theme conversion (sensitivity mapping)", () => {
   assert.strictEqual(sanitized.selectedTheme, "reactiveBorder");
   assert.strictEqual(sanitized.reactiveBorder.intensity, "high");
 });
+
+test("settingsStore - Focus Mode sanitization and clamping", () => {
+  const input = {
+    selectedTheme: "ambientWave",
+    focusMode: {
+      enabled: true,
+      dimOpacity: 1.5,          // should clamp to 1
+      idleTimeout: 75,         // should clamp to 60
+      transitionDuration: 15    // should clamp to 10
+    }
+  };
+  const sanitized = sanitizeSettings(input);
+  assert.strictEqual(sanitized.focusMode.enabled, true);
+  assert.strictEqual(sanitized.focusMode.dimOpacity, 1);
+  assert.strictEqual(sanitized.focusMode.idleTimeout, 60);
+  assert.strictEqual(sanitized.focusMode.transitionDuration, 10);
+
+  const inputMin = {
+    selectedTheme: "ambientWave",
+    focusMode: {
+      enabled: false,
+      dimOpacity: -0.5,        // should clamp to 0
+      idleTimeout: 0,          // should clamp to 1
+      transitionDuration: 0.05 // should clamp to 0.1
+    }
+  };
+  const sanitizedMin = sanitizeSettings(inputMin);
+  assert.strictEqual(sanitizedMin.focusMode.enabled, false);
+  assert.strictEqual(sanitizedMin.focusMode.dimOpacity, 0);
+  assert.strictEqual(sanitizedMin.focusMode.idleTimeout, 1);
+  assert.strictEqual(sanitizedMin.focusMode.transitionDuration, 0.1);
+});
+
