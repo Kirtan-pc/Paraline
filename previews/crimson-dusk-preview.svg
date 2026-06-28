@@ -1,19 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 180" width="260" height="180">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
   <defs>
+    <!-- Background of preview card -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A0F0A"/>
+      <stop offset="100%" stop-color="#0A0602"/>
+    </linearGradient>
+    <radialGradient id="wallpaper" cx="35%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#180C03" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#080401" stop-opacity="1"/>
+    </radialGradient>
     <radialGradient id="cornerBL" cx="0%" cy="100%" r="40%">
       <stop offset="0%" stop-color="#DC2B0A" stop-opacity="0.6"/>
       <stop offset="100%" stop-color="#0A0602" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="cornerBR" cx="100%" cy="100%" r="40%">
       <stop offset="0%" stop-color="#DC2B0A" stop-opacity="0.5"/>
-      <stop offset="100%" stop-color="#0A0602" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="cornerTL" cx="0%" cy="0%" r="30%">
-      <stop offset="0%" stop-color="#B84010" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#0A0602" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="cornerTR" cx="100%" cy="0%" r="30%">
-      <stop offset="0%" stop-color="#B84010" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="#0A0602" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="bottomGlow" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -28,183 +29,262 @@
       <stop offset="0%" stop-color="#CC3A08" stop-opacity="0.35"/>
       <stop offset="100%" stop-color="#CC3A08" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="topGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#B84010" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#B84010" stop-opacity="0"/>
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <filter id="softglow">
-      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+    <filter id="softglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <clipPath id="screen">
-      <rect width="260" height="180" rx="6"/>
+      <rect x="34" y="34" width="572" height="292" rx="22"/>
     </clipPath>
   </defs>
 
-  <!-- Background -->
-  <rect width="260" height="180" fill="#0A0602" rx="6"/>
+  <!-- Card background -->
+  <rect width="640" height="360" rx="32" fill="url(#bg)"/>
 
-  <!-- Subtle wallpaper texture -->
-  <radialGradient id="wallpaper" cx="35%" cy="45%" r="60%">
-    <stop offset="0%" stop-color="#180C03" stop-opacity="1"/>
-    <stop offset="100%" stop-color="#080401" stop-opacity="1"/>
-  </radialGradient>
-  <rect width="260" height="180" fill="url(#wallpaper)" clip-path="url(#screen)"/>
+  <!-- Outer Window boundary -->
+  <rect x="34" y="34" width="572" height="292" rx="22" fill="#040508" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
 
   <g clip-path="url(#screen)">
+    <rect x="34" y="34" width="572" height="292" fill="url(#wallpaper)"/>
 
     <!-- Edge glow fills -->
-    <rect x="0" y="120" width="260" height="60" fill="url(#bottomGlow)"/>
-    <rect x="0" y="0" width="55" height="180" fill="url(#leftGlow)"/>
-    <rect x="205" y="0" width="55" height="180" fill="url(#rightGlow)"/>
-    <rect x="0" y="0" width="260" height="45" fill="url(#topGlow)"/>
+    <rect x="34" y="220" width="572" height="106" fill="url(#bottomGlow)"/>
+    <rect x="34" y="34" width="90" height="292" fill="url(#leftGlow)"/>
+    <rect x="516" y="34" width="90" height="292" fill="url(#rightGlow)"/>
 
     <!-- Corner blooms -->
-    <rect width="260" height="180" fill="url(#cornerBL)">
+    <rect x="34" y="34" width="572" height="292" fill="url(#cornerBL)">
       <animate attributeName="opacity" values="1;0.7;1" dur="5s" repeatCount="indefinite"/>
     </rect>
-    <rect width="260" height="180" fill="url(#cornerBR)">
+    <rect x="34" y="34" width="572" height="292" fill="url(#cornerBR)">
       <animate attributeName="opacity" values="1;0.65;1" dur="4.3s" repeatCount="indefinite"/>
     </rect>
-    <rect width="260" height="180" fill="url(#cornerTL)">
-      <animate attributeName="opacity" values="1;0.75;1" dur="6s" repeatCount="indefinite"/>
-    </rect>
-    <rect width="260" height="180" fill="url(#cornerTR)">
-      <animate attributeName="opacity" values="1;0.75;1" dur="5.5s" repeatCount="indefinite"/>
-    </rect>
 
-    <!-- Ember particles — bottom area -->
+    <!-- Ember particles, drifting upward -->
     <g>
-      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -1.5; 0 0" dur="9s" repeatCount="indefinite"/>
-    <!-- Row 1 (bottom) -->
-    <circle cx="14" cy="162" r="1.2" fill="#FF6010" opacity="0.9" filter="url(#glow)"/>
-    <circle cx="38" cy="155" r="0.8" fill="#FF8020" opacity="0.7"/>
-    <circle cx="52" cy="168" r="1.0" fill="#E03808" opacity="0.8" filter="url(#glow)"/>
-    <circle cx="78" cy="158" r="1.4" fill="#FF9030" opacity="0.9" filter="url(#glow)"/>
-    <circle cx="95" cy="170" r="0.7" fill="#CC2A05" opacity="0.6"/>
-    <circle cx="118" cy="160" r="1.1" fill="#FF7018" opacity="0.85"/>
-    <circle cx="142" cy="166" r="0.9" fill="#FF8525" opacity="0.75"/>
-    <circle cx="165" cy="157" r="1.3" fill="#E84010" opacity="0.9" filter="url(#glow)"/>
-    <circle cx="188" cy="163" r="0.8" fill="#FF6510" opacity="0.7"/>
-    <circle cx="212" cy="158" r="1.2" fill="#FF8020" opacity="0.85" filter="url(#glow)"/>
-    <circle cx="238" cy="165" r="1.0" fill="#CC3008" opacity="0.8"/>
-    <circle cx="248" cy="155" r="0.7" fill="#FF7015" opacity="0.65"/>
-
-    <!-- Row 2 (mid-low) -->
-    <circle cx="8" cy="145" r="0.9" fill="#FF7018" opacity="0.65"/>
-    <circle cx="25" cy="138" r="1.1" fill="#E84810" opacity="0.8" filter="url(#glow)"/>
-    <circle cx="44" cy="142" r="0.7" fill="#FF9030" opacity="0.6"/>
-    <circle cx="68" cy="136" r="1.0" fill="#FF6010" opacity="0.75"/>
-    <circle cx="88" cy="148" r="0.8" fill="#CC2A05" opacity="0.55"/>
-    <circle cx="108" cy="140" r="1.2" fill="#FF8020" opacity="0.8" filter="url(#glow)"/>
-    <circle cx="132" cy="143" r="0.6" fill="#FF7018" opacity="0.5"/>
-    <circle cx="155" cy="137" r="1.0" fill="#E04010" opacity="0.72"/>
-    <circle cx="178" cy="144" r="0.9" fill="#FF9030" opacity="0.65"/>
-    <circle cx="200" cy="138" r="1.1" fill="#FF6510" opacity="0.78" filter="url(#glow)"/>
-    <circle cx="224" cy="141" r="0.7" fill="#CC3008" opacity="0.55"/>
-    <circle cx="245" cy="136" r="1.0" fill="#FF7820" opacity="0.7"/>
-
-    <!-- Row 3 (mid) -->
-    <circle cx="5" cy="118" r="0.8" fill="#E84010" opacity="0.45"/>
-    <circle cx="18" cy="112" r="1.0" fill="#FF8020" opacity="0.6" filter="url(#glow)"/>
-    <circle cx="36" cy="122" r="0.6" fill="#FF6010" opacity="0.4"/>
-    <circle cx="58" cy="115" r="0.9" fill="#CC2A05" opacity="0.5"/>
-    <circle cx="252" cy="118" r="0.9" fill="#E84010" opacity="0.5"/>
-    <circle cx="242" cy="110" r="0.7" fill="#FF8020" opacity="0.45"/>
-
-    <!-- Left side embers -->
-    <circle cx="4" cy="95" r="0.8" fill="#FF7018" opacity="0.5" filter="url(#glow)"/>
-    <circle cx="7" cy="75" r="0.6" fill="#E04010" opacity="0.4"/>
-    <circle cx="3" cy="58" r="0.9" fill="#FF8020" opacity="0.45" filter="url(#glow)"/>
-    <circle cx="6" cy="38" r="0.7" fill="#CC3008" opacity="0.35"/>
-
-    <!-- Right side embers -->
-    <circle cx="255" cy="92" r="0.8" fill="#FF7018" opacity="0.5" filter="url(#glow)"/>
-    <circle cx="257" cy="70" r="0.6" fill="#E04010" opacity="0.4"/>
-    <circle cx="254" cy="52" r="0.9" fill="#FF8020" opacity="0.45" filter="url(#glow)"/>
-    <circle cx="256" cy="30" r="0.7" fill="#CC3008" opacity="0.35"/>
-
-    <!-- Top embers (sparse) -->
-    <circle cx="22" cy="8" r="0.7" fill="#FF7018" opacity="0.3"/>
-    <circle cx="85" cy="5" r="0.6" fill="#E04010" opacity="0.25"/>
-    <circle cx="175" cy="7" r="0.7" fill="#FF8020" opacity="0.28"/>
-    <circle cx="238" cy="6" r="0.6" fill="#CC3008" opacity="0.25"/>
+      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -4; 0 0" dur="9s" repeatCount="indefinite"/>
+      <circle cx="60" cy="290" r="2.2" fill="#FF6010" opacity="0.9" filter="url(#glow)">
+        <animate attributeName="cy" values="290;180;290" dur="10s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.9;0" dur="10s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="105" cy="300" r="1.5" fill="#FF8020" opacity="0.7">
+        <animate attributeName="cy" values="300;160;300" dur="12s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.7;0" dur="12s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="150" cy="295" r="1.9" fill="#E03808" opacity="0.8" filter="url(#glow)">
+        <animate attributeName="cy" values="295;150;295" dur="11s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.8;0" dur="11s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="200" cy="305" r="2.4" fill="#FF9030" opacity="0.9" filter="url(#glow)">
+        <animate attributeName="cy" values="305;170;305" dur="9.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.9;0" dur="9.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="250" cy="298" r="1.3" fill="#CC2A05" opacity="0.6">
+        <animate attributeName="cy" values="298;190;298" dur="13s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.6;0" dur="13s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="300" cy="302" r="2.0" fill="#FF7018" opacity="0.85" filter="url(#glow)">
+        <animate attributeName="cy" values="302;165;302" dur="10.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.85;0" dur="10.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="350" cy="295" r="1.6" fill="#FF8525" opacity="0.7">
+        <animate attributeName="cy" values="295;175;295" dur="11.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.7;0" dur="11.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="400" cy="305" r="2.3" fill="#E84010" opacity="0.9" filter="url(#glow)">
+        <animate attributeName="cy" values="305;160;305" dur="9s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.9;0" dur="9s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="450" cy="298" r="1.4" fill="#FF6510" opacity="0.65">
+        <animate attributeName="cy" values="298;185;298" dur="12.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.65;0" dur="12.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="500" cy="300" r="2.1" fill="#FF8020" opacity="0.85" filter="url(#glow)">
+        <animate attributeName="cy" values="300;170;300" dur="10s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.85;0" dur="10s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="550" cy="292" r="1.7" fill="#CC3008" opacity="0.75">
+        <animate attributeName="cy" values="292;180;292" dur="11s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.75;0" dur="11s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="580" cy="305" r="1.2" fill="#FF7820" opacity="0.6">
+        <animate attributeName="cy" values="305;195;305" dur="13.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.6;0" dur="13.5s" repeatCount="indefinite"/>
+      </circle>
     </g>
 
-    <!-- Waveform bars at bottom edge -->
+    <!-- Waveform bars at bottom edge, edge-to-edge full width -->
     <g>
-    <rect x="12" y="173" width="2.5" height="5" fill="#FF6010" opacity="0.8" rx="1"/>
-    <rect x="17" y="171" width="2.5" height="7" fill="#FF7018" opacity="0.85" rx="1"/>
-    <rect x="22" y="169" width="2.5" height="9" fill="#FF8020" opacity="0.9" rx="1"/>
-    <rect x="27" y="171" width="2.5" height="7" fill="#FF7018" opacity="0.85" rx="1"/>
-    <rect x="32" y="174" width="2.5" height="4" fill="#E84010" opacity="0.75" rx="1"/>
-    <rect x="37" y="172" width="2.5" height="6" fill="#FF6510" opacity="0.8" rx="1"/>
-    <rect x="42" y="170" width="2.5" height="8" fill="#FF8020" opacity="0.85" rx="1"/>
-    <rect x="47" y="168" width="2.5" height="10" fill="#FF9030" opacity="0.9" rx="1" filter="url(#glow)"/>
-    <rect x="52" y="169" width="2.5" height="9" fill="#FF8020" opacity="0.88" rx="1"/>
-    <rect x="57" y="171" width="2.5" height="7" fill="#FF7018" opacity="0.82" rx="1"/>
-    <rect x="62" y="166" width="2.5" height="12" fill="#FF9030" opacity="0.95" rx="1" filter="url(#glow)"/>
-    <rect x="67" y="168" width="2.5" height="10" fill="#FF8520" opacity="0.9" rx="1"/>
-    <rect x="72" y="170" width="2.5" height="8" fill="#FF7018" opacity="0.85" rx="1"/>
-    <rect x="77" y="172" width="2.5" height="6" fill="#E84010" opacity="0.78" rx="1"/>
-    <rect x="82" y="165" width="2.5" height="13" fill="#FFA030" opacity="0.95" rx="1" filter="url(#glow)"/>
-    <rect x="87" y="167" width="2.5" height="11" fill="#FF9025" opacity="0.92" rx="1"/>
-    <rect x="92" y="169" width="2.5" height="9" fill="#FF8020" opacity="0.88" rx="1"/>
-    <rect x="97" y="163" width="2.5" height="15" fill="#FFB040" opacity="0.95" rx="1" filter="url(#glow)"/>
-    <rect x="102" y="165" width="2.5" height="13" fill="#FFA030" opacity="0.92" rx="1"/>
-    <rect x="107" y="162" width="2.5" height="16" fill="#FFB040" opacity="0.95" rx="1" filter="url(#glow)"/>
-    <rect x="112" y="164" width="2.5" height="14" fill="#FFA030" opacity="0.93" rx="1"/>
-    <rect x="117" y="161" width="2.5" height="17" fill="#FFB840" opacity="0.95" rx="1" filter="url(#glow)"/>
-    <rect x="122" y="163" width="2.5" height="15" fill="#FFA030" opacity="0.93" rx="1"/>
-    <rect x="127" y="161" width="2.5" height="17" fill="#FFB840" opacity="0.95" rx="1" filter="url(#glow)"/>
-    <rect x="132" y="163" width="2.5" height="15" fill="#FFA028" opacity="0.92" rx="1"/>
-    <rect x="137" y="162" width="2.5" height="16" fill="#FFB040" opacity="0.95" rx="1" filter="url(#glow)"/>
-    <rect x="142" y="164" width="2.5" height="14" fill="#FFA028" opacity="0.92" rx="1"/>
-    <rect x="147" y="163" width="2.5" height="15" fill="#FFB040" opacity="0.94" rx="1"/>
-    <rect x="152" y="165" width="2.5" height="13" fill="#FF9825" opacity="0.9" rx="1"/>
-    <rect x="157" y="163" width="2.5" height="15" fill="#FFA030" opacity="0.92" rx="1" filter="url(#glow)"/>
-    <rect x="162" y="166" width="2.5" height="12" fill="#FF8F20" opacity="0.88" rx="1"/>
-    <rect x="167" y="164" width="2.5" height="14" fill="#FFA028" opacity="0.9" rx="1"/>
-    <rect x="172" y="167" width="2.5" height="11" fill="#FF8020" opacity="0.86" rx="1"/>
-    <rect x="177" y="165" width="2.5" height="13" fill="#FF9025" opacity="0.88" rx="1" filter="url(#glow)"/>
-    <rect x="182" y="168" width="2.5" height="10" fill="#FF7818" opacity="0.84" rx="1"/>
-    <rect x="187" y="166" width="2.5" height="12" fill="#FF8520" opacity="0.87" rx="1"/>
-    <rect x="192" y="169" width="2.5" height="9" fill="#FF7018" opacity="0.82" rx="1"/>
-    <rect x="197" y="167" width="2.5" height="11" fill="#FF8020" opacity="0.85" rx="1"/>
-    <rect x="202" y="170" width="2.5" height="8" fill="#E84010" opacity="0.8" rx="1"/>
-    <rect x="207" y="168" width="2.5" height="10" fill="#FF7818" opacity="0.82" rx="1"/>
-    <rect x="212" y="171" width="2.5" height="7" fill="#E04008" opacity="0.78" rx="1"/>
-    <rect x="217" y="169" width="2.5" height="9" fill="#FF7018" opacity="0.8" rx="1"/>
-    <rect x="222" y="172" width="2.5" height="6" fill="#CC3008" opacity="0.75" rx="1"/>
-    <rect x="227" y="170" width="2.5" height="8" fill="#E04010" opacity="0.78" rx="1"/>
-    <rect x="232" y="173" width="2.5" height="5" fill="#CC2A05" opacity="0.72" rx="1"/>
-    <rect x="237" y="171" width="2.5" height="7" fill="#D83808" opacity="0.76" rx="1"/>
-    <rect x="242" y="174" width="2.5" height="4" fill="#CC2A05" opacity="0.7" rx="1"/>
-    <rect x="247" y="172" width="2.5" height="6" fill="#E03808" opacity="0.74" rx="1"/>
+      <rect x="34" y="312" width="11" height="14" fill="#FF6010" opacity="0.8" rx="2">
+        <animate attributeName="height" values="14;26;10;20;14" dur="2.1s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="312;300;316;306;312" dur="2.1s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="49" y="308" width="11" height="18" fill="#FF7018" opacity="0.85" rx="2">
+        <animate attributeName="height" values="18;8;24;14;18" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="308;318;302;312;308" dur="1.8s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="64" y="302" width="11" height="24" fill="#FF8020" opacity="0.9" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="24;12;30;18;24" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="302;314;296;308;302" dur="2.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="79" y="296" width="11" height="30" fill="#FFA030" opacity="0.95" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="30;16;34;22;30" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="296;310;292;304;296" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="94" y="290" width="11" height="36" fill="#FFB040" opacity="0.95" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="36;20;40;28;36" dur="2.3s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="290;306;286;298;290" dur="2.3s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="109" y="295" width="11" height="31" fill="#FFA028" opacity="0.92" rx="2">
+        <animate attributeName="height" values="31;18;38;24;31" dur="1.9s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="295;308;288;302;295" dur="1.9s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="124" y="300" width="11" height="26" fill="#FF9025" opacity="0.88" rx="2">
+        <animate attributeName="height" values="26;14;32;20;26" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="300;312;294;306;300" dur="2.2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="139" y="306" width="11" height="20" fill="#FF8020" opacity="0.85" rx="2">
+        <animate attributeName="height" values="20;10;26;15;20" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="306;316;300;311;306" dur="2.5s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="154" y="310" width="11" height="16" fill="#E84010" opacity="0.8" rx="2">
+        <animate attributeName="height" values="16;28;9;19;16" dur="1.7s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="310;298;317;307;310" dur="1.7s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="170" y="304" width="11" height="22" fill="#FF7018" opacity="0.86" rx="2">
+        <animate attributeName="height" values="22;33;13;25;22" dur="2.1s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="304;293;313;301;304" dur="2.1s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="185" y="297" width="11" height="29" fill="#FFA030" opacity="0.92" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="29;17;36;23;29" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="297;309;290;303;297" dur="2.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="200" y="291" width="11" height="35" fill="#FFB840" opacity="0.95" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="35;22;41;28;35" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="291;304;285;298;291" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="215" y="288" width="11" height="38" fill="#FFB840" opacity="0.96" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="38;24;44;30;38" dur="1.85s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="288;302;282;296;288" dur="1.85s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="230" y="293" width="11" height="33" fill="#FFA030" opacity="0.93" rx="2">
+        <animate attributeName="height" values="33;19;39;26;33" dur="2.15s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="293;307;287;300;293" dur="2.15s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="245" y="298" width="11" height="28" fill="#FF9825" opacity="0.9" rx="2">
+        <animate attributeName="height" values="28;15;35;21;28" dur="2.35s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="298;311;291;305;298" dur="2.35s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="260" y="304" width="11" height="22" fill="#FF8F20" opacity="0.88" rx="2">
+        <animate attributeName="height" values="22;31;14;24;22" dur="1.95s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="304;295;312;302;304" dur="1.95s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="275" y="299" width="11" height="27" fill="#FF8020" opacity="0.87" rx="2">
+        <animate attributeName="height" values="27;38;17;25;27" dur="2.25s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="299;288;309;301;299" dur="2.25s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="290" y="293" width="11" height="33" fill="#FFA825" opacity="0.92" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="33;20;39;27;33" dur="2.05s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="293;306;287;299;293" dur="2.05s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="305" y="289" width="11" height="37" fill="#FFB840" opacity="0.95" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="37;23;43;29;37" dur="1.9s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="289;303;283;297;289" dur="1.9s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="320" y="296" width="11" height="30" fill="#FFA030" opacity="0.91" rx="2">
+        <animate attributeName="height" values="30;18;36;24;30" dur="2.3s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="296;308;290;302;296" dur="2.3s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="335" y="302" width="11" height="24" fill="#FF9025" opacity="0.89" rx="2">
+        <animate attributeName="height" values="24;33;15;22;24" dur="1.75s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="302;293;311;304;302" dur="1.75s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="350" y="307" width="11" height="19" fill="#FF8020" opacity="0.86" rx="2">
+        <animate attributeName="height" values="19;9;26;14;19" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="307;317;300;312;307" dur="2.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="365" y="301" width="11" height="25" fill="#FF7818" opacity="0.84" rx="2">
+        <animate attributeName="height" values="25;36;16;23;25" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="301;290;310;303;301" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="380" y="295" width="11" height="31" fill="#FF8520" opacity="0.9" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="31;19;38;25;31" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="295;307;288;301;295" dur="2.2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="395" y="300" width="11" height="26" fill="#FF7018" opacity="0.87" rx="2">
+        <animate attributeName="height" values="26;14;32;20;26" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="300;312;294;306;300" dur="1.8s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="410" y="306" width="11" height="20" fill="#E84010" opacity="0.83" rx="2">
+        <animate attributeName="height" values="20;30;11;18;20" dur="2.15s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="306;296;315;308;306" dur="2.15s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="425" y="298" width="11" height="28" fill="#FF7818" opacity="0.88" rx="2">
+        <animate attributeName="height" values="28;16;34;22;28" dur="2.35s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="298;310;292;304;298" dur="2.35s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="440" y="304" width="11" height="22" fill="#E04008" opacity="0.85" rx="2">
+        <animate attributeName="height" values="22;32;13;19;22" dur="1.95s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="304;294;313;307;304" dur="1.95s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="455" y="309" width="11" height="17" fill="#FF7018" opacity="0.82" rx="2">
+        <animate attributeName="height" values="17;27;9;15;17" dur="2.25s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="309;299;317;311;309" dur="2.25s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="470" y="311" width="11" height="15" fill="#CC3008" opacity="0.78" rx="2">
+        <animate attributeName="height" values="15;25;8;13;15" dur="2.05s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="311;301;318;313;311" dur="2.05s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="485" y="307" width="11" height="19" fill="#E04010" opacity="0.81" rx="2">
+        <animate attributeName="height" values="19;29;10;17;19" dur="1.7s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="307;297;316;309;307" dur="1.7s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="500" y="301" width="11" height="25" fill="#FF8020" opacity="0.86" rx="2" filter="url(#glow)">
+        <animate attributeName="height" values="25;14;31;20;25" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="301;312;295;306;301" dur="2.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="515" y="305" width="11" height="21" fill="#FF7820" opacity="0.84" rx="2">
+        <animate attributeName="height" values="21;32;12;18;21" dur="1.85s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="305;294;314;308;305" dur="1.85s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="530" y="310" width="11" height="16" fill="#E03808" opacity="0.8" rx="2">
+        <animate attributeName="height" values="16;26;9;14;16" dur="2.3s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="310;300;317;312;310" dur="2.3s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="545" y="306" width="11" height="20" fill="#FF6010" opacity="0.82" rx="2">
+        <animate attributeName="height" values="20;30;11;17;20" dur="2.1s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="306;296;315;309;306" dur="2.1s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="560" y="312" width="11" height="14" fill="#FF7018" opacity="0.8" rx="2">
+        <animate attributeName="height" values="14;24;7;12;14" dur="1.9s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="312;302;319;314;312" dur="1.9s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="575" y="308" width="11" height="18" fill="#FF8020" opacity="0.85" rx="2">
+        <animate attributeName="height" values="18;28;9;15;18" dur="2.45s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="308;298;317;311;308" dur="2.45s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="590" y="303" width="11" height="23" fill="#E84010" opacity="0.83" rx="2">
+        <animate attributeName="height" values="23;13;29;19;23" dur="2.15s" repeatCount="indefinite"/>
+        <animate attributeName="y" values="303;313;297;307;303" dur="2.15s" repeatCount="indefinite"/>
+      </rect>
     </g>
 
-    <!-- Edge border lines -->
-    <!-- Bottom -->
-    <line x1="0" y1="179" x2="260" y2="179" stroke="#E8520F" stroke-width="1.5" opacity="0.7" filter="url(#softglow)">
+    <!-- Edge border lines, breathing glow -->
+    <line x1="34" y1="325" x2="606" y2="325" stroke="#E8520F" stroke-width="2" opacity="0.7" filter="url(#softglow)">
       <animate attributeName="opacity" values="0.7;0.95;0.7" dur="3.2s" repeatCount="indefinite"/>
     </line>
-    <!-- Left -->
-    <line x1="0.8" y1="0" x2="0.8" y2="180" stroke="#CC3A08" stroke-width="1.5" opacity="0.5" filter="url(#glow)">
+    <line x1="35.5" y1="34" x2="35.5" y2="326" stroke="#CC3A08" stroke-width="2" opacity="0.5" filter="url(#glow)">
       <animate attributeName="opacity" values="0.5;0.7;0.5" dur="4s" repeatCount="indefinite"/>
     </line>
-    <!-- Right -->
-    <line x1="259.2" y1="0" x2="259.2" y2="180" stroke="#CC3A08" stroke-width="1.5" opacity="0.5" filter="url(#glow)">
+    <line x1="604.5" y1="34" x2="604.5" y2="326" stroke="#CC3A08" stroke-width="2" opacity="0.5" filter="url(#glow)">
       <animate attributeName="opacity" values="0.5;0.7;0.5" dur="4.5s" repeatCount="indefinite"/>
     </line>
-    <!-- Top -->
-    <line x1="0" y1="0.8" x2="260" y2="0.8" stroke="#B84010" stroke-width="1" opacity="0.35"/>
-
   </g>
 
-  <!-- Screen border frame -->
-  <rect x="0.5" y="0.5" width="259" height="179" fill="none" stroke="#3A1A08" stroke-width="1" rx="6"/>
+  <!-- Screen border frame (re-drawn on top for crisp edge) -->
+  <rect x="34.5" y="34.5" width="571" height="291" fill="none" stroke="#3A1A08" stroke-width="1" rx="22"/>
 </svg>
