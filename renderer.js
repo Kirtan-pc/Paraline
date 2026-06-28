@@ -28,6 +28,10 @@ const {
   getSideBarsAudioMultiplier,
   drawSideBars
 } = window.ParalineSideBars;
+const {
+  getCrimsonInputMultiplier,
+  drawCrimsonDusk
+} = window.ParalineCrimsonDusk;
 
 const {
   getFlatRipplesAudioMultiplier,
@@ -120,6 +124,14 @@ let visualizerState = {
     barThickness: "thick",
     sensitivity: "medium",
     barDensity: "medium"
+  },
+  crimsonDusk: {
+    barMode: "bottom",
+    barThickness: "medium",
+    barCount: "medium",
+    glowStrength: "medium",
+    sensitivity: "medium",
+    filmGrain: "off"
   },
   flatRipples: {
     mode: "sideRipples",
@@ -422,6 +434,9 @@ function getFlowBorderSettings() {
 function getSideBarsSettings() {
   return getResolvedThemeSettings("sideBars", visualizerState.sideBars || {});
 }
+function getCrimsonDuskSettings() {
+  return getResolvedThemeSettings("crimsonDusk", visualizerState.crimsonDusk || {});
+}
 
 function getFlatRipplesSettings() {
   return getResolvedThemeSettings("flatRipples", visualizerState.flatRipples || {});
@@ -464,6 +479,9 @@ function getActiveAudioMultiplier() {
     return getSideBarsAudioMultiplier(getSideBarsSettings());
   }
 
+  if (visualizerState.selectedTheme === "crimsonDusk") {
+    return getCrimsonInputMultiplier(getCrimsonDuskSettings());
+  }
   if (visualizerState.selectedTheme === "flatRipples") {
     return getFlatRipplesAudioMultiplier(getFlatRipplesSettings());
   }
@@ -686,6 +704,16 @@ function renderFrame(now) {
       settings: getSideBarsSettings(),
       performanceMode: visualizerState.performanceMode
     });
+  } else if (visualizerState.selectedTheme === "crimsonDusk") {
+    drawCrimsonDusk({
+      context,
+      width,
+      height,
+      time,
+      smoothedLevel,
+      settings: getCrimsonDuskSettings(),
+      performanceMode: visualizerState.performanceMode
+    });
   } else if (visualizerState.selectedTheme === "flatRipples") {
     drawFlatRipples({
       context,
@@ -797,6 +825,10 @@ function applySettings(nextSettings) {
       ...visualizerState.sideBars,
       ...(nextSettings?.sideBars || {})
     },
+    crimsonDusk: {
+      ...visualizerState.crimsonDusk,
+      ...(nextSettings?.crimsonDusk || {})
+    },
     flatRipples: {
       ...visualizerState.flatRipples,
       ...(nextSettings?.flatRipples || {})
@@ -827,7 +859,7 @@ function applySettings(nextSettings) {
     }
   };
 
-  if (!["ambientWave", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids", "auroraDrift"].includes(visualizerState.selectedTheme)) {
+  if (!["ambientWave", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "crimsonDusk", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids", "auroraDrift"].includes(visualizerState.selectedTheme)) {
     visualizerState.selectedTheme = "ambientWave";
   }
 
@@ -1147,6 +1179,68 @@ const THEME_INFOS = {
           { value: "low", label: "Less" },
           { value: "medium", label: "Medium" },
           { value: "high", label: "More" }
+        ]
+      }
+    ]
+  },
+  crimsonDusk: {
+    label: "Crimson Dusk",
+    settingsHeader: "Crimson Dusk Settings",
+    options: [
+      {
+        key: "barMode",
+        label: "Bar Mode",
+        choices: [
+          { value: "bottom", label: "Bottom" },
+          { value: "bottomCompact", label: "Bottom Compact" },
+          { value: "side", label: "Side" },
+          { value: "both", label: "Both" }
+        ]
+      },
+      {
+        key: "barThickness",
+        label: "Bar Thickness",
+        choices: [
+          { value: "thin", label: "Thin" },
+          { value: "medium", label: "Medium" },
+          { value: "thick", label: "Thick" },
+          { value: "custom", label: "Custom" }
+        ]
+      },
+      {
+        key: "barCount",
+        label: "Bar Count",
+        choices: [
+          { value: "sparse", label: "Sparse" },
+          { value: "medium", label: "Medium" },
+          { value: "dense", label: "Dense" }
+        ]
+      },
+      {
+        key: "glowStrength",
+        label: "Glow Strength",
+        choices: [
+          { value: "soft", label: "Soft" },
+          { value: "medium", label: "Medium" },
+          { value: "strong", label: "Strong" }
+        ]
+      },
+      {
+        key: "sensitivity",
+        label: "Sensitivity",
+        choices: [
+          { value: "low", label: "Low" },
+          { value: "medium", label: "Medium" },
+          { value: "high", label: "High" },
+          { value: "custom", label: "Custom" }
+        ]
+      },
+      {
+        key: "filmGrain",
+        label: "Film Grain",
+        choices: [
+          { value: "off", label: "Off" },
+          { value: "on", label: "On" }
         ]
       }
     ]
@@ -1843,3 +1937,5 @@ window.addEventListener('keydown', (e) => {
     closeMenu();
   }
 });
+
+

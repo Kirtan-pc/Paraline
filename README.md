@@ -104,6 +104,9 @@ Star ⭐️ this repo to stay updated as we ship new features and improvements.
 
 </td>
 <td align="center" width="33%">
+<strong>Crimson Dusk</strong><br/>
+<img src="./previews/crimson-dusk-preview.svg" alt="Crimson Dusk Preview" width="260"/>
+
 </td>
 </tr>
 </table>
@@ -244,6 +247,11 @@ Paraline is designed to stay running in the background without feeling heavy or 
 <td><strong>Side Braids</strong></td>
 <td>Intertwined glowing neon strands braiding and flowing vertically along screen edges.</td>
 <td>Color Style, Braid Density, Motion Style, Glow Strength, Braid Width, Flow Direction</td>
+</tr>
+<tr>
+<td><strong>Crimson Dusk</strong></td>
+<td>Warm ember and crimson glow along screen edges, inspired by desert sunsets.</td>
+<td>Bar Mode (bottom/side/both), Bar Thickness, Bar Count, Glow Strength, Sensitivity, Film Grain (optional)</td>
 </tr>
 <tr>
 <td><strong>Aurora Drift</strong></td>
