@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Plus, X } from "lucide-react";
-import { getThemesEndpoint } from "@/lib/paraline-api";
 import { usePreviewStore } from "@/store/preview";
 
 import { AmbientWavePreview } from "./visualizers/AmbientWavePreview";
@@ -232,29 +231,8 @@ export function ThemeShowcase() {
     }
   };
 
-  const handleApply = async (theme: Theme) => {
+  const handleApply = (theme: Theme) => {
     setActivePreviewThemeId(theme.id);
-
-    try {
-      // Connect to the backend API to physically apply the theme on the desktop
-      const response = await fetch(getThemesEndpoint(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "apply_theme", theme: theme.name })
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          // If the endpoint doesn't exist, intentionally throw to trigger simulation
-          throw new Error("Theme endpoint not found");
-        }
-        console.error("Failed to apply theme. Server responded with status:", response.status);
-        return; // Do not set applied state on failure
-      }
-    } catch (e) {
-      console.warn("Backend not running, simulating theme application:", e);
-    }
-
     setAppliedTheme(theme.name);
     setTimeout(() => setAppliedTheme(null), 3000);
   };
