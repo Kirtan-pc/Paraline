@@ -126,7 +126,8 @@ const DEFAULT_SETTINGS = Object.freeze({
   focusMode: Object.freeze({
     enabled: false,
     dimOpacity: 0.1,
-    idleTimeout: 5
+    idleTimeout: 5,
+    transitionDuration: 1.5
   }),
   auroraDrift: Object.freeze({
     // Standard settings
@@ -599,13 +600,16 @@ function migrateLegacySettings(input = {}) {
 
 function sanitizeFocusMode(input = {}) {
   const enabled = typeof input.enabled === "boolean" ? input.enabled : DEFAULT_SETTINGS.focusMode.enabled;
-  const dimOpacity = typeof input.dimOpacity === "number" && input.dimOpacity >= 0 && input.dimOpacity <= 1
-    ? input.dimOpacity
+  const dimOpacity = typeof input.dimOpacity === "number" && Number.isFinite(input.dimOpacity)
+    ? Math.max(0, Math.min(1, input.dimOpacity))
     : DEFAULT_SETTINGS.focusMode.dimOpacity;
-  const idleTimeout = typeof input.idleTimeout === "number" && input.idleTimeout >= 1 && input.idleTimeout <= 60
-    ? input.idleTimeout
+  const idleTimeout = typeof input.idleTimeout === "number" && Number.isFinite(input.idleTimeout)
+    ? Math.max(1, Math.min(60, input.idleTimeout))
     : DEFAULT_SETTINGS.focusMode.idleTimeout;
-  return { enabled, dimOpacity, idleTimeout };
+  const transitionDuration = typeof input.transitionDuration === "number" && Number.isFinite(input.transitionDuration)
+    ? Math.max(0.1, Math.min(10, input.transitionDuration))
+    : DEFAULT_SETTINGS.focusMode.transitionDuration;
+  return { enabled, dimOpacity, idleTimeout, transitionDuration };
 }
 
 function sanitizeShortcuts(input) {
