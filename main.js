@@ -227,7 +227,8 @@ const THEME_LABELS = {
   snowBubbleParticles: "Snow Particles",
   edgeCrystals: "Edge Crystals",
   sideBraids: "Side Braids",
-  auroraDrift: "Aurora Drift"
+  auroraDrift: "Aurora Drift",
+  crimsonDusk: "Crimson Dusk"
 };
 
 function getActiveOverlayWindows() {
@@ -470,7 +471,7 @@ function reloadVisualizer() {
 }
 
 function cycleTheme() {
-  const themes = ["ambientWave", "auroraDrift", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids"];
+  const themes = ["ambientWave", "auroraDrift", "reactiveBorder", "flowBorder", "sideBars", "flatRipples", "dotParticles", "rippleFlow", "snowBubbleParticles", "edgeCrystals", "sideBraids", "crimsonDusk"];
   const currentTheme = visualizerSettings.selectedTheme;
   const currentIndex = themes.indexOf(currentTheme);
   const nextIndex = (currentIndex + 1) % themes.length;
@@ -941,7 +942,8 @@ function buildMainThemeMenuItems() {
     { value: "rippleFlow", label: "Ripple Flow" },
     { value: "snowBubbleParticles", label: "Snow Particles" },
     { value: "edgeCrystals", label: "Edge Crystals" },
-    { value: "sideBraids", label: "Side Braids" }
+    { value: "sideBraids", label: "Side Braids" },
+    { value: "crimsonDusk", label: "Crimson Dusk" }
   ];
 
   return themeOptions.map((themeOption) => ({
@@ -1621,6 +1623,10 @@ function buildActiveThemeMenuItems() {
   }
 
   if (visualizerSettings.selectedTheme === "auroraDrift") {
+    return []; // No settings in Phase 1
+  }
+
+  if (visualizerSettings.selectedTheme === "crimsonDusk") {
     return []; // No settings in Phase 1
   }
 
